@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
     <link rel="icon" type="image/png" href="{{ asset('uploads/favicon.png') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
     <!-- Header -->
@@ -17,7 +18,7 @@
             <div class="nav-wrapper">
                 <div class="logo">
                     <a href="#">
-                        <img src="{{ asset('uploads/logo.png') }}" alt="SecureEscrow Logo" style="height: 50px; vertical-align: middle;">
+                        <img src="{{ asset('uploads/logo-hoz.png') }}" alt="e-confirm Logo" style="height: 70px; vertical-align: middle;">
                     </a>
                 </div>
                 
@@ -60,7 +61,7 @@
                         <span>Trusted by over 10,000 clients</span>
                     </div>
                     <h1 class="hero-title">
-                        Secure Transactions with <span class="gradient-text">Professional Escrow</span>
+                        Secure Your Transactions with <span class="gradient-text">e-confirm Escrow</span>
                     </h1>
                     <p class="hero-description">
                         Our escrow service ensures safe transactions between parties. We hold and regulate payment until all terms of an agreement are met.
@@ -113,19 +114,19 @@
                             <div class="form-group">
                                 <label for="transaction-amount">Transaction Amount</label>
                                 <div class="input-with-prefix">
-                                    <span class="prefix">$</span>
-                                    <input type="number" id="transaction-amount" name="transaction-amount" placeholder="Amount">
+                                    <span class="prefix">kes &nbsp;</span>
+                                    <input type="number" id="transaction-amount" name="transaction-amount" placeholder="Amount" class="w-100">
                                 </div>
                             </div>
                             
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="sender-email">Your Email</label>
-                                    <input type="email" id="sender-email" name="sender-email" placeholder="your@email.com">
+                                    <label for="sender-mobile">Your Mobile Number</label>
+                                    <input type="tel" id="sender-mobile" name="sender-mobile" placeholder="+254 723 000 000">
                                 </div>
                                 <div class="form-group">
-                                    <label for="receiver-email">Recipient Email</label>
-                                    <input type="email" id="receiver-email" name="receiver-email" placeholder="recipient@email.com">
+                                    <label for="receiver-mobile">Recipient Mobile Number</label>
+                                    <input type="tel" id="receiver-mobile" name="receiver-mobile" placeholder="+254 723 000 000">
                                 </div>
                             </div>
                             
@@ -133,9 +134,16 @@
                                 <label for="transaction-details">Transaction Details</label>
                                 <textarea id="transaction-details" name="transaction-details" rows="3" placeholder="Describe your transaction..."></textarea>
                             </div>
-                            
-                            <button type="submit" class="btn btn-primary btn-full">Start Escrow Process</button>
-                            
+
+                            <button type="submit" class="btn btn-primary btn-full">
+                                Fund Your Escrow
+                                <svg style="vertical-align: middle; margin-left: 8px;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                    <polyline points="12 5 19 12 12 19" />
+                                </svg>
+                            </button>
+                            <p style="text-align:center; margin:0 auto; font-size:10px;" id="mpesa-response" class="text-success"></p>
+
                             <p class="form-disclaimer">
                                 By submitting this form, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
                             </p>
@@ -147,7 +155,7 @@
     </section>
 
     <!-- Features Section -->
-    <section id="features" class="features">
+    <section id="features" class="features text-center">
         <div class="container">
             <div class="section-header animate-on-scroll">
                 <div class="section-badge">Why Choose Us</div>
@@ -155,80 +163,73 @@
                 <p>Our comprehensive escrow service is designed to provide security, convenience, and peace of mind for all types of transactions.</p>
             </div>
             
-            <div class="features-grid row">
-                <div class="col-md-4 mb-4">
-                    <div class="feature-card animate-on-scroll">
-                        <div class="feature-icon">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                            </svg>
-                        </div>
-                        <h3>Secure Transactions</h3>
-                        <p>Our escrow service protects both buyers and sellers with a secure and reliable payment system.</p>
+            <div class="features-grid row justify-content-center">
+                <div class="feature-card col-md-4 animate-on-scroll">
+                    <div class="feature-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
                     </div>
+                    <h3>Secure Transactions</h3>
+                    <p>Our escrow service protects both buyers and sellers with a secure and reliable payment system.</p>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <div class="feature-card animate-on-scroll">
-                        <div class="feature-icon">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                <circle cx="12" cy="16" r="1"/>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                            </svg>
-                        </div>
-                        <h3>Fraud Protection</h3>
-                        <p>Advanced security measures and verification processes to prevent fraud and scams.</p>
+                
+                <div class="feature-card col-md-4 animate-on-scroll">
+                    <div class="feature-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <circle cx="12" cy="16" r="1"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
                     </div>
+                    <h3>Fraud Protection</h3>
+                    <p>Advanced security measures and verification processes to prevent fraud and scams.</p>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <div class="feature-card animate-on-scroll">
-                        <div class="feature-icon">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <polyline points="12,6 12,12 16,14"/>
-                            </svg>
-                        </div>
-                        <h3>Quick Processing</h3>
-                        <p>Fast transaction processing with real-time updates on the status of your escrow.</p>
+                
+                <div class="feature-card col-md-4 animate-on-scroll">
+                    <div class="feature-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12,6 12,12 16,14"/>
+                        </svg>
                     </div>
+                    <h3>Quick Processing</h3>
+                    <p>Fast transaction processing with real-time updates on the status of your escrow.</p>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <div class="feature-card animate-on-scroll">
-                        <div class="feature-icon">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-                                <line x1="1" y1="10" x2="23" y2="10"/>
-                            </svg>
-                        </div>
-                        <h3>Multiple Payment Methods</h3>
-                        <p>Support for various payment methods including credit cards, bank transfers, and cryptocurrencies.</p>
+                
+                <div class="feature-card col-md-4 animate-on-scroll">
+                    <div class="feature-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                            <line x1="1" y1="10" x2="23" y2="10"/>
+                        </svg>
                     </div>
+                    <h3>Multiple Payment Methods</h3>
+                    <p>Support for various payment methods including credit cards, bank transfers, and cryptocurrencies.</p>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <div class="feature-card animate-on-scroll">
-                        <div class="feature-icon">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                <circle cx="9" cy="7" r="4"/>
-                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                            </svg>
-                        </div>
-                        <h3>Dispute Resolution</h3>
-                        <p>Professional mediation services to resolve disputes between parties fairly and efficiently.</p>
+                
+                <div class="feature-card col-md-4 animate-on-scroll">
+                    <div class="feature-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
                     </div>
+                    <h3>Dispute Resolution</h3>
+                    <p>Professional mediation services to resolve disputes between parties fairly and efficiently.</p>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <div class="feature-card animate-on-scroll">
-                        <div class="feature-icon">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="11" cy="11" r="8"/>
-                                <path d="M21 21l-4.35-4.35"/>
-                            </svg>
-                        </div>
-                        <h3>Full Transparency</h3>
-                        <p>Complete transparency with detailed transaction history and documentation.</p>
+                
+                <div class="feature-card col-md-4 animate-on-scroll">
+                    <div class="feature-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                        </svg>
                     </div>
+                    <h3>Full Transparency</h3>
+                    <p>Complete transparency with detailed transaction history and documentation.</p>
                 </div>
             </div>
         </div>
@@ -274,7 +275,7 @@
                                 <path d="M9 12l2 2 4-4"/>
                             </svg>
                         </div>
-                        <h3>3. We Verify Everything</h3>
+                        <h3>3. Verification</h3>
                         <p>We hold the funds securely while the seller delivers the goods or services as agreed upon.</p>
                     </div>
                     
@@ -432,6 +433,49 @@
             document.querySelectorAll('.animate-on-scroll').forEach(el => {
                 observer.observe(el);
             });
+        });
+
+        // AJAX submit for transaction form
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.querySelector('.transaction-form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const formData = new FormData(form);
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = 'Processing...';
+                    fetch('/submit-transaction', {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = 'Fund Your Escrow <svg style="vertical-align: middle; margin-left: 8px;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>';
+                        const mpesaResponse = document.getElementById('mpesa-response');
+                        if (data.success) {
+                            form.reset();
+                            mpesaResponse.textContent = data.message || 'Transaction submitted successfully!';
+                            mpesaResponse.classList.remove('text-warning');
+                            mpesaResponse.classList.add('text-success');
+                        } else {
+                            mpesaResponse.textContent = data.message || 'Submission failed. Please try again.';
+                            mpesaResponse.classList.remove('text-success');
+                            mpesaResponse.classList.add('text-warning');
+                        }
+                    })
+                    .catch(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = 'Fund Your Escrow <svg style="vertical-align: middle; margin-left: 8px;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>';
+                        alert('Submission failed. Please try again.');
+                    });
+                });
+            }
         });
     </script>
 </body>
