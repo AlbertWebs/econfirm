@@ -1,0 +1,104 @@
+:root {
+    --bs-primary: #18743c;
+    --bs-primary-rgb: 37, 99, 235;
+}
+
+.bg-primary {
+    background-color: var(--bs-primary) !important;
+}
+
+.text-primary {
+    color: var(--bs-primary) !important;
+}
+
+.btn-primary {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+.theme-color{
+    color: var(--bs-primary);
+}
+.btn-outline-primary {
+    color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+.progress-bar {
+    background-color: var(--bs-primary);
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--bs-primary);
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--bs-primary);
+    border-bottom-color: var(--bs-primary);
+}
+
+.transaction-item:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.2s ease;
+}
+
+.card {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.border-dashed {
+    border-style: dashed !important;
+}
+
+.fs-2 {
+    font-size: 2rem !important;
+}
+
+.rounded-circle {
+    border-radius: 50% !important;
+}
+
+.bg-opacity-10 {
+    --bs-bg-opacity: 0.1;
+}
+
+.bg-opacity-25 {
+    --bs-bg-opacity: 0.25;
+}
+
+.form-check-input:checked {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+@media (max-width: 768px) {
+    .transaction-item .row {
+        flex-direction: column;
+    }
+    
+    .transaction-item .col-lg-4 {
+        margin-top: 1rem;
+        text-align: left !important;
+    }
+    
+    .transaction-item .d-flex {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
