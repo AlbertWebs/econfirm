@@ -38,42 +38,6 @@
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
-
-        /* Search Transaction Popup Animation */
-        #searchTransactionPopup {
-          opacity: 0;
-          pointer-events: none;
-          transition: opacity 0.3s cubic-bezier(0.4,0,0.2,1);
-        }
-        #searchTransactionPopup.active {
-          opacity: 1;
-          pointer-events: auto;
-          display: flex !important;
-        }
-        #searchTransactionPopup .popup-content-anim {
-          animation: popupIn 0.4s cubic-bezier(0.4,0,0.2,1);
-        }
-        @keyframes popupIn {
-          0% { transform: scale(0.95) translateY(30px); opacity: 0; }
-          100% { transform: scale(1) translateY(0); opacity: 1; }
-        }
-        /* Loader spinner for search button */
-        .btn-loading {
-          position: relative;
-          pointer-events: none;
-          opacity: 0.7;
-        }
-        .btn-loading .spinner {
-          width: 18px;
-          height: 18px;
-          border: 2px solid #fff;
-          border-top: 2px solid #18743c;
-          border-radius: 50%;
-          display: inline-block;
-          vertical-align: middle;
-          margin-left: 8px;
-          animation: spin 0.7s linear infinite;
-        }
     </style>
 </head>
 <body>
@@ -113,7 +77,6 @@
                 <a href="#pricing">Pricing</a>
                 <a href="#faq">FAQ</a>
                 <button class="btn btn-outline">Log In</button>
-                
                 <button class="btn btn-primary">Custom Solutions</button>
             </nav>
         </div>
@@ -196,7 +159,7 @@
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; {{date('Y')}} Confirm Diligence Solutions. - All rights reserved.</p>
+                <p>&copy; 2025 e-confirm. All rights reserved.</p>
                 <div class="footer-badge">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
@@ -210,16 +173,17 @@
 
     <!-- Search Transaction Popup (Basic) -->
     <div id="searchTransactionPopup" style="display:none; position:fixed; z-index:1050; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); align-items:center; justify-content:center;">
-        <div class="popup-content-anim" style="background:#fff; border-radius:10px; max-width:350px; width:90%; margin:auto; padding:2rem 1.5rem; box-shadow:0 8px 32px rgba(0,0,0,0.18); position:relative;">
+        <div style="background:#fff; border-radius:10px; max-width:350px; width:90%; margin:auto; padding:2rem 1.5rem; box-shadow:0 8px 32px rgba(0,0,0,0.18); position:relative;">
             <button id="closeSearchPopup" style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.5rem; color:#888; cursor:pointer;">&times;</button>
             <h5 style="margin-bottom:1rem;">Search Transaction</h5>
             <form id="basic-search-transaction-form">
             <div class="form-group mb-3"> 
                 <label for="basic-search-transaction-id" class="form-label">Transaction ID</label>
+
                 <input type="text" class="form-control w-100" id="basic-search-transaction-id" name="transaction_id" placeholder="Enter Transaction ID" required>
             </div>
             <br>
-            <button type="submit" class="btn btn-outline w-100" id="search-btn">Search</button>
+            <button type="submit" class="btn btn-primary w-100">Search</button>
             </form>
             <div style="text-align: center; font-size:10px; line-height:1.2; padding-top: 10px;" id="basic-search-transaction-result" class="mt-3" style="display:none;"></div>
         </div>
@@ -228,28 +192,27 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"></script>
 
-   <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Toggle Mobile Menu
-    window.toggleMobileMenu = function () {
-        const mobileNav = document.getElementById('mobileNav');
-        if (mobileNav) {
+    <script>
+        function toggleMobileMenu() {
+            const mobileNav = document.getElementById('mobileNav');
             mobileNav.classList.toggle('active');
         }
-    };
 
-    // Smooth Scrolling for Anchor Links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({ behavior: 'smooth' });
-            }
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
         });
-    });
 
-    // On-scroll Animation using Intersection Observer
+        document.addEventListener('DOMContentLoaded', function() {
+    // On-scroll animation using Intersection Observer
     const observer = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -258,41 +221,42 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }, { threshold: 0.15 });
+    document.querySelectorAll('.animate-on-scroll').forEach(el => {
+        observer.observe(el);
+    });
 
-    document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
-
-    // Transaction Type Animation
-    const transactionType = document.getElementById('transaction-type');
-    const customTypeGroup = document.getElementById('custom-transaction-type-group');
+    // Transaction type animation
+    var transactionType = document.getElementById('transaction-type');
+    var customTypeGroup = document.getElementById('custom-transaction-type-group');
     if (transactionType && customTypeGroup) {
         customTypeGroup.style.display = transactionType.value === 'other' ? 'block' : 'none';
-
-        transactionType.addEventListener('change', function () {
+        transactionType.addEventListener('change', function() {
             if (this.value === 'other') {
                 customTypeGroup.style.display = 'block';
                 customTypeGroup.style.opacity = 0;
                 customTypeGroup.style.transition = 'opacity 0.4s cubic-bezier(0.4,0,0.2,1)';
-                setTimeout(() => { customTypeGroup.style.opacity = 1; }, 10);
+                setTimeout(function() {
+                    customTypeGroup.style.opacity = 1;
+                }, 10);
             } else {
                 customTypeGroup.style.opacity = 0;
                 customTypeGroup.style.transition = 'opacity 0.3s cubic-bezier(0.4,0,0.2,1)';
-                setTimeout(() => { customTypeGroup.style.display = 'none'; }, 300);
+                setTimeout(function() {
+                    customTypeGroup.style.display = 'none';
+                }, 300);
             }
         });
     }
 
-    // AJAX Submit for Transaction Form
+    // AJAX submit for transaction form
     const form = document.querySelector('.transaction-form');
     if (form) {
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const defaultBtnHTML = 'Fund Your Escrow <svg style="vertical-align: middle; margin-left: 8px;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>';
-
-        form.addEventListener('submit', function (e) {
+        form.addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(form);
+            const submitBtn = form.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
             submitBtn.innerHTML = 'Processing...';
-
             fetch('/submit-transaction', {
                 method: 'POST',
                 headers: {
@@ -304,154 +268,78 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(response => response.json())
             .then(data => {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = defaultBtnHTML;
-
+                submitBtn.innerHTML = 'Fund Your Escrow <svg style="vertical-align: middle; margin-left: 8px;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>';
                 const mpesaResponse = document.getElementById('mpesa-response');
-                if (mpesaResponse) {
-                    mpesaResponse.style.display = 'block';
-                    if (data.success && data.data && data.data.CheckoutRequestID) {
-                        form.reset();
-                        mpesaResponse.textContent = 'STK push sent. Waiting for payment confirmation...';
-                        mpesaResponse.className = 'alert alert-info';
-                        // Start polling for transaction status
-                        pollTransactionStatus(data.data.CheckoutRequestID);
-                    } else if (data.success) {
-                        mpesaResponse.textContent = data.message || 'Transaction submitted successfully!';
-                        mpesaResponse.className = 'alert alert-success';
-                    } else {
-                        mpesaResponse.textContent = data.message || 'Submission failed. Please try again.';
-                        mpesaResponse.className = 'alert alert-warning';
-                    }
+                mpesaResponse.style.display = 'block';
+                if (data.success) {
+                    form.reset();
+                    mpesaResponse.textContent = data.message || 'Transaction submitted successfully!';
+                    mpesaResponse.classList.remove('text-warning', 'alert-warning', 'alert-success');
+                    mpesaResponse.classList.add('alert', 'alert-success');
+                } else {
+                    mpesaResponse.textContent = data.message || 'Submission failed. Please try again.';
+                    mpesaResponse.classList.remove('text-success', 'alert-success', 'alert-warning');
+                    mpesaResponse.classList.add('alert', 'alert-warning');
                 }
             })
             .catch(() => {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = defaultBtnHTML;
+                submitBtn.innerHTML = 'Fund Your Escrow <svg style="vertical-align: middle; margin-left: 8px;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>';
                 alert('Submission failed. Please try again.');
             });
         });
     }
 
-    // Polling function for transaction status
-    function pollTransactionStatus(checkoutRequestId) {
-        let pollInterval = 5000; // 5 seconds
-        let maxAttempts = 24; // 2 minutes
-        let attempts = 0;
-        const mpesaResponse = document.getElementById('mpesa-response');
-        const poll = setInterval(() => {
-            attempts++;
-            fetch(`/transaction/status/${checkoutRequestId}`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'completed' || data.status === 'Success') {
-                    clearInterval(poll);
-                    if (mpesaResponse) {
-                        mpesaResponse.textContent = 'Payment received! Redirecting...';
-                        mpesaResponse.className = 'alert alert-success';
-                    }
-                    setTimeout(() => {
-                        window.location.href = `/get-transaction/${data.transaction_id || checkoutRequestId}`;
-                    }, 1500);
-                } else if (data.status === 'Failed') {
-                    clearInterval(poll);
-                    if (mpesaResponse) {
-                        mpesaResponse.textContent = 'Payment failed. Please try again.';
-                        mpesaResponse.className = 'alert alert-danger';
-                    }
-                } else if (attempts >= maxAttempts) {
-                    clearInterval(poll);
-                    if (mpesaResponse) {
-                        mpesaResponse.textContent = 'Payment confirmation timed out. Please check your transaction status later.';
-                        mpesaResponse.className = 'alert alert-warning';
-                    }
-                }
-            })
-            .catch(() => {
-                if (attempts >= maxAttempts) {
-                    clearInterval(poll);
-                    if (mpesaResponse) {
-                        mpesaResponse.textContent = 'Payment confirmation timed out. Please check your transaction status later.';
-                        mpesaResponse.className = 'alert alert-warning';
-                    }
-                }
-            });
-        }, pollInterval);
-    }
-
-    // Show Popup for Search Transaction
-    const searchBtn = document.getElementById('search-transaction-btn');
-    const popup = document.getElementById('searchTransactionPopup');
-    const closeBtn = document.getElementById('closeSearchPopup');
-    const popupContent = popup?.querySelector('.popup-content-anim');
-
+    // Show popup for search transaction
+    var searchBtn = document.getElementById('search-transaction-btn');
+    var popup = document.getElementById('searchTransactionPopup');
+    var closeBtn = document.getElementById('closeSearchPopup');
     if (searchBtn && popup) {
-        searchBtn.addEventListener('click', function (e) {
+        searchBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            popup.classList.add('active');
-            if (popupContent) {
-                popupContent.classList.remove('popupIn');
-                void popupContent.offsetWidth;
-                popupContent.classList.add('popupIn');
-            }
+            popup.style.display = 'flex';
         });
     }
-
     if (closeBtn && popup) {
-        closeBtn.addEventListener('click', function () {
-            popup.classList.remove('active');
+        closeBtn.addEventListener('click', function() {
+            popup.style.display = 'none';
         });
     }
-
     if (popup) {
-        popup.addEventListener('click', function (e) {
-            if (e.target === popup) popup.classList.remove('active');
+        popup.addEventListener('click', function(e) {
+            if (e.target === popup) popup.style.display = 'none';
         });
     }
-
-    // Basic AJAX Search with Loading Spinner
-    const basicForm = document.getElementById('basic-search-transaction-form');
+    // Basic AJAX search
+    var basicForm = document.getElementById('basic-search-transaction-form');
     if (basicForm) {
-        basicForm.addEventListener('submit', function (e) {
+        basicForm.addEventListener('submit', function(e) {
             e.preventDefault();
-
-            const resultDiv = document.getElementById('basic-search-transaction-result');
-            const idInput = document.getElementById('basic-search-transaction-id');
-            const btn = document.getElementById('search-btn');
-
+            var resultDiv = document.getElementById('basic-search-transaction-result');
             resultDiv.style.display = 'none';
             resultDiv.innerHTML = '';
-
-            const id = idInput?.value.trim();
+            var id = document.getElementById('basic-search-transaction-id').value.trim();
             if (!id) return;
-
-            // Show loading spinner
-            btn.classList.add('btn-loading');
-            btn.innerHTML = 'Searching <span class="spinner"></span>';
-
             fetch(`/transaction/search?id=${encodeURIComponent(id)}`, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(res => res.json())
             .then(data => {
-                btn.classList.remove('btn-loading');
-                btn.innerHTML = 'Search';
                 resultDiv.style.display = 'block';
-
+                // Support both array and object response
                 let transaction = null;
                 if (data.transaction) {
                     transaction = data.transaction;
-                } else if (Array.isArray(data.data) && data.data.length > 0) {
+                } else if (data.data && Array.isArray(data.data) && data.data.length > 0) {
                     transaction = data.data[0];
                 }
-
                 if (data.success && transaction) {
                     resultDiv.className = 'alert alert-success';
                     resultDiv.innerHTML = `<strong>Transaction Found:</strong><br>ID: ${transaction.transaction_id || transaction.id}<br>Status: ${transaction.status}`;
+                    // Show the button after 3 seconds
                     setTimeout(() => {
                         const viewId = transaction.transaction_id || transaction.id;
-                        resultDiv.innerHTML += `<br><a href="/get-transaction/${viewId}" class="btn btn-outline mt-2 small-btn">View Details <i class='fas fa-arrow-right' style='margin-left:6px;'></i></a>`;
+                        resultDiv.innerHTML += `<br><a href="/transaction/${viewId}" class="btn btn-primary mt-2">View Details</a>`;
                     }, 3000);
                 } else {
                     resultDiv.className = 'alert alert-warning';
@@ -459,8 +347,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             })
             .catch(() => {
-                btn.classList.remove('btn-loading');
-                btn.innerHTML = 'Search';
                 resultDiv.style.display = 'block';
                 resultDiv.className = 'alert alert-danger';
                 resultDiv.textContent = 'Error searching transaction.';
@@ -468,18 +354,17 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Preloader Hide on Page Load
-    window.addEventListener('load', function () {
-        const preloader = document.getElementById('preloader');
+    // Preloader hide on page load
+    window.addEventListener('load', function() {
+        var preloader = document.getElementById('preloader');
         if (preloader) {
             preloader.style.opacity = 0;
-            setTimeout(() => {
+            setTimeout(function() {
                 preloader.style.display = 'none';
             }, 400);
         }
     });
 });
-</script>
-
+    </script>
 </body>
 </html>

@@ -62,12 +62,32 @@
                                 <label for="transaction-type">Transaction Type</label>
                                 <select id="transaction-type" name="transaction-type">
                                     <option value="">Select a transaction type</option>
-                                    <option value="real-estate">Real Estate</option>
-                                    <option value="vehicle">Vehicle</option>
-                                    <option value="business">Business</option>
-                                    <option value="personal">Personal</option>
+                                    <option value="ecommerce">E-commerce Marketplace Transactions</option>
+                                    <option value="services">Professional Services (Consulting, Legal, Accounting)</option>
+                                    <option value="real-estate">Real Estate (Land, Plots, Rentals)</option>
+                                    <option value="vehicle">Vehicle Sales (Cars, Motorbikes, Trucks)</option>
+                                    <option value="business">Business Transfers & Partnerships</option>
+                                    <option value="freelance">Freelance Work & Digital Services</option>
+                                    <option value="goods">High-Value Goods (Electronics, Machinery, Furniture)</option>
+                                    <option value="construction">Construction & Renovation Projects</option>
+                                    <option value="agriculture">Agricultural Produce & Equipment</option>
+                                    <option value="legal">Legal Settlements & Compensation</option>
+                                    <option value="import-export">Import/Export Transactions</option>
+                                    <option value="tenders">Government or Corporate Tender Payments</option>
+                                    <option value="education">Education Payments (International Tuition, School Fees)</option>
+                                    <option value="personal">Personal Loans & Informal Lending</option>
+                                    <option value="crypto">Crypto & Forex Trading Agreements</option>
+                                    <option value="rentals">Equipment & Property Rentals</option>   
+                                    <option value="charity">Charity Donations & Fundraising</option>
+                                    <option value="events">Event Ticket Sales & Bookings</option>
+                                    <option value="subscriptions">Subscription Services (Software, Memberships)</option>
+                                    <option value="affiliate">Affiliate Marketing Payments</option>
                                     <option value="other">Other</option>
                                 </select>
+                            </div>
+                            <div class="form-group" id="custom-transaction-type-group" style="display:none;">
+                                <label for="custom-transaction-type">Specify Transaction Type</label>
+                                <input type="text" id="custom-transaction-type" name="custom-transaction-type" placeholder="Enter custom transaction type" class="w-100">
                             </div>
                             
                             <div class="form-group">
@@ -322,3 +342,4 @@
         </div>
     </section>
 @endsection
+

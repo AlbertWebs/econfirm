@@ -13,45 +13,52 @@ class MpesaService
      * @param Transaction $transaction
      * @return array
      */
-    public function stkPush(Transaction $transaction): array
+  public function stkPush(Transaction $transaction): array
     {
-        // TODO: Replace with your actual M-Pesa credentials and logic
-        // Example payload (customize as needed)
+        $timestamp = now()->format('YmdHis');
+        $password = base64_encode(config('mpesa.shortcode') . config('mpesa.passkey') . $timestamp);
+
         $payload = [
             'BusinessShortCode' => config('mpesa.shortcode'),
-            'Password' => base64_encode(config('mpesa.shortcode') . config('mpesa.passkey') . now()->format('YmdHis')),
-            'Timestamp' => now()->format('YmdHis'),
+            'Password' => $password,
+            'Timestamp' => $timestamp,
             'TransactionType' => 'CustomerPayBillOnline',
             'Amount' => (int) preg_replace('/[\s+]/', '', $transaction->transaction_amount),
             'PartyA' => preg_replace('/[\s+]/', '', $transaction->sender_mobile),
             'PartyB' => config('mpesa.shortcode'),
             'PhoneNumber' => preg_replace('/[\s+]/', '', $transaction->sender_mobile),
-            'CallBackURL' => config('mpesa.callback_url', url('/mpesa/callback')),
-            'AccountReference' => 'Escrow-Entry-' . $transaction->id,
+            'CallBackURL' => config('mpesa.callback_url', url('/api/mpesa/callback')), // Ensure correct path
+            'AccountReference' => $transaction->transaction_id,
             'TransactionDesc' => $transaction->transaction_details ?? 'Escrow Payment',
         ];
 
-        // Example endpoint (sandbox)
         $endpoint = config('mpesa.stk_url', 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest');
         $token = $this->getAccessToken();
 
-        $response = Http::withToken($token)
-            ->acceptJson()
-            ->post($endpoint, $payload);
+        $response = Http::withToken($token)->acceptJson()->post($endpoint, $payload);
 
         if ($response->successful() && isset($response['ResponseCode']) && $response['ResponseCode'] == '0') {
+            $responseData = $response->json();
+
+            // Save CheckoutRequestID and MerchantRequestID
+            $transaction->checkout_request_id = $responseData['CheckoutRequestID'];
+            $transaction->merchant_request_id = $responseData['MerchantRequestID'];
+            $transaction->save();
+
             return [
                 'success' => true,
                 'message' => 'STK push initiated.',
-                'data' => $response->json(),
+                'data' => $responseData,
             ];
         }
+
         return [
             'success' => false,
             'message' => $response['errorMessage'] ?? 'STK push failed.',
             'data' => $response->json(),
         ];
     }
+
 
     /**
      * Simulate C2B Payment (Customer to Business)

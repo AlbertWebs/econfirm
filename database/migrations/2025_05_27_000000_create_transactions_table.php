@@ -13,11 +13,16 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
+            $table->string('transaction_id')->unique();
             $table->string('transaction_type');
             $table->decimal('transaction_amount', 15, 2);
             $table->string('sender_mobile');
             $table->string('receiver_mobile');
             $table->text('transaction_details')->nullable();
+            $table->string('checkout_request_id')->nullable();
+            $table->string('merchant_request_id')->nullable();
+            $table->json('callback_metadata')->nullable();
+            $table->string('result_desc')->nullable();
             $table->string('status')->default('pending');
             $table->timestamps();
         });
