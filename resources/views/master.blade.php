@@ -3,8 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureEscrow - Trusted Escrow Services</title>
-    <meta name="description" content="Professional escrow services for secure transactions. We provide safe, reliable escrow solutions for real estate, vehicles, businesses, and more.">
+   {{-- --}}
+    <!-- Primary Meta Tags -->
+    <title>Secure Peer-to-Peer Payments in Kenya | eConfirm Escrow Services</title>
+    <meta name="description" content="eConfirm protects your transactions with reliable escrow services in Kenya. Make secure peer-to-peer payments for goods, services, or contracts with full confidence.">
+    <meta name="keywords" content="escrow services Kenya, peer to peer payments, secure payments Kenya, online escrow Kenya, transaction protection Kenya, eConfirm escrow, payment security Kenya, escrow platform Kenya, safe online transactions, protect buyer seller transactions">
+    <meta name="author" content="eConfirm">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://econfirm.co.ke/">
+    <meta property="og:title" content="Secure Peer-to-Peer Payments in Kenya | eConfirm Escrow Services">
+    <meta property="og:description" content="Protect your peer-to-peer transactions with eConfirm, Kenya's trusted escrow platform for secure payments.">
+    <meta property="og:image" content="https://econfirm.co.ke/assets/images/social-share.jpg">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://econfirm.co.ke/">
+    <meta name="twitter:title" content="Secure Peer-to-Peer Payments in Kenya | eConfirm Escrow Services">
+    <meta name="twitter:description" content="eConfirm helps individuals and businesses in Kenya secure payments for goods, services, and contracts using escrow.">
+    <meta name="twitter:image" content="https://econfirm.co.ke/assets/images/social-share.jpg">
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://econfirm.co.ke/">
+
+    <!-- Schema.org JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "eConfirm",
+        "url": "https://econfirm.co.ke",
+        "logo": "https://econfirm.co.ke/assets/images/logo.png",
+        "description": "eConfirm is an escrow platform in Kenya helping individuals and businesses protect peer-to-peer payments for goods and services.",
+        "sameAs": [
+            "https://www.facebook.com/econfirmke",
+            "https://www.linkedin.com/company/econfirm"
+        ]
+    }
+    </script>
+
+   {{--  --}}
+   
     <link rel="stylesheet" href="{{asset('theme/style.css')}}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
