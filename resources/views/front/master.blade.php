@@ -227,10 +227,10 @@
                 <div class="footer-column">
                     <h3>Legal</h3>
                     <ul>
-                        <li><a href="#">Terms of Service</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Security</a></li>
-                        <li><a href="#">Compliance</a></li>
+                        <li><a href="{{ route('terms.conditions') }}">Terms of Service</a></li>
+                        <li><a href="{{ route('privacy.policy') }}">Privacy Policy</a></li>
+                        <li><a href="{{ route('security') }}">Security</a></li>
+                        <li><a href="{{ route('complience') }}">Compliance</a></li>
                     </ul>
                 </div>
             </div>
@@ -349,15 +349,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 const mpesaResponse = document.getElementById('mpesa-response');
                 if (mpesaResponse) {
                     mpesaResponse.style.display = 'block';
-                    if (data.success && data.data && data.data.CheckoutRequestID) {
+                    if (data.success) {
                         form.reset();
                         mpesaResponse.textContent = 'STK push sent. Waiting for payment confirmation...';
-                        mpesaResponse.className = 'alert alert-info';
-                        // Start polling for transaction status
-                        pollTransactionStatus(data.data.CheckoutRequestID);
-                    } else if (data.success) {
-                        mpesaResponse.textContent = data.message || 'Transaction submitted successfully!';
                         mpesaResponse.className = 'alert alert-success';
+                        // Check for CheckoutRequestID before polling
+                        const checkoutRequestId = data.CheckoutRequestID || (data.data && data.data.CheckoutRequestID);
+                        if (checkoutRequestId) {
+                            pollTransactionStatus(checkoutRequestId);
+                        }
                     } else {
                         mpesaResponse.textContent = data.message || 'Submission failed. Please try again.';
                         mpesaResponse.className = 'alert alert-warning';
@@ -377,6 +377,8 @@ document.addEventListener('DOMContentLoaded', function () {
         let pollInterval = 5000; // 5 seconds
         let maxAttempts = 24; // 2 minutes
         let attempts = 0;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = 'Waiting for confirmation...';
         const mpesaResponse = document.getElementById('mpesa-response');
         const poll = setInterval(() => {
             attempts++;
@@ -392,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         mpesaResponse.className = 'alert alert-success';
                     }
                     setTimeout(() => {
-                        window.location.href = `/get-transaction/${data.transaction_id || checkoutRequestId}`;
+                        window.location.href = `/get-transaction/${data.transaction_id}`; //only work with transaction_id
                     }, 1500);
                 } else if (data.status === 'Failed') {
                     clearInterval(poll);

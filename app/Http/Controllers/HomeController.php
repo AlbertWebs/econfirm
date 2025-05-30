@@ -6,9 +6,35 @@ use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Services\MpesaService;
+use App\Models\MpesaStkPush;
 
 class HomeController extends Controller
 {
+    public function index()
+    {
+        return view('front.welcome');
+    }
+
+     //Legalities
+    public function termsAndConditions()
+    {
+        return view('front.terms-and-conditions');
+    }
+
+    public function privacyPolicy()
+    {
+        return view('front.privacy-policy');
+    }
+
+    public function complience()
+    {
+        return view('front.complience');
+    }
+    public function security()
+    {
+        return view('front.security');
+    }
+
     //generateUniqueTransactionId
     private function generateUniqueTransactionId(): string
     {
@@ -42,6 +68,10 @@ class HomeController extends Controller
             'transaction_details' => $validated['transaction-details'] ?? null,
             'status' => 'pending',
         ]);
+        //i want to save the chackout_request_id and merchant_request_id to the transaction from mpesa service
+        $transaction->checkout_request_id = null; // Initialize as null
+        $transaction->merchant_request_id = null; // Initialize as null
+        $transaction->save();
 
         // Use MpesaService for STK push
         $mpesa = new MpesaService();
@@ -50,10 +80,13 @@ class HomeController extends Controller
 
         if ($mpesaResponse['success']) {
             $transaction->status = 'stk_initiated';
+            $transaction->checkout_request_id = $mpesaResponse['data']['CheckoutRequestID'] ?? null;
+            $transaction->merchant_request_id = $mpesaResponse['data']['MerchantRequestID'] ?? null;
             $transaction->save();
             return response()->json([
                 'success' => true,
                 'message' => 'Transaction submitted and STK push initiated! Check your phone for pin confirmation.',
+                'CheckoutRequestID' => $mpesaResponse['data']['CheckoutRequestID'] ?? null,
             ]);
         } else {
             $transaction->status = 'stk_failed';
@@ -75,9 +108,9 @@ class HomeController extends Controller
                 'message' => 'Transaction not found.',
             ]);
         }
-
+        $stkPush = MpesaStkPush::where('checkout_request_id', $transaction->checkout_request_id)->first();
        //Return a view to approve the transaction
-        return view('approve-transaction', compact('transaction'));
+        return view('process.approve-transaction', compact('transaction', 'stkPush'));
     }
 
 
@@ -91,8 +124,10 @@ class HomeController extends Controller
                 'message' => 'Transaction not found.',
             ]);
         }
-        return view('transaction', compact('transaction'));
-     
+        //Get stk where checkout_request_id is the same as the transaction checkout_request_id
+        $stkPush = MpesaStkPush::where('checkout_request_id', $transaction->checkout_request_id)->first();
+        return view('process.transaction', compact('transaction', 'stkPush'));
+
     }
 
     //searchTransactions
@@ -112,7 +147,31 @@ class HomeController extends Controller
                 'data' => $transactions,
             ]);
         }
-
-       
     }
+
+    
+    public function transactionStatus($id)
+    {
+        $StkPush = MpesaStkPush::where('checkout_request_id', $id)->first();
+        if ($StkPush && $StkPush->status === 'Success') {
+            $transaction = Transaction::where('checkout_request_id', $id)->first();
+            if ($transaction) {
+                $transaction->status = 'Escrow Funded';
+                $transaction->save();
+            }
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaction successful.',
+                'transaction_id' => $transaction->transaction_id ?? null,
+                'status' => $StkPush->status,
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Transaction not found or not successful.',
+            ]);
+        }
+    }
+
+   
 }

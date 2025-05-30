@@ -1,4 +1,4 @@
-@extends('master')
+@extends('front.master')
 
 @section('content')
        <!-- Hero Section -->
@@ -124,7 +124,7 @@
                             <p style="text-align:center; margin:0 auto; font-size:10px; display:none;" id="mpesa-response"></p>
 
                             <p class="form-disclaimer">
-                                By submitting this form, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+                                By submitting this form, you agree to our <a target="new" href="{{route('terms.conditions')}}">Terms of Service</a> and <a target="new" href="{{route('privacy.policy')}}">Privacy Policy</a>.
                             </p>
                         </form>
                     </div>
@@ -177,8 +177,21 @@
                     <h3>Quick Processing</h3>
                     <p>Fast transaction processing with real-time updates on the status of your escrow.</p>
                 </div>
+
+                 <div class="feature-card col-md-4 animate-on-scroll">
+                    <div class="feature-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <h3>Dispute Resolution</h3>
+                    <p>Professional mediation services to resolve disputes between parties fairly and efficiently.</p>
+                </div>
                 
-                <div class="feature-card col-md-4 animate-on-scroll">
+                {{-- <div class="feature-card col-md-4 animate-on-scroll">
                     <div class="feature-icon">
                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
@@ -211,7 +224,7 @@
                     </div>
                     <h3>Full Transparency</h3>
                     <p>Complete transparency with detailed transaction history and documentation.</p>
-                </div>
+                </div> --}}
             </div>
         </div>
     </section>

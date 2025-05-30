@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use App\Models\Transaction;
+use App\Models\MpesaStkPush;
 
 class MpesaService
 {
@@ -27,7 +28,7 @@ class MpesaService
             'PartyA' => preg_replace('/[\s+]/', '', $transaction->sender_mobile),
             'PartyB' => config('mpesa.shortcode'),
             'PhoneNumber' => preg_replace('/[\s+]/', '', $transaction->sender_mobile),
-            'CallBackURL' => config('mpesa.callback_url', url('/api/mpesa/callback')), // Ensure correct path
+            'CallBackURL' => config('mpesa.callback_url'), // Ensure correct path
             'AccountReference' => $transaction->transaction_id,
             'TransactionDesc' => $transaction->transaction_details ?? 'Escrow Payment',
         ];
@@ -41,9 +42,15 @@ class MpesaService
             $responseData = $response->json();
 
             // Save CheckoutRequestID and MerchantRequestID
-            $transaction->checkout_request_id = $responseData['CheckoutRequestID'];
-            $transaction->merchant_request_id = $responseData['MerchantRequestID'];
-            $transaction->save();
+            $MpesaStkPush = new MpesaStkPush();
+            $MpesaStkPush->phone = $transaction->sender_mobile;
+            $MpesaStkPush->amount = $transaction->transaction_amount;
+            $MpesaStkPush->reference = $transaction->transaction_id;
+            $MpesaStkPush->description = $transaction->transaction_details ?? 'Escrow Payment';
+            $MpesaStkPush->status = 'Pending';
+            $MpesaStkPush->checkout_request_id = $responseData['CheckoutRequestID'];
+            $MpesaStkPush->merchant_request_id = $responseData['MerchantRequestID'];
+            $MpesaStkPush->save();
 
             return [
                 'success' => true,

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Models\MpesaStkPush; // Assuming you have a model for M-Pesa STK Push transactions
 
 class MpesaController extends Controller
 {
@@ -30,7 +31,7 @@ class MpesaController extends Controller
     $transaction = MpesaStkPush::where('checkout_request_id', $checkoutRequestID)->first();
 
     if ($transaction) {
-        $transaction->status = ($resultCode == 0) ? 'completed' : 'failed';
+        $transaction->status = ($resultCode == 0) ? 'Success' : 'Failed';  //datatype is enum ('Pending', 'Success', 'Failed') can you change it to enum
         $transaction->result_desc = $resultDesc;
         $transaction->callback_metadata = $callbackMetadata;
         $transaction->save();
