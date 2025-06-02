@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Third Party Services
@@ -35,4 +34,11 @@ return [
         ],
     ],
 
+    'sms' => [
+        'api_url'   => env('SMS_API_URL', 'https://smsportal.hostpinnacle.co.ke/SMSApi/send'),
+        'api_key'   => env('SMS_API_KEY'),
+        'user_id'   => env('SMS_USER_ID'),
+        'password'  => env('SMS_PASSWORD'),
+        'sender_id' => env('SMS_SENDER_ID'),
+    ],
 ];

@@ -366,12 +366,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (mpesaResponse) {
                     mpesaResponse.style.display = 'block';
                     if (data.success) {
-                        form.reset();
+                        
                         mpesaResponse.textContent = 'STK push sent. Waiting for payment confirmation...';
                         mpesaResponse.className = 'alert alert-success';
                         // Check for CheckoutRequestID before polling
                         const checkoutRequestId = data.CheckoutRequestID || (data.data && data.data.CheckoutRequestID);
                         if (checkoutRequestId) {
+                            form.reset();
                             pollTransactionStatus(checkoutRequestId);
                         }
                     } else {
@@ -509,7 +510,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     resultDiv.innerHTML = `<strong>Transaction Found:</strong><br>ID: ${transaction.transaction_id || transaction.id}<br>Status: ${transaction.status}`;
                     setTimeout(() => {
                         const viewId = transaction.transaction_id || transaction.id;
-                        resultDiv.innerHTML += `<br><a href="/get-transaction/${viewId}" class="btn btn-outline mt-2 small-btn">View Details <i class='fas fa-arrow-right' style='margin-left:6px;'></i></a>`;
+                        resultDiv.innerHTML += `<br><a href="/get-transaction/${viewId}" class="btn btn-outline mt-2 small-btn">View Transaction <i class='fas fa-arrow-right' style='margin-left:6px;'></i></a>`;
                     }, 3000);
                 } else {
                     resultDiv.className = 'alert alert-warning';

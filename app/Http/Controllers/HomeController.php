@@ -104,6 +104,38 @@ class HomeController extends Controller
         }
     }
 
+     public function transactionStatus($id)
+    {
+        $StkPush = MpesaStkPush::where('checkout_request_id', $id)->first();
+        if ($StkPush && $StkPush->status === 'Success') {
+            $transaction = Transaction::where('checkout_request_id', $id)->first();
+            if ($transaction) {
+                $transaction->status = 'Escrow Funded';
+                $transaction->save();
+            }
+            //send sms to the sender and receiver
+            $mpesaService = new MpesaService();
+            $mpesaService->sendSms($transaction->sender_mobile, "Your transaction with ID {$transaction->transaction_id} has been successfully funded.");
+            //if payment_method is mpesa, send sms to the receiver else send to receiver and include that the transaction will be sent to paybill/till paybill_till_number
+            if ($transaction->payment_method === 'mpesa') {
+                $mpesaService->sendSms($transaction->receiver_mobile, "You have received a transaction with ID {$transaction->transaction_id}, Amount: {$transaction->transaction_amount} that has been successfully funded.");
+            } else {
+                $mpesaService->sendSms($transaction->receiver_mobile, "You have received a transaction with ID {$transaction->transaction_id}, Amount: {$transaction->transaction_amount} that will be sent to Paybill/Till Number: {$transaction->paybill_till_number}.");
+            }
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaction successful.',
+                'transaction_id' => $transaction->transaction_id ?? null,
+                'status' => $StkPush->status,
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Transaction not found or not successful.',
+            ]);
+        }
+    }
+
     //approveTransaction(id)
     public function approveTransaction($id)
     {
@@ -156,28 +188,7 @@ class HomeController extends Controller
     }
 
     
-    public function transactionStatus($id)
-    {
-        $StkPush = MpesaStkPush::where('checkout_request_id', $id)->first();
-        if ($StkPush && $StkPush->status === 'Success') {
-            $transaction = Transaction::where('checkout_request_id', $id)->first();
-            if ($transaction) {
-                $transaction->status = 'Escrow Funded';
-                $transaction->save();
-            }
-            return response()->json([
-                'success' => true,
-                'message' => 'Transaction successful.',
-                'transaction_id' => $transaction->transaction_id ?? null,
-                'status' => $StkPush->status,
-            ]);
-        } else {
-            return response()->json([
-                'success' => false,
-                'message' => 'Transaction not found or not successful.',
-            ]);
-        }
-    }
+   
 
    
 }
