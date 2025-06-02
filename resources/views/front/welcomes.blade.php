@@ -90,46 +90,22 @@
                                 <input type="text" id="custom-transaction-type" name="custom-transaction-type" placeholder="Enter custom transaction type" class="w-100">
                             </div>
                             
-                            {{-- <div class="form-group">
+                            <div class="form-group">
                                 <label for="transaction-amount">Transaction Amount</label>
                                 <div class="input-with-prefix">
                                     <span class="prefix">kes &nbsp;</span>
                                     <input type="number" id="transaction-amount" name="transaction-amount" placeholder="Amount" class="w-100">
                                 </div>
-                            </div> --}}
-
-                            <div class="form-row">
-                                
-                                <div class="form-group">
-                                    <label for="payment-method">Payment Method</label>
-                                    <select id="payment-method" name="payment-method">
-                                        <option value="mpesa">M-Pesa Number</option>
-                                        <option value="paybill">Paybill/Buy Goods</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="transaction-amount">Transaction Amount</label>
-                                    <div class="input-with-prefix">
-                                        <span class="prefix">kes &nbsp;</span>
-                                        <input type="number" id="transaction-amount" name="transaction-amount" placeholder="Amount" class="w-100">
-                                    </div>
-                                </div>
                             </div>
-                            <div class="form-group" id="paybill-till-group" style="display:none;">
-                                <label for="paybill-till-number">Buy Goods or Paybill Number</label>
-                                <div>
-                                    <input type="text" id="paybill-till-number" name="paybill-till-number" value="{{ old('paybill-till-number') }}" placeholder="Buy Goods or Paybill Number" class="w-100">
-                                </div>
-                            </div> 
                             
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="sender-mobile">Your Mobile Number</label>
-                                    <input type="tel" id="sender-mobile" name="sender-mobile" placeholder="+254723000000">
+                                    <input type="tel" id="sender-mobile" name="sender-mobile" placeholder="+254 723 000 000">
                                 </div>
                                 <div class="form-group">
                                     <label for="receiver-mobile">Recipient Mobile Number</label>
-                                    <input type="tel" id="receiver-mobile" name="receiver-mobile" placeholder="+254723000000">
+                                    <input type="tel" id="receiver-mobile" name="receiver-mobile" placeholder="+254 723 000 000">
                                 </div>
                             </div>
                             
@@ -379,6 +355,4 @@
         </div>
     </section>
 @endsection
-
-
 

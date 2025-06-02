@@ -49,6 +49,8 @@ class HomeController extends Controller
         // Create code to generate unique transaction ID and check if it exists, if it exists, generate a new one the format is ESCROW-ENTRY-veryrandom5-digitnumber
         $transactionId = $this->generateUniqueTransactionId();
 
+    
+        // dd($request->all()); // Debugging line, remove in production
         // Validate input
         $validated = $request->validate([
             'transaction-type' => 'required|string',
@@ -56,11 +58,14 @@ class HomeController extends Controller
             'sender-mobile' => 'required|string',
             'receiver-mobile' => 'required|string',
             'transaction-details' => 'nullable|string',
+            'payment-method' => 'required|string',
         ]);
 
         // Save transaction to database add transaction_id to the transaction
         $transaction = Transaction::create([
             'transaction_id' => $transactionId,
+            'payment_method' => $validated['payment-method'],
+            'paybill_till_number' => $request['paybill-till-number'],
             'transaction_type' => $validated['transaction-type'],
             'transaction_amount' => $validated['transaction-amount'],
             'sender_mobile' => $validated['sender-mobile'],
@@ -73,6 +78,7 @@ class HomeController extends Controller
         $transaction->merchant_request_id = null; // Initialize as null
         $transaction->save();
 
+    
         // Use MpesaService for STK push
         $mpesa = new MpesaService();
         $mpesaResponse = $mpesa->stkPush($transaction);
