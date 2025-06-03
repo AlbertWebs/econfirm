@@ -27,7 +27,8 @@
         <div class="card-body">
             <div class="row mb-4">
                 <div class="col-md-6 mb-3 mb-md-0">
-                    <h6 class="text-muted">Type</h6>
+                  
+                     <h6 class="text-muted">Type</h6>
                     <div class="fw-bold">{{ $transaction->transaction_type ?? '-' }}</div>
                 </div>
                 <div class="col-md-6">
@@ -36,14 +37,23 @@
                 </div>
             </div>
             <div class="row mb-4">
-                <div class="col-md-6 mb-3 mb-md-0">
-                    <h6 class="text-muted">Amount</h6>
+                <div class="col-md-6 mb-md-0">
+                    <h6 class="text-muted">Amount Funded</h6>
                     <div class="fw-bold">KES {{ number_format($transaction->transaction_amount ?? 0, 2) }}</div>
+                    <h6 class="text-muted">Escrow Fee</h6>
+                    <div class="fw-bold">KES {{ number_format($transaction->transaction_fee ?? 0, 2) }}</div>
+                    
                 </div>
                 <div class="col-md-6">
                     <h6 class="text-muted">Parties</h6>
                     <div><strong>Sender:</strong> {{ $transaction->sender_mobile ?? '-' }}</div>
-                    <div><strong>Recipient:</strong> {{ $transaction->receiver_mobile ?? '-' }}</div>
+                    {{-- if payment method is m-pesa Recipient is the paybill-till-number but just show the recipient as the contact number --}}
+
+                    @if($transaction->payment_method === 'mpesa')
+                        <div><strong>Recipient:</strong> {{ $transaction->receiver_mobile ?? '-' }}</div>
+                    @else
+                    <div><strong>Recipient Contact:</strong> {{ $transaction->receiver_mobile ?? '-' }} &nbsp; &nbsp; <strong>Paybill/Till:</strong> {{ $transaction->paybill_till_number ?? '-' }}</div>
+                    @endif
                 </div>
             </div>
             <div class="mb-4">
@@ -58,7 +68,7 @@
                         $progress = 0;
                     } elseif ($transaction->status === 'Escrow Funded') {
                         $progress = 50;
-                    } elseif ($transaction->status === 'completed') {
+                    } elseif ($transaction->status === 'Completed') {
                         $progress = 100;
                     }
                 @endphp
@@ -70,7 +80,7 @@
             <div class="d-flex gap-2">
                 <a href="{{ route('home') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i> Back</a>
                 @if($transaction->status === 'pending' || $transaction->status === 'Escrow Funded')
-                    <a href="{{ route('transaction.approve', $transaction->transaction_id) }}" class="btn btn-success"><i class="fas fa-check me-1"></i> Approve</a>
+                    <a href="{{ route('approve.transaction', $transaction->transaction_id) }}" class="btn btn-success"><i class="fas fa-check me-1"></i> Approve</a>
                     <button class="btn btn-danger"><i class="fas fa-times me-1"></i> Cancel</button>
                 @endif
                 <button class="btn btn-outline-primary"><i class="fas fa-download me-1"></i> Export Contract</button>

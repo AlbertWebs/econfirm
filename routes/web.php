@@ -18,11 +18,15 @@ Route::get('/complience', [HomeController::class, 'complience'])->name('complien
 Route::get('/security', [HomeController::class, 'security'])->name('security');
 Route::get('/transaction/status/{id}', [HomeController::class, 'transactionStatus'])->name('transaction.status');
 Route::get('/get-access-token', [HomeController::class, 'getAccessToken'])->name('get.access.token');
+Route::post('/create-otp', [HomeController::class, 'createOTP'])->name('create.otp');
+
+
+Route::post('/approve-transaction-post/{id}', [HomeController::class, 'approveTransactionPost'])->name('transaction.approve');
 
 // DashboardController routes
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('/view/{id}', [DashboardController::class, 'viewTransaction'])->name('view.transaction');
-Route::post('/approve-transaction/{id}', [DashboardController::class, 'approveTransaction'])->name('transaction.approve');
+Route::post('/approve-transaction/{id}', [DashboardController::class, 'approveTransaction'])->name('transaction.approves');
 Route::post('/reject-transaction/{id}', [DashboardController::class, 'rejectTransaction'])->name('reject.transaction');
 Route::get('/transaction.export', [DashboardController::class, 'exportTransactions'])->name('transaction.export');
 

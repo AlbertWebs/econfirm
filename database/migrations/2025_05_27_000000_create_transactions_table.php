@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('paybill_till_number')->nullable();
             $table->string('transaction_type');
             $table->decimal('transaction_amount', 15, 2);
+            $table->decimal('transaction_fee', 15, 2)->default(0.00);
+            $table->string('otp')->nullable();
             $table->string('sender_mobile');
             $table->string('receiver_mobile');
             $table->text('transaction_details')->nullable();

@@ -10,6 +10,8 @@ class Transaction extends Model
     use HasFactory;
 
     protected $fillable = [
+        'otp',
+        'transaction_fee',
         'paybill_till_number',
         'payment_method',
         'transaction_id',

@@ -32,6 +32,11 @@ class MpesaService
             'AccountReference' => $transaction->transaction_id,
             'TransactionDesc' => $transaction->transaction_details ?? 'Escrow Payment',
         ];
+        //Log Payload
+        \Log::info('M-Pesa STK Push Payload', [
+            'payload' => $payload,
+            'transaction_id' => $transaction->transaction_id,
+        ]);
 
         $endpoint = config('mpesa.stk_url', 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest');
         $token = $this->getAccessToken();
@@ -59,38 +64,95 @@ class MpesaService
             ];
         }
 
+        //log responseData
+        \Log::error('M-Pesa STK Push Error', [
+            'response' => $response->json(),
+            'transaction_id' => $transaction->transaction_id,
+        ]);
         return [
             'success' => false,
             'message' => $response['errorMessage'] ?? 'STK push failed.',
             'data' => $response->json(),
         ];
     }
-
-
     /**
-     * Simulate C2B Payment (Customer to Business)
+     * Initiate B2B Payment (Business to Business)
+     *
+     * @param Transaction $transaction
+     * @return array
      */
-    public function c2b(array $data): array
+    public function b2b(Transaction $transaction): array
     {
-        // TODO: Implement C2B logic
-        // Example endpoint and payload
-        $endpoint = config('mpesa.c2b_url', 'https://sandbox.safaricom.co.ke/mpesa/c2b/v1/simulate');
+        $endpoint = config('mpesa.b2b_url', 'https://sandbox.safaricom.co.ke/mpesa/b2b/v1/payment/request');
         $token = $this->getAccessToken();
         $payload = [
-            'ShortCode' => config('mpesa.shortcode'),
-            'CommandID' => 'CustomerPayBillOnline',
-            'Amount' => $data['amount'],
-            'Msisdn' => $data['msisdn'],
-            'BillRefNumber' => $data['reference'] ?? 'Escrow',
+            'Initiator' => config('mpesa.initiator'),
+            'SecurityCredential' => config('mpesa.security_credential'),
+            'CommandID' => 'BusinessPayBill',
+            'SenderIdentifierType' => '4',
+            'RecieverIdentifierType' => '4', 
+            'Amount' => round($transaction['transaction_amount']),
+            'PartyA' => config('mpesa.business_shortcode'),
+            'PartyB' => $transaction['paybill_till_number'],
+            'Remarks' => $transaction['transaction_details'],
+            'AccountReference' => $transaction['transaction_id'],
+            'Requester'=> '254708374149',
+            'QueueTimeOutURL' => config('mpesa.b2b_queue_timeout_url'),
+            'ResultURL' => config('mpesa.b2b_results_url'),
+            'Occasion' => $transaction['transaction_type'],
         ];
+        // dd($payload);
         $response = Http::withToken($token)->acceptJson()->post($endpoint, $payload);
-        return $response->json();
+       
+        if ($response->successful() && isset($response['ResponseCode']) && $response['ResponseCode'] == '0') {
+            $responseData = $response->json();
+            // Log the response for debugging
+            \Log::info('M-Pesa B2B Payment Response', [
+                'response' => $responseData,
+                'transaction_id' => $transaction->transaction_id,
+            ]);
+            // Fill the M-Pesa B2B table
+            $mpesaB2b = new \App\Models\MpesaB2b();
+            $mpesaB2b->originator_conversation_id = $responseData['OriginatorConversationID'] ?? null;
+            $mpesaB2b->conversation_id = $responseData['ConversationID'] ?? null;
+            $mpesaB2b->transaction_id = $responseData['TransactionID'] ?? null;
+            $mpesaB2b->transaction_type = $responseData['TransactionType'] ?? null;
+            $mpesaB2b->party_a = $responseData['PartyA'] ?? null;
+            $mpesaB2b->party_b = $responseData['PartyB'] ?? null;
+            $mpesaB2b->amount = $responseData['Amount'] ?? null;
+            $mpesaB2b->result_code = $responseData['ResultCode'] ?? null;
+            $mpesaB2b->result_desc = $responseData['ResultDesc'] ?? null;
+            $mpesaB2b->command_id = $responseData['CommandID'] ?? null;
+            $mpesaB2b->initiator = config('mpesa.initiator', 'testapi');
+            $mpesaB2b->security_credential = null;
+            $mpesaB2b->remarks = $responseData['Remarks'] ?? null;
+            $mpesaB2b->occasion = $responseData['Occasion'] ?? null;
+            $mpesaB2b->status = 'pending';
+            $mpesaB2b->raw_response = $responseData;
+            $mpesaB2b->save();
+
+            return [
+                'success' => true,
+                'message' => 'B2B payment initiated successfully.',
+                'data' => $responseData,
+            ];
+        }
+        // Log error response
+        \Log::error('M-Pesa B2B Payment Error', [
+            'response' => $response->json(),
+            'transaction_id' => $transaction->transaction_id,
+        ]);
+        return [
+            'success' => false,
+            'message' => $response['errorMessage'] ?? 'B2B payment initiation failed.',
+            'data' => $response->json(),
+        ];
     }
 
     /**
      * Initiate B2C Payment (Business to Customer)
      */
-    public function b2c(array $data): array
+    public function b2c(Transaction $transaction): array
     {
         // TODO: Implement B2C logic
         $endpoint = config('mpesa.b2c_url', 'https://sandbox.safaricom.co.ke/mpesa/b2c/v1/paymentrequest');
@@ -99,16 +161,54 @@ class MpesaService
             'InitiatorName' => config('mpesa.initiator', 'testapi'),
             'SecurityCredential' => config('mpesa.security_credential', 'security'),
             'CommandID' => 'BusinessPayment',
-            'Amount' => $data['amount'],
+            'Amount' => $transaction->transaction_amount,
             'PartyA' => config('mpesa.shortcode'),
-            'PartyB' => $data['msisdn'],
-            'Remarks' => $data['remarks'] ?? 'Escrow Payout',
+            'PartyB' => preg_replace('/[\s+]/', '', $transaction->receiver_mobile),
+            'Remarks' => $transaction->transaction_details ?? 'Escrow Payout',
             'QueueTimeOutURL' => config('mpesa.b2c_timeout_url', url('/mpesa/b2c/timeout')),
             'ResultURL' => config('mpesa.b2c_result_url', url('/mpesa/b2c/result')),
-            'Occasion' => $data['occasion'] ?? 'Escrow',
+            'Occasion' => $transaction->transaction_type ?? 'Escrow',
         ];
+        // Log the payload for debugging
+        \Log::info('M-Pesa B2C Payload', [
+            'payload' => $payload,
+            'transaction_id' => $transaction->transaction_id,
+        ]);
         $response = Http::withToken($token)->acceptJson()->post($endpoint, $payload);
-        return $response->json();
+         
+        if ($response->successful() && isset($response['ResponseCode']) && $response['ResponseCode'] == '0') {
+           $responseData = $response->json();
+          
+           //fill the M-Pesa B2c table
+              $mpesaB2c = new \App\Models\MpesaB2c();
+              $mpesaB2c->originator_conversation_id = $responseData['OriginatorConversationID'] ?? null;
+              $mpesaB2c->conversation_id = $responseData['ConversationID'] ?? null;
+              $mpesaB2c->transaction_id = $responseData['TransactionID'] ?? null;
+              $mpesaB2c->transaction_type = $responseData['TransactionType'] ?? null;
+              $mpesaB2c->receiver_mobile = $responseData['PartyB'] ?? null;
+              $mpesaB2c->amount = $responseData['Amount'] ?? null;
+              $mpesaB2c->result_code = $responseData['ResultCode'] ?? null;
+              $mpesaB2c->result_desc = $responseData['ResultDesc'] ?? null;
+              $mpesaB2c->command_id = $responseData['CommandID'] ?? null;
+              $mpesaB2c->initiator_name = $responseData['InitiatorName'] ?? null;
+              $mpesaB2c->security_credential = $responseData['SecurityCredential'] ?? null;
+              $mpesaB2c->party_a = $responseData['PartyA'] ?? null;
+              $mpesaB2c->party_b = $responseData['PartyB'] ?? null;
+              $mpesaB2c->remarks = $responseData['Remarks'] ?? null;
+              $mpesaB2c->occasion = $responseData['Occasion'] ?? null;
+              $mpesaB2c->status = $responseData['Status'] ?? 'pending';
+              $mpesaB2c->raw_response = $responseData;
+              $mpesaB2c->save();
+            return [
+                'success' => true,
+                'message' => 'B2C payment initiated successfully.',
+                'data' => $responseData,
+            ];
+        }
+        return [
+            'success' => false,
+            'message' => 'B2C payment initiation failed.',
+        ];
     }
 
     /**
@@ -130,6 +230,11 @@ class MpesaService
             'Remarks' => 'Transaction Status',
             'Occasion' => 'Escrow',
         ];
+        // Log the payload for debugging
+        \Log::info('M-Pesa Transaction Status Payload', [
+            'payload' => $payload,
+            'transaction_id' => $transactionId,
+        ]);
         $response = Http::withToken($token)->acceptJson()->post($endpoint, $payload);
         return $response->json();
     }
@@ -194,4 +299,25 @@ class MpesaService
             return $accessToken;
         }
     }
+
+    /**
+     * Simulate C2B Payment (Customer to Business)
+     */
+    public function c2b(array $data): array
+    {
+        // TODO: Implement C2B logic
+        // Example endpoint and payload
+        $endpoint = config('mpesa.c2b_url', 'https://sandbox.safaricom.co.ke/mpesa/c2b/v1/simulate');
+        $token = $this->getAccessToken();
+        $payload = [
+            'ShortCode' => config('mpesa.shortcode'),
+            'CommandID' => 'CustomerPayBillOnline',
+            'Amount' => $data['amount'],
+            'Msisdn' => $data['msisdn'],
+            'BillRefNumber' => $data['reference'] ?? 'Escrow',
+        ];
+        $response = Http::withToken($token)->acceptJson()->post($endpoint, $payload);
+        return $response->json();
+    }
+  
 }
