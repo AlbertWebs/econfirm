@@ -1,4 +1,4 @@
-@extends('master')
+@extends('front.master-page')
 
 @section('content')
 <section id="features" class="features text-center">
