@@ -52,8 +52,9 @@
     "description": "eConfirm is Kenya's leading escrow platform for secure peer-to-peer payments via M-Pesa. Ideal for buyers and sellers of goods, services, or contracts.",
     "sameAs": [
         "https://www.facebook.com/econfirmke",
-        "https://www.linkedin.com/company/econfirm",
+        "https://www.linkedin.com/company/econfirmke",
         "https://www.instagram.com/econfirmke/",
+        "https://x.com/econfirmke"
     ],
     "contactPoint": {
         "@type": "ContactPoint",
@@ -66,6 +67,20 @@
     </script>
 
 
+   {{--  --}}
+   <!--Start of Tawk.to Script-->
+    <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    (function(){
+    var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+    s1.async=true;
+    s1.src='https://embed.tawk.to/6859484414b543191cac8bc1/1iuec4jii';
+    s1.charset='UTF-8';
+    s1.setAttribute('crossorigin','*');
+    s0.parentNode.insertBefore(s1,s0);
+    })();
+    </script>
+    <!--End of Tawk.to Script-->
    {{--  --}}
    
    
@@ -151,9 +166,9 @@
                     <a href="#faq">FAQ</a>
                     <button class="btn btn-outline">Log In</button>
                     <button class="btn btn-outline" id="search-transaction-btn"><i class="fas fa-search"></i> Search Transaction</button>
-                    <button class="btn btn-primary">
-                        <i class="fas fa-search text-white"></i>Custom Solutions
-                    </button>
+                    <a href="mailto:tickets@e-confirm.p.tawk.email" class="btn btn-primary" style="color:#ffffff;">
+                        <i class="fas fa-search text-white"></i>Create Ticket 💬
+                    </a>
                 </nav>
                 
                 <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
@@ -180,89 +195,7 @@
   
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-brand">
-                    <div class="footer-logo">
-                        {{-- logo here --}}
-                        <img src="{{ asset('uploads/logo.png') }}" alt="SecureEscrow Logo" style="height: 50px; vertical-align: middle;">
-                        {{-- <span class="logo-text">SecureEscrow</span> --}}
-                    </div>
-                    <p>Providing secure escrow services for all your transaction needs.</p>
-                    <div class="social-links">
-                        <a href="#">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
-                            </svg>
-                        </a>
-                        <a href="#">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>
-                            </svg>
-                        </a>
-                        <a href="#">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
-                                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-                                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
-                            </svg>
-                        </a>
-                        <a href="#">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
-                                <rect width="4" height="12" x="2" y="9"/>
-                                <circle cx="4" cy="4" r="2"/>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="footer-column">
-                    <h3>Products</h3>
-                    <ul>
-                        <li><a href="#">Standard Escrow</a></li>
-                        <li><a href="#">Real Estate Escrow</a></li>
-                        <li><a href="#">Vehicle Escrow</a></li>
-                        <li><a href="#">Business Escrow</a></li>
-                        <li><a href="#">International Escrow</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-column">
-                    <h3>Company</h3>
-                    <ul>
-                        <li><a href="#">About Us</a></li>
-                        <li><a href="#">Careers</a></li>
-                        <li><a href="#">Blog</a></li>
-                        <li><a href="#">Press</a></li>
-                        <li><a href="#">Contact</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-column">
-                    <h3>Legal</h3>
-                    <ul>
-                        <li><a href="{{ route('terms.conditions') }}">Terms of Service</a></li>
-                        <li><a href="{{ route('privacy.policy') }}">Privacy Policy</a></li>
-                        <li><a href="{{ route('security') }}">Security</a></li>
-                        <li><a href="{{ route('complience') }}">Compliance</a></li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <p>&copy; {{date('Y')}} Confirm Diligence Solutions. - All rights reserved.</p>
-                <div class="footer-badge">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                        <polyline points="22,4 12,14.01 9,11.01"/>
-                    </svg>
-                    <span>Licensed and regulated escrow service</span>
-                </div>
-            </div>
-        </div>
-    </footer>
+    @include('front.footer')
 
     <!-- Search Transaction Popup (Basic) -->
     <div id="searchTransactionPopup" style="display:none; position:fixed; z-index:1050; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); align-items:center; justify-content:center;">

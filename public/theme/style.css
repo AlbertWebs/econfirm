@@ -524,13 +524,15 @@ h3 {
 }
 
 .social-links {
-    display: flex;
+    /* display: flex; */
     gap: 1rem;
 }
 
 .social-links a {
     color: #000000;
     transition: color 0.2s;
+    padding: 10px;
+    /* border:1px solid rgba(24, 116, 60, 0.1); */
 }
 
 .social-links a:hover {

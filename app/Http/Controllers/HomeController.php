@@ -324,8 +324,9 @@ class HomeController extends Controller
         }
     }
 
-    
-   
+    public function getAPIDocumentation(){
+        return view('front.api-documentation');
+    }
 
-   
+
 }

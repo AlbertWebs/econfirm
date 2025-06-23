@@ -19,6 +19,7 @@ Route::get('/security', [HomeController::class, 'security'])->name('security');
 Route::get('/transaction/status/{id}', [HomeController::class, 'transactionStatus'])->name('transaction.status');
 Route::get('/get-access-token', [HomeController::class, 'getAccessToken'])->name('get.access.token');
 Route::post('/create-otp', [HomeController::class, 'createOTP'])->name('create.otp');
+Route::get('/api/documentation', [HomeController::class, 'getAPIDocumentation'])->name('api-documentation');
 
 
 Route::post('/approve-transaction-post/{id}', [HomeController::class, 'approveTransactionPost'])->name('transaction.approve');
