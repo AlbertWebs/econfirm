@@ -23,20 +23,38 @@
                     </div>
                     <div>
                         <h5 class="mb-0 fw-bold">e-confirm</h5>
-                        <small class="text-muted">Customer Portal</small>
+                        <small class="text-muted">
+                            @if(Auth::check())
+                                Welcome {{ Auth::user()->name ?? 'N/A' }}
+                            @else
+                            Customer Portal
+                            @endif
+                            
+                        </small>
                     </div>
                 </div>
                 <div class="d-flex align-items-center">
+                     <a href="{{route('user.dashboard')}}" class="btn btn-outline-primary btn-sm me-3 position-relative"> 
+                        <i class="fas fa-dashboard me-1"></i>
+                        My Account
+                     </a>
                     @yield('header-actions')
-                    <div class="d-flex align-items-center me-3">
+                    {{-- <div class="d-flex align-items-center me-3">
                         <div class="bg-primary bg-opacity-25 rounded-circles p-2 me-2" style="border-radius: 5px;">
                             <i class="fas fa-user" style="color:#ffffff"></i>
                         </div>
                         <span class="fw-medium">@yield('user-phone', 'N/A')</span>
-                    </div>
-                    <button onclick="location.href='{{ route('home') }}'" class="btn btn-outline-secondary btn-sm">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </button>
+                    </div> --}}
+                 
+                    <a  class="btn btn-outline-secondary btn-sm" title="Logout" class="dropdown-item" href="{{ route('logout') }}"
+                            onclick="event.preventDefault();
+                                            document.getElementById('logout-form').submit();">
+                            <i class="fas fa-sign-out"></i>
+                        </a>
+
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                            @csrf
+                        </form>
                 </div>
             </div>
         </div>

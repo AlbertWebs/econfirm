@@ -10,8 +10,17 @@
         .container.my-5 ol {
             margin-left: 40px;
         }
+        p{
+            font-size: 0.875rem !important;
+        }
+         ol{
+            font-size: 0.875rem !important;
+        }
+         li{
+            font-size: 0.875rem !important;
+        }
     </style>
-    <h3 class="mb-4"><strong>e-Confirm Terms and Conditions</strong></h3>
+    <h3 class="mb-4"><strong>Terms and Conditions</strong></h3>
 
     <br><h3>1. <strong>Introduction</strong></h3>
     <p>

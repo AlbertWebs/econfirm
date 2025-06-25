@@ -8,10 +8,15 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{{ asset('theme/dashboard.css') }}" rel="stylesheet">
+
+    <link rel="icon" type="image/png" href="{{ asset('uploads/favicon.png') }}">
+
+    <!-- Font Awesome Free CDN -->
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body class="bg-light">
-    <!-- Header -->
-    <header class="bg-white border-bottom shadow-sm mb-4">
+     <!-- Header -->
+    <header class="bg-white border-bottom shadow-sm">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center py-3">
                 <div class="d-flex align-items-center">
@@ -23,20 +28,25 @@
                         <small class="text-muted">Customer Portal</small>
                     </div>
                 </div>
+                
                 <div class="d-flex align-items-center">
-                    <button class="btn btn-outline-secondary btn-sm me-3">
+                    {{-- <button class="btn btn-outline-secondary btn-sm me-3">
                         <i class="fas fa-bell me-1"></i>
                         Notifications
-                    </button>
+                    </button> --}}
                     <div class="d-flex align-items-center me-3">
-                        <div class="bg-primary bg-opacity-25 rounded-circle p-2 me-2">
-                            <i class="fas fa-user text-primary"></i>
-                        </div>
-                        <span class="fw-medium">John Smith</span>
+                       
+                        <span class="fw-medium">{{Auth::User()->name}}</span>
                     </div>
-                    <button class="btn btn-outline-secondary btn-sm">
+                    <button onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="btn btn-outline-secondary btn-sm">
                         <i class="fas fa-sign-out-alt"></i>
                     </button>
+                    {{--  --}}
+                  
+                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                        @csrf
+                    </form>
+                    {{--  --}}
                 </div>
             </div>
         </div>
@@ -82,12 +92,12 @@
                     <small class="text-muted">{{ $transaction->progress ?? 0 }}% complete</small>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i> Back</a>
+                    <a href="{{ route('user.dashboard') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i> Back</a>
                     @if($transaction->status === 'pending')
                         <button class="btn btn-success"><i class="fas fa-check me-1"></i> Approve</button>
                         <button class="btn btn-danger"><i class="fas fa-times me-1"></i> Cancel</button>
                     @endif
-                    <button class="btn btn-outline-primary"><i class="fas fa-download me-1"></i> Export PDF</button>
+                    <a href="{{ route('e-contract.print', $transaction->id) }}" class="btn btn-outline-primary"><i class="fas fa-download me-1"></i> Export PDF</a>
                 </div>
             </div>
         </div>

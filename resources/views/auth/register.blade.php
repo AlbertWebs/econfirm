@@ -1,6 +1,32 @@
-@extends('layouts.app')
+@extends('process.master')
 
 @section('content')
+<style>
+    .auth-card {
+        border: 1px solid #18743c;
+        border-radius: 10px;
+    }
+    .auth-header {
+        background-color: #18743c;
+        color: white;
+        font-weight: bold;
+        text-align: center;
+        padding: 1rem;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+    .btn-primary {
+        background-color: #18743c;
+        border-color: #18743c;
+    }
+    .btn-primary:hover {
+        background-color: #155f32;
+        border-color: #155f32;
+    }
+     .min-vh-50 {
+        min-height: 60vh;
+    }
+</style>
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">

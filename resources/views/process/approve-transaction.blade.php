@@ -15,7 +15,11 @@
 @endsection
 
 @section('user-phone')
-    {{ $stkPush->phone ?? 'N/A' }}
+    @if(Auth::check())
+        {{ Auth::user()->name ?? 'N/A' }}
+    @else
+      {{ $stkPush->phone ?? 'N/A' }}
+    @endif
 @endsection
 
 @section('content')
@@ -25,8 +29,8 @@
         <div class="card mx-auto mb-4" style="max-width: 600px;">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Transaction Details</h5>
-                <a href="{{ route('transaction.export', $transaction->id) }}" class="btn btn-outline-primary btn-sm text-white">
-                    <i class="fas fa-download me-1"></i> Export Contract
+                <a href="{{ route('e-contract.print', $transaction->id) }}" class="btn btn-outline-primary btn-sm text-white">
+                    <i class="fas fa-download me-1"></i> Export Contracts
                 </a>
             </div>
             <div class="card-body">
@@ -73,7 +77,7 @@
         <div class="card mx-auto mb-4" style="max-width: 600px;">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Transaction Details</h5>
-                <a href="{{ route('transaction.export', $transaction->id) }}" class="btn btn-outline-primary btn-sm text-white">
+                <a href="{{ route('e-contract.print', $transaction->id) }}" class="btn btn-outline-primary btn-sm text-white">
                     <i class="fas fa-download me-1"></i> Export Contract
                 </a>
             </div>
@@ -138,6 +142,15 @@
                     <small id="otp-message" class="form-text text-success d-none">OTP sent!</small>
                 </div>
                 <button type="submit" class="btn btn-success w-100"><i class="fas fa-check me-1"></i> Approve Transaction</button>
+                {{--  --}}
+                <br><br>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('transaction.index', $transaction->transaction_id) }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i> Back</a>
+
+                    <a style="position:absolute; right:16px;" href="{{route('home')}}" class="btn btn-danger"><i class="fas fa-times me-1"></i> Cancel</a>
+                </div>
+                {{--  --}}
+                
             </form>
         </div>
     </div>

@@ -8,6 +8,15 @@
         .container.my-5 ol {
             margin-left: 40px;
         }
+         p{
+            font-size: 0.875rem !important;
+        }
+         ol{
+            font-size: 0.875rem !important;
+        }
+         li{
+            font-size: 0.875rem !important;
+        }
     </style>
 
 <div class="container my-5">

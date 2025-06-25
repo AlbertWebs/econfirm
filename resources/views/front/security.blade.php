@@ -8,6 +8,15 @@
         .container.my-5 ol {
             margin-left: 40px;
         }
+         p{
+            font-size: 0.875rem !important;
+        }
+         ol{
+            font-size: 0.875rem !important;
+        }
+         li{
+            font-size: 0.875rem !important;
+        }
     </style>
 
 <div class="container my-5">
@@ -66,4 +75,23 @@
 
 
 </section>
+ <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content">
+                <div class="cta-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                </div>
+                <h2>Ready to Secure Your Transactions?</h2>
+                <p>Join thousands of satisfied clients who trust our escrow service for their important transactions.</p>
+                <div class="cta-buttons">
+                    <a href="#home" class="btn btn-primary btn-lg">Get Started Now</a>
+                    <a href="mailto:support@econfirm.co.ke" class="btn btn-outline btn-lg">Contact Support</a>
+                </div>
+                <p class="cta-note">No obligation. Cancel anytime.</p>
+            </div>
+        </div>
+    </section>
 @endsection

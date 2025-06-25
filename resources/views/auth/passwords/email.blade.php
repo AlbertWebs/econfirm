@@ -1,4 +1,5 @@
-@extends('layouts.app')
+@extends('process.master')
+
 
 @section('content')
 <div class="container">

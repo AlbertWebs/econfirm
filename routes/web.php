@@ -2,8 +2,13 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MpesaController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\UserController;
+
+
 
 // HomeController routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -21,19 +26,44 @@ Route::get('/get-access-token', [HomeController::class, 'getAccessToken'])->name
 Route::post('/create-otp', [HomeController::class, 'createOTP'])->name('create.otp');
 Route::get('/api/documentation', [HomeController::class, 'getAPIDocumentation'])->name('api-documentation');
 
+Route::get('/e-contract', [HomeController::class, 'getEContract'])->name('e-contract');
+Route::get('/e-contract-print/{transactionID}', [ContractController::class, 'generateEscrowPdf'])->name('e-contract.print'); 
+
+
 
 Route::post('/approve-transaction-post/{id}', [HomeController::class, 'approveTransactionPost'])->name('transaction.approve');
+Route::post('/custom-login', [DashboardController::class, 'customLogin'])->name('custom.login');
 
+
+
+Auth::routes();
 // DashboardController routes
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+Route::get('/home', [DashboardController::class, 'index'])->name('home.dashboard');
 Route::get('/view/{id}', [DashboardController::class, 'viewTransaction'])->name('view.transaction');
 Route::post('/approve-transaction/{id}', [DashboardController::class, 'approveTransaction'])->name('transaction.approves');
 Route::post('/reject-transaction/{id}', [DashboardController::class, 'rejectTransaction'])->name('reject.transaction');
 Route::get('/transaction.export', [DashboardController::class, 'exportTransactions'])->name('transaction.export');
+Route::post('/user/update', [DashboardController::class, 'update'])->name('user.update');
+Route::post('/user/update-password', [DashboardController::class, 'updatePassword'])->name('user.update-password');
 
+Route::get('/profile/edit/{id}', [DashboardController::class, 'editProfile'])->name('profile.edit');
+Route::post('/profile/update', [DashboardController::class, 'updateProfile'])->name('profile.update');
 
-// Auth routes
-Auth::routes();
-// Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-
-
+// Admin routes
+/*------------------------------------------
+--------------------------------------------
+All Normal Users Routes List
+--------------------------------------------
+--------------------------------------------*/
+Route::middleware(['auth', 'user-access:user'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('user.dashboard');    
+});
+/*------------------------------------------
+--------------------------------------------
+All Admin Routes List
+--------------------------------------------
+--------------------------------------------*/
+Route::middleware(['auth', 'user-access:admin'])->group(function () {
+    Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+});

@@ -534,7 +534,7 @@ https://api.econfirm.co.ke/v1
                   <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                     <div class="accordion-body">
                       e-confirm charges a competitive fee based on the transaction amount. Fees start at 1.5% for transactions 
-                      under $1,000 and decrease for larger amounts. There are no setup fees or monthly charges - you only pay 
+                      under ksh1,000 and decrease for larger amounts. There are no setup fees or monthly charges - you only pay 
                       when you use the service.
                     </div>
                   </div>
@@ -645,8 +645,8 @@ https://api.econfirm.co.ke/v1
                             <h5 class="card-title mb-0">Phone Support</h5>
                           </div>
                           <p class="card-text">Speak directly with our support team</p>
-                          <a href="tel:+1-555-ESCROW" class="btn btn-outline-primary">
-                            +1 (555) ESCROW
+                          <a href="tel:+254 723000000" class="btn btn-outline-primary">
+                            +254 72 300 0000
                           </a>
                         </div>
                       </div>
@@ -678,16 +678,21 @@ https://api.econfirm.co.ke/v1
                       <ul class="list-unstyled mb-0">
                         <li class="mb-2">
                           <strong>Monday - Friday:</strong><br/>
-                          9:00 AM - 6:00 PM EST
+                          6:00 AM - 11:00 PM EAT
                         </li>
                         <li class="mb-2">
                           <strong>Saturday:</strong><br/>
-                          10:00 AM - 4:00 PM EST
+                          6:00 AM - 9:00 PM EAT
                         </li>
                         <li class="mb-2">
                           <strong>Sunday:</strong><br/>
-                          Closed
+                          9:00 AM - 9:00 PM EAT
                         </li>
+                        <li class="mb-2">
+                          <strong>Holidays:</strong><br/>
+                          9:00 AM - 9:00 PM EAT
+                        </li>
+                        <br>
                       </ul>
                       
                       <hr />

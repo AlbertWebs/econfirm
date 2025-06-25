@@ -7,7 +7,13 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{{ asset('theme/dashboard.css') }}" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ asset('uploads/favicon.png') }}">
+     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <!-- Font Awesome Free CDN -->
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
+
 <body class="bg-light">
     <!-- Header -->
     <header class="bg-white border-bottom shadow-sm">
@@ -24,19 +30,23 @@
                 </div>
                 
                 <div class="d-flex align-items-center">
-                    <button class="btn btn-outline-secondary btn-sm me-3">
+                    {{-- <button class="btn btn-outline-secondary btn-sm me-3">
                         <i class="fas fa-bell me-1"></i>
                         Notifications
-                    </button>
+                    </button> --}}
                     <div class="d-flex align-items-center me-3">
-                        <div class="bg-primary bg-opacity-25 rounded-circle p-2 me-2">
-                            <i class="fas fa-user text-primary"></i>
-                        </div>
-                        <span class="fw-medium">John Smith</span>
+                       
+                        <span class="fw-medium">{{Auth::User()->name}}</span>
                     </div>
-                    <button class="btn btn-outline-secondary btn-sm">
+                    <button onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="btn btn-outline-secondary btn-sm">
                         <i class="fas fa-sign-out-alt"></i>
                     </button>
+                    {{--  --}}
+                  
+                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                        @csrf
+                    </form>
+                    {{--  --}}
                 </div>
             </div>
         </div>
@@ -56,10 +66,15 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
+                <button class="nav-link" id="create-transaction-tab" data-bs-toggle="tab" data-bs-target="#create-transaction" type="button" role="tab">
+                    Create Transaction
+                </button>
+            </li>
+            {{-- <li class="nav-item" role="presentation">
                 <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab">
                     Documents
                 </button>
-            </li>
+            </li> --}}
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab">
                     Profile
@@ -73,20 +88,20 @@
                 <!-- Welcome Section -->
                 <div class="card bg-primary text-white mb-4">
                     <div class="card-body">
-                        <h2 class="card-title">Welcome back, John Smith!</h2>
+                        <h2 class="card-title">Welcome back, {{Auth::User()->name}}!</h2>
                         <p class="card-text text-white-50">Manage your escrow transactions securely and efficiently.</p>
                     </div>
                 </div>
 
                 <!-- Stats Grid -->
                 <div class="row g-4 mb-4">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card h-100">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
                                         <h6 class="card-title text-muted">Active Transactions</h6>
-                                        <h2 class="fw-bold">3</h2>
+                                        <h2 class="fw-bold">{{$AllPendingTransactionsCount}}</h2>
                                         <small class="text-muted">Currently in progress</small>
                                     </div>
                                     <i class="fas fa-clock text-muted"></i>
@@ -94,13 +109,13 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card h-100">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
                                         <h6 class="card-title text-muted">Completed</h6>
-                                        <h2 class="fw-bold">12</h2>
+                                        <h2 class="fw-bold">{{$AllCompletedTransactionsCount}}</h2>
                                         <small class="text-muted">Successfully closed</small>
                                     </div>
                                     <i class="fas fa-shield-alt text-muted"></i>
@@ -108,13 +123,13 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card h-100">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
                                         <h6 class="card-title text-muted">Total Value</h6>
-                                        <h2 class="fw-bold">$125,000</h2>
+                                        <h2 class="fw-bold">kes {{$AllPendingTransactionsAmount}}</h2>
                                         <small class="text-muted">In escrow transactions</small>
                                     </div>
                                     <i class="fas fa-dollar-sign text-muted"></i>
@@ -122,7 +137,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    {{-- <div class="col-md-3">
                         <div class="card h-100">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start">
@@ -135,7 +150,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
 
                 <!-- Recent Activity -->
@@ -174,6 +189,208 @@
                 </div>
             </div>
 
+            <div class="tab-pane fade" id="create-transaction" role="tabpanel">
+                <!-- Welcome Section -->
+                
+                <style>
+                /* Form Styles */
+                .hero-form {
+                    background: white;
+                    border-radius: 0.75rem;
+                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                    border: 3px solid #18743c;
+                }
+
+                .form-container {
+                    padding: 1.5rem;
+                }
+
+                .form-container h3 {
+                    text-align: center;
+                    margin-bottom: 1.5rem;
+                    font-size: 1.25rem;
+                }
+
+                .transaction-form {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1rem;
+                }
+
+                .form-group {
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .form-group label {
+                    font-weight: 500;
+                    color: #374151;
+                    margin-bottom: 0.25rem;
+                    font-size: 0.875rem;
+                }
+
+                .form-group input,
+                .form-group select,
+                .form-group textarea {
+                    padding: 0.5rem 0.75rem;
+                    border: 1px solid #d1d5db;
+                    border-radius: 0.375rem;
+                    font-size: 0.875rem;
+                    transition: border-color 0.2s, box-shadow 0.2s;
+                }
+
+                .form-group input:focus,
+                .form-group select:focus,
+                .form-group textarea:focus {
+                    outline: none;
+                    border-color: #18743c;
+                    box-shadow: 0 0 0 3px rgba(24, 116, 60, 0.1);
+                }
+
+                .input-with-prefix {
+                    position: relative;
+                }
+
+                .prefix {
+                    position: absolute;
+                    left: 0.75rem;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: #000000;
+                    font-size: 0.875rem;
+                }
+
+                .input-with-prefix input {
+                    padding-left: 3rem;
+                }
+
+                .form-row {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 1rem;
+                }
+
+                .form-disclaimer {
+                    font-size: 0.75rem;
+                    color: #000000;
+                    text-align: center;
+                    margin-top: 0.5rem;
+                }
+
+                .form-disclaimer a {
+                    color: #18743c;
+                    text-decoration: none;
+                }
+
+                .form-disclaimer a:hover {
+                    text-decoration: underline;
+                }
+
+                </style>
+                {{--  --}}
+                <div class="hero-form animate-on-scroll" style="max-width: 600px; margin: 0 auto; ">
+                    <div class="form-container">
+                        <h3>Start a Secure Transaction</h3>
+                        <form class="transaction-form">
+                            <div class="form-group">
+                                <label for="transaction-type">Transaction Type</label>
+                                <select id="transaction-type" name="transaction-type">
+                                    <option value="">Select a transaction type</option>
+                                    <option value="ecommerce">E-commerce Marketplace Transactions</option>
+                                    <option value="services">Professional Services (Consulting, Legal, Accounting)</option>
+                                    <option value="real-estate">Real Estate (Land, Plots, Rentals)</option>
+                                    <option value="vehicle">Vehicle Sales (Cars, Motorbikes, Trucks)</option>
+                                    <option value="business">Business Transfers & Partnerships</option>
+                                    <option value="freelance">Freelance Work & Digital Services</option>
+                                    <option value="goods">High-Value Goods (Electronics, Machinery, Furniture)</option>
+                                    <option value="construction">Construction & Renovation Projects</option>
+                                    <option value="agriculture">Agricultural Produce & Equipment</option>
+                                    <option value="legal">Legal Settlements & Compensation</option>
+                                    <option value="import-export">Import/Export Transactions</option>
+                                    <option value="tenders">Government or Corporate Tender Payments</option>
+                                    <option value="education">Education Payments (International Tuition, School Fees)</option>
+                                    <option value="personal">Personal Loans & Informal Lending</option>
+                                    <option value="crypto">Crypto & Forex Trading Agreements</option>
+                                    <option value="rentals">Equipment & Property Rentals</option>   
+                                    <option value="charity">Charity Donations & Fundraising</option>
+                                    <option value="events">Event Ticket Sales & Bookings</option>
+                                    <option value="subscriptions">Subscription Services (Software, Memberships)</option>
+                                    <option value="affiliate">Affiliate Marketing Payments</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="custom-transaction-type-group" style="display:none;">
+                                <label for="custom-transaction-type">Specify Transaction Type</label>
+                                <input type="text" id="custom-transaction-type" name="custom-transaction-type" placeholder="Enter custom transaction type" class="w-100">
+                            </div>
+                            
+                            {{-- <div class="form-group">
+                                <label for="transaction-amount">Transaction Amount</label>
+                                <div class="input-with-prefix">
+                                    <span class="prefix">kes &nbsp;</span>
+                                    <input type="number" id="transaction-amount" name="transaction-amount" placeholder="Amount" class="w-100">
+                                </div>
+                            </div> --}}
+
+                            <div class="form-row">
+                                
+                                <div class="form-group">
+                                    <label for="payment-method">Payment Method</label>
+                                    <select id="payment-method" name="payment-method">
+                                        <option value="mpesa">M-Pesa Number</option>
+                                        <option value="paybill">Paybill/Buy Goods</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="transaction-amount">Transaction Amount</label>
+                                    <div class="input-with-prefix">
+                                        <span class="prefix">kes &nbsp;</span>
+                                        <input type="number" id="transaction-amount" name="transaction-amount" placeholder="Amount" class="w-100">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group" id="paybill-till-group" style="display:none;">
+                                <label for="paybill-till-number">Buy Goods or Paybill Number</label>
+                                <div>
+                                    <input type="text" id="paybill-till-number" name="paybill-till-number" value="{{ old('paybill-till-number') }}" placeholder="Buy Goods or Paybill Number" class="w-100">
+                                </div>
+                            </div> 
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="sender-mobile">Your Mobile Number</label>
+                                    <input type="tel" value="{{Auth::User()->phone}}" id="sender-mobile" name="sender-mobile" placeholder="+254723000000">
+                                </div>
+                                <div class="form-group">
+                                    <label for="receiver-mobile">Recipient Mobile Number</label>
+                                    <input type="tel" id="receiver-mobile" name="receiver-mobile" placeholder="+254723000000">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="transaction-details">Transaction Details</label>
+                                <textarea id="transaction-details" name="transaction-details" rows="3" placeholder="Describe your transaction..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-full">
+                                Fund Your Escrow
+                                <svg style="vertical-align: middle; margin-left: 8px;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                    <polyline points="12 5 19 12 12 19" />
+                                </svg>
+                            </button>
+                            <p style="text-align:center; margin:0 auto; font-size:10px; display:none;" id="mpesa-response"></p>
+
+                            <p class="form-disclaimer">
+                                By submitting this form, you agree to our <a target="new" href="{{route('terms.conditions')}}">Terms of Service</a> and <a target="new" href="{{route('privacy.policy')}}">Privacy Policy</a>.
+                            </p>
+                        </form>
+                    </div>
+                </div>
+                {{--  --}}
+             
+            </div>
+            
             <!-- Transactions Tab -->
             <div class="tab-pane fade" id="transactions" role="tabpanel">
                 <div class="card">
@@ -203,86 +420,74 @@
                             </div>
                         </div>
 
+                        @foreach ($transactions as $transaction)
                         <!-- Transactions List -->
                         <div class="transaction-item border rounded p-4 mb-3">
                             <div class="row align-items-center">
                                 <div class="col-lg-8">
                                     <div class="d-flex align-items-center mb-2">
-                                        <h6 class="fw-semibold mb-0 me-3">Real Estate Purchase - 123 Main St</h6>
-                                        <span class="badge bg-success me-2">completed</span>
-                                        <span class="badge bg-primary">buy</span>
+                                        <h6 class="fw-semibold mb-0 me-3" style="text-transform: capitalize">{{$transaction->payment_method}} Transaction</h6>
+                                        <small style="text-align: center; width:80%">
+                                            {{ $transaction->transaction_details ?? 'No details provided' }}
+                                        </small>
+                                        <div style="position: relative; right: 0; top: 0;">
+                                            {{-- <i class="fas fa-ellipsis-v text-muted"></i> --}}
+                                            @if($transaction->status == 'Completed')
+                                                <span class="badge bg-success me-2">{{$transaction->status}}</span>
+                                            @elseif($transaction->status == 'pending')
+                                                <span class="badge bg-warning me-2">{{$transaction->status}}</span>
+                                            @elseif($transaction->status == 'stk_failed')
+                                                <span class="badge bg-danger">{{$transaction->status}}</span>
+                                            @elseif($transaction->status == 'stk_initiated')
+                                                <span class="badge bg-info">{{$transaction->status}}</span>
+                                            @else
+                                                <span class="badge bg-primary me-2">{{$transaction->status}}</span>
+                                            @endif
+                                        </div>
                                     </div>
                                     <div class="row text-muted small">
-                                        <div class="col-sm-4"><strong>ID:</strong> ESC-2024-001</div>
-                                        <div class="col-sm-4"><i class="fas fa-calendar me-1"></i> Jan 15, 2024</div>
-                                        <div class="col-sm-4">Counterparty: Jane Doe Properties</div>
+                                        <div class="col-sm-4"><strong>ID:</strong> {{$transaction->transaction_id}}</div>
+                                        <div class="col-sm-4"><i class="fas fa-calendar me-1"></i> {{$transaction->created_at->format('M d, Y')}}</div>
+                                        <div class="col-sm-4">Counterparty: {{$transaction->receiver_mobile}}</div>
                                     </div>
+                                     @php
+                                        $progress = 0;
+                                        if ($transaction->status === 'pending') {
+                                            $progress = 0;
+                                        } elseif ($transaction->status === 'Escrow Funded') {
+                                            $progress = 50;
+                                        } elseif ($transaction->status === 'Completed') {
+                                            $progress = 100;
+                                        }
+                                    @endphp
                                     <div class="mt-2">
                                         <div class="d-flex justify-content-between small mb-1">
                                             <span>Progress</span>
-                                            <span>100%</span>
+                                            <span>{{ $progress }}%</span>
                                         </div>
                                         <div class="progress" style="height: 8px;">
-                                            <div class="progress-bar bg-primary" style="width: 100%"></div>
+                                            <div class="progress-bar bg-primary" style="width: {{ $progress }}%"></div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-lg-4 text-lg-end">
                                     <div class="mb-3">
-                                        <h3 class="fw-bold">$450,000</h3>
+                                        <h3 class="fw-bold">kes {{$transaction->transaction_amount}}</h3>
                                         <small class="text-muted">Escrow Amount</small>
                                     </div>
                                     <div class="d-flex flex-column flex-lg-row gap-2">
-                                        <button class="btn btn-outline-primary btn-sm">
+                                        <a href="{{route('view.transaction', $transaction->id)}}" class="btn btn-outline-primary btn-sm">
                                             <i class="fas fa-eye me-1"></i> View
-                                        </button>
-                                        <button class="btn btn-outline-secondary btn-sm">
+                                        </a>
+                                        <a href="{{ route('e-contract.print', $transaction->id) }}" class="btn btn-outline-secondary btn-sm">
                                             <i class="fas fa-download me-1"></i> Export
-                                        </button>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        @endforeach
 
-                        <div class="transaction-item border rounded p-4 mb-3">
-                            <div class="row align-items-center">
-                                <div class="col-lg-8">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <h6 class="fw-semibold mb-0 me-3">Vehicle Sale - 2023 Tesla Model S</h6>
-                                        <span class="badge bg-primary me-2">in-progress</span>
-                                        <span class="badge bg-warning">sell</span>
-                                    </div>
-                                    <div class="row text-muted small">
-                                        <div class="col-sm-4"><strong>ID:</strong> ESC-2024-002</div>
-                                        <div class="col-sm-4"><i class="fas fa-calendar me-1"></i> Jan 20, 2024</div>
-                                        <div class="col-sm-4">Counterparty: Mike Johnson</div>
-                                    </div>
-                                    <div class="mt-2">
-                                        <div class="d-flex justify-content-between small mb-1">
-                                            <span>Progress</span>
-                                            <span>65%</span>
-                                        </div>
-                                        <div class="progress" style="height: 8px;">
-                                            <div class="progress-bar bg-primary" style="width: 65%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-4 text-lg-end">
-                                    <div class="mb-3">
-                                        <h3 class="fw-bold">$75,000</h3>
-                                        <small class="text-muted">Escrow Amount</small>
-                                    </div>
-                                    <div class="d-flex flex-column flex-lg-row gap-2">
-                                        <button class="btn btn-outline-primary btn-sm">
-                                            <i class="fas fa-eye me-1"></i> View
-                                        </button>
-                                        <button class="btn btn-outline-secondary btn-sm">
-                                            <i class="fas fa-download me-1"></i> Export
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -422,30 +627,31 @@
                             <li class="nav-item">
                                 <button class="nav-link" data-bs-toggle="pill" data-bs-target="#notification-settings">Notifications</button>
                             </li>
-                            <li class="nav-item">
+                            {{-- <li class="nav-item">
                                 <button class="nav-link" data-bs-toggle="pill" data-bs-target="#billing-info">Billing</button>
-                            </li>
+                            </li> --}}
                         </ul>
 
                         <div class="tab-content">
                             <div class="tab-pane fade show active" id="personal-info">
-                                <form>
+                                <form method="POST" action="{{ route('user.update') }}" id="profileForm">
+                                    @csrf
                                     <div class="row g-3 mb-4">
                                         <div class="col-md-6">
                                             <label class="form-label">Full Name</label>
-                                            <input type="text" class="form-control" value="John Smith">
+                                            <input type="text" class="form-control" name="name" value="{{Auth::User()->name}}">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Email Address</label>
-                                            <input type="email" class="form-control" value="john.smith@email.com">
+                                            <input type="email" class="form-control" name="email" value="{{Auth::User()->email}}">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Phone Number</label>
-                                            <input type="tel" class="form-control" placeholder="+1 (555) 123-4567">
+                                            <input type="tel" class="form-control" name="phone" value="{{Auth::User()->phone}}">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Company</label>
-                                            <input type="text" class="form-control" placeholder="Your company name">
+                                            <input type="text" class="form-control" name="company" value="{{Auth::User()->company}}">
                                         </div>
                                     </div>
 
@@ -457,23 +663,25 @@
                                     <div class="row g-3 mb-4">
                                         <div class="col-md-6">
                                             <label class="form-label">Street Address</label>
-                                            <input type="text" class="form-control" placeholder="123 Main Street">
+                                            <input value="{{Auth::User()->street}}"  name="street" type="text" class="form-control" placeholder="Prestige Plaza, Ngong Road, Kilimani, Nairobi">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">City</label>
-                                            <input type="text" class="form-control" placeholder="San Francisco">
+                                            <input value="{{Auth::User()->city}}"  name="city" type="text" class="form-control" placeholder="Nairobi">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">State</label>
-                                            <input type="text" class="form-control" placeholder="CA">
+                                            <input value="{{Auth::User()->state}}"  name="state" type="text" class="form-control" placeholder="Nairobi">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">ZIP Code</label>
-                                            <input type="text" class="form-control" placeholder="94105">
+                                            <input value="{{Auth::User()->zip}}"  name="zip" type="text" class="form-control" placeholder="00100">
                                         </div>
                                     </div>
 
-                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                                        Save Changes
+                                    </button>
                                 </form>
                             </div>
 
@@ -484,21 +692,31 @@
                                         Password & Authentication
                                     </h6>
                                     
-                                    <form class="mb-4">
+                                    <form id="passwordUpdateForm" class="mb-4">
+                                        @csrf
+
                                         <div class="mb-3">
                                             <label class="form-label">Current Password</label>
-                                            <input type="password" class="form-control">
+                                            <input type="password" name="current_password" class="form-control" required>
                                         </div>
+
                                         <div class="mb-3">
                                             <label class="form-label">New Password</label>
-                                            <input type="password" class="form-control">
+                                            <input type="password" name="new_password" class="form-control" required>
                                         </div>
+
                                         <div class="mb-3">
                                             <label class="form-label">Confirm New Password</label>
-                                            <input type="password" class="form-control">
+                                            <input type="password" name="new_password_confirmation" class="form-control" required>
                                         </div>
-                                        <button type="submit" class="btn btn-outline-primary">Update Password</button>
+
+                                        <button type="submit" class="btn btn-outline-primary" id="updatePasswordBtn">
+                                            Update Password
+                                        </button>
+
+                                        <div id="passwordUpdateMsg" class="mt-3"></div>
                                     </form>
+
                                 </div>
 
                                 <div class="border-top pt-4">
@@ -549,7 +767,7 @@
                                     </div>
                                 </div>
                             </div>
-
+{{-- 
                             <div class="tab-pane fade" id="billing-info">
                                 <h6 class="mb-3">
                                     <i class="fas fa-credit-card me-2"></i>
@@ -593,7 +811,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
                         </div>
                     </div>
                 </div>
@@ -601,7 +819,119 @@
         </div>
     </div>
 
+    <!-- Toast Notification -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055">
+        <div id="formToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="formToastBody">
+                    Success!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="script.js"></script>
+    {{--  --}}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $('#profileForm').submit(function(e) {
+            e.preventDefault();
+
+            let form = $(this);
+            let actionUrl = form.attr('action');
+            let formData = form.serialize();
+            let submitBtn = $('#submitBtn');
+
+            submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Saving changes...');
+
+            $.ajax({
+                url: actionUrl,
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    $('#formResponse').html(
+                        `<div class="alert alert-success">Profile updated successfully.</div>`
+                    );
+
+                    // ✅ Show toast
+                    $('#formToastBody').text('Profile updated successfully.');
+                    let toast = new bootstrap.Toast(document.getElementById('formToast'));
+                    toast.show();
+                },
+                error: function(xhr) {
+                    let errors = xhr.responseJSON.errors;
+                    let message = '<div class="alert alert-danger"><ul>';
+                    $.each(errors, function(key, val) {
+                        message += `<li>${val}</li>`;
+                    });
+                    message += '</ul></div>';
+                    $('#formResponse').html(message);
+                },
+                complete: function() {
+                    submitBtn.prop('disabled', false).html('Save Changes');
+                }
+            });
+        });
+
+        $('#passwordUpdateForm').on('submit', function(e) {
+            e.preventDefault();
+
+            let btn = $('#updatePasswordBtn');
+            let msgBox = $('#passwordUpdateMsg');
+            
+            btn.prop('disabled', true).html(
+                '<span class="spinner-border spinner-border-sm me-1"></span> Updating...'
+            );
+
+            $.ajax({
+                url: '{{ route("user.update-password") }}',
+                method: 'POST',
+                data: $(this).serialize(),
+                success: function(response) {
+                    msgBox.html(`<div class="alert alert-success">${response.message}</div>`);
+                    $('#passwordUpdateForm')[0].reset();
+
+                    // ✅ Show toast
+                    $('#formToastBody').text('Password updated successfully.');
+                    let toast = new bootstrap.Toast(document.getElementById('formToast'));
+                    toast.show();
+
+                    if (response.redirect) {
+                        setTimeout(function() {
+                            window.location.href = response.redirect;
+                        }, 2000);
+                    }
+                },
+                error: function(xhr) {
+                    let errors = xhr.responseJSON.errors;
+                    let message = '<div class="alert alert-danger"><ul>';
+
+                    if (errors) {
+                        $.each(errors, function(key, val) {
+                            message += `<li>${val}</li>`;
+                        });
+                    } else {
+                        message += `<li>${xhr.responseJSON.message || 'An error occurred.'}</li>`;
+                    }
+
+                    message += '</ul></div>';
+                    msgBox.html(message);
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html('Update Password');
+                }
+            });
+        });
+    </script>
+
+
+   @include('dashboard.scripts')
+
+
+
+
+    {{--  --}}
 </body>
 </html>

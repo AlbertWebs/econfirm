@@ -2,7 +2,7 @@
 
 @section('content')
        <!-- Hero Section -->
-    <section class="hero">
+    <section class="hero" id="home">
         <div class="container">
             <div class="hero-grid">
                 <div class="hero-content animate-on-scroll">
@@ -254,7 +254,7 @@
     </section>
 
         <!-- Integration Section -->
-    <section class="cta">
+    <section class="cta" id="integration">
         <div class="container">
             <div class="cta-content">
                 <div class="cta-icon">
@@ -371,8 +371,8 @@
                 <h2>Ready to Secure Your Transactions?</h2>
                 <p>Join thousands of satisfied clients who trust our escrow service for their important transactions.</p>
                 <div class="cta-buttons">
-                    <button class="btn btn-primary btn-lg">Get Started Now</button>
-                    <button class="btn btn-outline btn-lg">Contact Sales</button>
+                    <a href="#home" class="btn btn-primary btn-lg">Get Started Now</a>
+                    <a href="mailto:support@econfirm.co.ke" class="btn btn-outline btn-lg">Contact Support</a>
                 </div>
                 <p class="cta-note">No obligation. Cancel anytime.</p>
             </div>

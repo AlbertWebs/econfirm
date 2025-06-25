@@ -81,6 +81,9 @@ class HomeController extends Controller
             'transaction_details' => $validated['transaction-details'] ?? null,
             'status' => 'pending',
         ]);
+
+        //Create user to user table with some of this data
+        
         // Log the transaction creation
         \Log::info('Transaction created', [
             'transaction_id' => $transaction->transaction_id,
@@ -326,6 +329,10 @@ class HomeController extends Controller
 
     public function getAPIDocumentation(){
         return view('front.api-documentation');
+    }
+
+    public function getEContract(){
+        return view('front.contracts.escrow-agreement');
     }
 
 
