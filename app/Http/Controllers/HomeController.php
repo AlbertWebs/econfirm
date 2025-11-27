@@ -17,6 +17,11 @@ class HomeController extends Controller
         return view('front.welcome');
     }
 
+    public function indexV2()
+    {
+        return view('front.welcome-v2');
+    }
+
      //Legalities
     public function termsAndConditions()
     {
