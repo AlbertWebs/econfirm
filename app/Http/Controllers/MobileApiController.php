@@ -509,12 +509,24 @@ class MobileApiController extends Controller
      */
     public function verifyOtp(Request $request): JsonResponse
     {
+        // Log incoming request for debugging
+        Log::info('Verify OTP request received', [
+            'request_data' => $request->all(),
+            'headers' => $request->headers->all()
+        ]);
+
+        // More flexible validation - accept various phone formats
         $validator = Validator::make($request->all(), [
-            'phone_number' => 'required|string|regex:/^\+?254[0-9]{9}$/',
-            'otp' => 'required|string|size:6',
+            'phone_number' => 'required|string',
+            'otp' => 'required|string|min:4|max:6',
         ]);
 
         if ($validator->fails()) {
+            Log::warning('Verify OTP validation failed', [
+                'errors' => $validator->errors()->toArray(),
+                'request_data' => $request->all()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
@@ -525,25 +537,50 @@ class MobileApiController extends Controller
         try {
             $phoneNumber = $request->phone_number;
             
-            // Normalize phone number
-            $phoneNumber = preg_replace('/^\+/', '', $phoneNumber);
-            if (!str_starts_with($phoneNumber, '254')) {
-                if (str_starts_with($phoneNumber, '0')) {
-                    $phoneNumber = '254' . substr($phoneNumber, 1);
-                } else {
-                    $phoneNumber = '254' . $phoneNumber;
-                }
+            // Normalize phone number - handle various formats
+            $phoneNumber = preg_replace('/[\s+\-()]/', '', $phoneNumber); // Remove spaces, +, -, (, )
+            
+            // Convert to 254 format
+            if (str_starts_with($phoneNumber, '+254')) {
+                $phoneNumber = substr($phoneNumber, 1); // Remove +
+            } elseif (str_starts_with($phoneNumber, '254')) {
+                // Already in correct format
+            } elseif (str_starts_with($phoneNumber, '0')) {
+                $phoneNumber = '254' . substr($phoneNumber, 1);
+            } elseif (strlen($phoneNumber) == 9) {
+                $phoneNumber = '254' . $phoneNumber;
             }
 
-            $otpCode = $request->otp;
+            // Validate normalized phone number
+            if (!preg_match('/^254[0-9]{9}$/', $phoneNumber)) {
+                Log::warning('Invalid phone number format after normalization', [
+                    'original' => $request->phone_number,
+                    'normalized' => $phoneNumber
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid phone number format. Please use format: +254XXXXXXXXX or 0XXXXXXXXX',
+                    'errors' => ['phone_number' => ['Invalid phone number format']]
+                ], 422);
+            }
+
+            $otpCode = trim($request->otp);
 
             // Verify OTP
             $otp = Otp::verify($phoneNumber, $otpCode);
 
             if (!$otp) {
+                Log::warning('OTP verification failed', [
+                    'phone' => $phoneNumber,
+                    'otp_provided' => $otpCode,
+                    'normalized_phone' => $phoneNumber
+                ]);
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Invalid or expired OTP. Please request a new one.'
+                    'message' => 'Invalid or expired OTP. Please request a new one.',
+                    'error_code' => 'INVALID_OTP'
                 ], 400);
             }
 
