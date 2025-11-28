@@ -568,7 +568,22 @@ class MobileApiController extends Controller
             $otpCode = trim($request->otp);
 
             // Verify OTP
-            $otp = Otp::verify($phoneNumber, $otpCode);
+            try {
+                $otp = Otp::verify($phoneNumber, $otpCode);
+            } catch (\Exception $e) {
+                Log::error('OTP verification exception', [
+                    'phone' => $phoneNumber,
+                    'otp_provided' => $otpCode,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error verifying OTP. Please try again.',
+                    'error_code' => 'OTP_VERIFICATION_ERROR'
+                ], 500);
+            }
 
             if (!$otp) {
                 Log::warning('OTP verification failed', [
@@ -585,28 +600,42 @@ class MobileApiController extends Controller
             }
 
             // Find or create user
-            $user = User::where('phone', $phoneNumber)->first();
+            try {
+                $user = User::where('phone', $phoneNumber)->first();
 
-            if (!$user) {
-                // Create new user
-                $user = User::create([
+                if (!$user) {
+                    // Create new user
+                    $user = User::create([
+                        'phone' => $phoneNumber,
+                        'name' => 'User', // Default name, can be updated later
+                        'email' => null,
+                        'password' => Hash::make(uniqid()), // Random password, user can reset later
+                        'role' => 'user',
+                        'type' => 0, // 0 = user
+                    ]);
+
+                    Log::info('New user created via OTP verification', [
+                        'user_id' => $user->id,
+                        'phone' => $phoneNumber
+                    ]);
+                } else {
+                    Log::info('Existing user verified via OTP', [
+                        'user_id' => $user->id,
+                        'phone' => $phoneNumber
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error('User creation/retrieval failed', [
                     'phone' => $phoneNumber,
-                    'name' => 'User', // Default name, can be updated later
-                    'email' => null,
-                    'password' => Hash::make(uniqid()), // Random password, user can reset later
-                    'role' => 'user',
-                    'type' => 0, // 0 = user
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
                 ]);
 
-                Log::info('New user created via OTP verification', [
-                    'user_id' => $user->id,
-                    'phone' => $phoneNumber
-                ]);
-            } else {
-                Log::info('Existing user verified via OTP', [
-                    'user_id' => $user->id,
-                    'phone' => $phoneNumber
-                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error processing user account. Please try again.',
+                    'error_code' => 'USER_CREATION_ERROR'
+                ], 500);
             }
 
             return response()->json([
@@ -624,13 +653,27 @@ class MobileApiController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Verify OTP failed', [
-                'phone' => $request->phone_number,
-                'error' => $e->getMessage()
+                'phone' => $request->phone_number ?? 'unknown',
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
             ]);
+
+            // Return more detailed error in development, generic in production
+            $errorMessage = config('app.debug') 
+                ? 'Failed to verify OTP: ' . $e->getMessage() 
+                : 'Failed to verify OTP. Please try again.';
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to verify OTP. Please try again.'
+                'message' => $errorMessage,
+                'error_code' => 'VERIFICATION_FAILED',
+                'debug' => config('app.debug') ? [
+                    'error' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ] : null
             ], 500);
         }
     }
