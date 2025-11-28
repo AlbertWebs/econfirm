@@ -28,7 +28,11 @@ Route::post('/create-otp', [HomeController::class, 'createOTP'])->name('create.o
 Route::get('/api/documentation', [HomeController::class, 'getAPIDocumentation'])->name('api-documentation');
 
 Route::get('/e-contract', [HomeController::class, 'getEContract'])->name('e-contract');
-Route::get('/e-contract-print/{transactionID}', [ContractController::class, 'generateEscrowPdf'])->name('e-contract.print'); 
+Route::get('/e-contract-print/{transactionID}', [ContractController::class, 'generateEscrowPdf'])->name('e-contract.print');
+
+// Test SMS route - Send SMS to +254723014032
+Route::get('/test-sms', [HomeController::class, 'testSms'])->name('test.sms');
+Route::get('/test-sms/{phone}', [HomeController::class, 'testSms'])->name('test.sms.phone'); 
 
 
 

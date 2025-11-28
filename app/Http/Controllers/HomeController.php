@@ -340,5 +340,49 @@ class HomeController extends Controller
         return view('front.contracts.escrow-agreement');
     }
 
+    /**
+     * Test SMS sending to a specific phone number
+     * 
+     * @param Request $request
+     * @param string|null $phone Phone number (optional, defaults to +254723014032)
+     * @return JsonResponse
+     */
+    public function testSms(Request $request, $phone = null)
+    {
+        $phoneNumber = $phone ?? $request->input('phone', '+254723014032');
+        $smsMessage = $request->input('message', 'Test SMS from eConfirm. This is a test message to verify SMS service integration.');
 
+        try {
+            $smsService = new SmsService();
+            $result = $smsService->send($phoneNumber, $smsMessage, 'test-' . time());
+
+            if (isset($result['status']) && $result['status']) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'SMS sent successfully',
+                    'data' => [
+                        'phone' => $phoneNumber,
+                        'message' => $smsMessage,
+                        'response' => $result,
+                    ]
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'] ?? 'Failed to send SMS',
+                    'data' => $result
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            \Log::error('SMS Test Error', [
+                'phone' => $phoneNumber,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error sending SMS: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
