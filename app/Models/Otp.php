@@ -130,16 +130,46 @@ class Otp extends Model
      */
     public static function verify(string $phoneNumber, string $otpCode): ?self
     {
+        \Log::info('Otp::verify called', [
+            'phone_number' => $phoneNumber,
+            'otp_code' => $otpCode,
+            'otp_code_length' => strlen($otpCode)
+        ]);
+
+        // First, find the OTP without expiration check to see what we have
         $otp = self::where('phone_number', $phoneNumber)
             ->where('otp_code', $otpCode)
             ->where('is_verified', false)
-            ->where('expires_at', '>', now())
             ->first();
 
         if ($otp) {
+            \Log::info('OTP record found', [
+                'otp_id' => $otp->id,
+                'expires_at' => $otp->expires_at->toDateTimeString(),
+                'now' => now()->toDateTimeString(),
+                'is_expired' => $otp->isExpired(),
+                'is_valid' => $otp->isValid()
+            ]);
+
+            // Check if expired
+            if ($otp->isExpired()) {
+                \Log::warning('OTP is expired', [
+                    'otp_id' => $otp->id,
+                    'expires_at' => $otp->expires_at->toDateTimeString()
+                ]);
+                return null;
+            }
+
+            // Mark as verified
             $otp->markAsVerified();
+            \Log::info('OTP verified successfully', ['otp_id' => $otp->id]);
             return $otp;
         }
+
+        \Log::warning('OTP not found or already verified', [
+            'phone_number' => $phoneNumber,
+            'otp_code' => $otpCode
+        ]);
 
         return null;
     }
