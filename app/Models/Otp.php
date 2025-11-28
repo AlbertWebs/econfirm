@@ -64,17 +64,65 @@ class Otp extends Model
      */
     public static function createForPhone(string $phoneNumber, int $expiryMinutes = 10): self
     {
-        // Invalidate any existing unverified OTPs for this phone
-        self::where('phone_number', $phoneNumber)
-            ->where('is_verified', false)
-            ->where('expires_at', '>', now())
-            ->update(['is_verified' => true]); // Mark as used
+        try {
+            // Invalidate any existing unverified OTPs for this phone BEFORE creating new one
+            $invalidated = self::where('phone_number', $phoneNumber)
+                ->where('is_verified', false)
+                ->where('expires_at', '>', now())
+                ->update(['is_verified' => true]); // Mark as used
 
-        return self::create([
-            'phone_number' => $phoneNumber,
-            'otp_code' => self::generateCode(),
-            'expires_at' => now()->addMinutes($expiryMinutes),
-        ]);
+            \Log::info('Invalidated existing OTPs', [
+                'phone_number' => $phoneNumber,
+                'count' => $invalidated
+            ]);
+
+            $otpCode = self::generateCode();
+            $expiresAt = now()->addMinutes($expiryMinutes);
+
+            \Log::info('Creating new OTP record', [
+                'phone_number' => $phoneNumber,
+                'otp_code' => $otpCode,
+                'expires_at' => $expiresAt->toDateTimeString()
+            ]);
+
+            // Use create method which should work fine
+            $otp = self::create([
+                'phone_number' => $phoneNumber,
+                'otp_code' => $otpCode,
+                'expires_at' => $expiresAt,
+                'is_verified' => false,
+            ]);
+
+            // Verify it was saved
+            if (!$otp->id) {
+                throw new \Exception('OTP was not saved - no ID returned');
+            }
+
+            \Log::info('OTP record created and saved successfully', [
+                'otp_id' => $otp->id,
+                'phone_number' => $otp->phone_number,
+                'otp_code' => $otp->otp_code,
+                'expires_at' => $otp->expires_at->toDateTimeString(),
+                'is_verified' => $otp->is_verified
+            ]);
+
+            // Double-check by querying the database
+            $verifyOtp = self::find($otp->id);
+            if (!$verifyOtp) {
+                throw new \Exception('OTP was not found in database after creation');
+            }
+
+            return $otp;
+        } catch (\Exception $e) {
+            \Log::error('Failed to create OTP', [
+                'phone_number' => $phoneNumber,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
     }
 
     /**

@@ -416,7 +416,23 @@ class MobileApiController extends Controller
             }
 
             // Create OTP
+            Log::info('Creating OTP', ['phone' => $phoneNumber]);
             $otp = Otp::createForPhone($phoneNumber, 10); // 10 minutes expiry
+            
+            if (!$otp || !$otp->id) {
+                Log::error('Failed to create OTP', ['phone' => $phoneNumber]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to generate OTP. Please try again.'
+                ], 500);
+            }
+            
+            Log::info('OTP created successfully', [
+                'phone' => $phoneNumber,
+                'otp_id' => $otp->id,
+                'otp_code' => $otp->otp_code,
+                'expires_at' => $otp->expires_at
+            ]);
 
             // Send SMS via SmsService
             $smsService = new SmsService();
@@ -424,10 +440,24 @@ class MobileApiController extends Controller
             
             $smsResult = $smsService->send($phoneNumber, $message);
 
+            // Verify OTP was saved to database
+            $savedOtp = Otp::find($otp->id);
+            if (!$savedOtp) {
+                Log::error('OTP was not saved to database', [
+                    'phone' => $phoneNumber,
+                    'otp_id' => $otp->id
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to save OTP to database. Please try again.'
+                ], 500);
+            }
+
             if ($smsResult['status'] ?? false) {
                 Log::info('OTP sent successfully', [
                     'phone' => $phoneNumber,
-                    'otp_id' => $otp->id
+                    'otp_id' => $otp->id,
+                    'otp_code' => $otp->otp_code
                 ]);
 
                 return response()->json([
@@ -435,12 +465,14 @@ class MobileApiController extends Controller
                     'message' => 'OTP sent successfully to your phone number',
                     'data' => [
                         'expires_in' => 600, // 10 minutes in seconds
+                        'otp_id' => $otp->id, // For debugging
                     ]
                 ]);
             } else {
                 Log::error('Failed to send OTP SMS', [
                     'phone' => $phoneNumber,
-                    'sms_error' => $smsResult['message'] ?? 'Unknown error'
+                    'sms_error' => $smsResult['message'] ?? 'Unknown error',
+                    'otp_id' => $otp->id
                 ]);
 
                 // Still return success but log the SMS failure
@@ -450,6 +482,7 @@ class MobileApiController extends Controller
                     'message' => 'OTP generated. Please check your phone for the code.',
                     'data' => [
                         'expires_in' => 600,
+                        'otp_id' => $otp->id, // For debugging
                         'otp_code' => $otp->otp_code, // For development/testing only - remove in production
                     ]
                 ]);
@@ -457,13 +490,16 @@ class MobileApiController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Send OTP failed', [
-                'phone' => $request->phone_number,
-                'error' => $e->getMessage()
+                'phone' => $request->phone_number ?? 'unknown',
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send OTP. Please try again.'
+                'message' => 'Failed to send OTP: ' . $e->getMessage()
             ], 500);
         }
     }
