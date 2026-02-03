@@ -20,7 +20,12 @@ return new class extends Migration
             $table->string('seller_email')->nullable()->after('receiver_mobile');
             $table->string('currency', 3)->default('KES')->after('transaction_amount');
             $table->text('terms')->nullable()->after('transaction_details');
-            $table->string('confirmation_code')->nullable()->after('otp');
+            // Check if otp column exists before using it as reference
+            if (Schema::hasColumn('transactions', 'otp')) {
+                $table->string('confirmation_code')->nullable()->after('otp');
+            } else {
+                $table->string('confirmation_code')->nullable()->after('transaction_details');
+            }
         });
     }
 
