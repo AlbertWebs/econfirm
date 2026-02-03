@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MpesaController;
 use App\Http\Controllers\MobileApiController;
+use App\Http\Controllers\EscrowApiController;
 
 // Example API route
 Route::get('/ping', function () {
@@ -23,4 +24,11 @@ Route::prefix('mobile')->group(function () {
     Route::post('/payment/status', [MobileApiController::class, 'checkPaymentStatus']);
     Route::get('/transaction/{transactionId}', [MobileApiController::class, 'getTransaction']);
     Route::post('/transaction/search', [MobileApiController::class, 'searchTransaction']);
+});
+
+// Escrow API Routes (v1)
+Route::prefix('v1')->middleware('api.auth')->group(function () {
+    Route::post('/transactions', [EscrowApiController::class, 'createTransaction']);
+    Route::get('/transactions/{transaction_id}', [EscrowApiController::class, 'getTransaction']);
+    Route::post('/transactions/{transaction_id}/release', [EscrowApiController::class, 'releaseFunds']);
 });

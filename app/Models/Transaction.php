@@ -21,5 +21,10 @@ class Transaction extends Model
         'receiver_mobile',
         'transaction_details',
         'status',
+        'buyer_email',
+        'seller_email',
+        'currency',
+        'terms',
+        'confirmation_code',
     ];
 }

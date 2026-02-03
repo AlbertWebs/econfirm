@@ -22,6 +22,14 @@ Route::get('/terms-and-conditions', [HomeController::class, 'termsAndConditions'
 Route::get('/privacy-policy', [HomeController::class, 'privacyPolicy'])->name('privacy.policy');
 Route::get('/complience', [HomeController::class, 'complience'])->name('complience');
 Route::get('/security', [HomeController::class, 'security'])->name('security');
+Route::get('/support', [HomeController::class, 'support'])->name('support');
+Route::get('/help', [HomeController::class, 'help'])->name('help');
+Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
+Route::post('/contact', [HomeController::class, 'submitContact'])->name('submit.contact');
+Route::get('/sitemap.xml', [HomeController::class, 'sitemap'])->name('sitemap');
+Route::get('/scam-watch', [HomeController::class, 'scamWatch'])->name('scam.watch');
+Route::post('/submit-scam-report', [HomeController::class, 'submitScamReport'])->name('submit.scam.report');
+Route::post('/like-scam-report/{id}', [HomeController::class, 'likeScamReport'])->name('like.scam.report');
 Route::get('/transaction/status/{id}', [HomeController::class, 'transactionStatus'])->name('transaction.status');
 Route::get('/get-access-token', [HomeController::class, 'getAccessToken'])->name('get.access.token');
 Route::post('/create-otp', [HomeController::class, 'createOTP'])->name('create.otp');

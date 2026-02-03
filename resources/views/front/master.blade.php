@@ -4,10 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-     <link rel="stylesheet" href="{{asset('theme/style.css')}}">
+    <meta name="theme-color" content="#18743c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="eConfirm">
+    <link rel="apple-touch-icon" href="{{ asset('uploads/favicon.png') }}">
+     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
     <link rel="icon" type="image/png" href="{{ asset('uploads/favicon.png') }}">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
     <!-- Font Awesome Free CDN -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
@@ -67,24 +72,14 @@
     </script>
 
 
-   {{--  --}}
-   <!--Start of Tawk.to Script-->
-    <script type="text/javascript">
-    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-    (function(){
-    var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-    s1.async=true;
-    s1.src='https://embed.tawk.to/6859484414b543191cac8bc1/1iuec4jii';
-    s1.charset='UTF-8';
-    s1.setAttribute('crossorigin','*');
-    s0.parentNode.insertBefore(s1,s0);
-    })();
-    </script>
-    <!--End of Tawk.to Script-->
-   {{--  --}}
    
    
     <style>
+        /* Smooth scrolling for anchor links */
+        html {
+            scroll-behavior: smooth;
+        }
+        
         /* Preloader styles */
         #preloader {
           position: fixed;
@@ -147,71 +142,93 @@
         }
     </style>
 </head>
-<body>
-<div id="preloader"><div class="loader"></div></div>
+<body class="bg-white antialiased" x-data="{ mobileMenuOpen: false, searchPopupOpen: false }">
+<div id="preloader" class="fixed inset-0 z-50 flex items-center justify-center bg-white transition-opacity duration-400">
+    <div class="w-16 h-16 border-4 border-gray-200 border-t-green-700 rounded-full animate-spin"></div>
+</div>
+    
     <!-- Header -->
-    <header class="header">
-        <div class="container">
-            <div class="nav-wrapper">
-                <div class="logo">
-                    <a href="#">
-                        <img src="{{ asset('uploads/logo-hoz.png') }}" alt="e-confirm Logo" style="height: 70px; vertical-align: middle;">
+    <header class="hidden lg:block sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <div class="flex-shrink-0">
+                    <a href="{{ route('home') }}#home" class="block transition-transform hover:scale-105 duration-200">
+                        <img src="{{ asset('uploads/logo-hoz.png') }}" alt="e-confirm Logo" class="h-14 md:h-16">
                     </a>
                 </div>
                 
-                <nav class="nav-desktop">
-                    <a href="#home">Get Started</a>
-                    <a href="#features">Features</a>
-                    <a href="#how-it-works">How It Works</a>
-                    <a href="#integration">API
-                        <small class="fa-solid fa-code"></small>
-
+                <!-- Desktop Navigation -->
+                <nav class="hidden lg:flex items-center space-x-2">
+                    <a href="{{ route('home') }}#home" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200">Get Started</a>
+                    <a href="{{ route('home') }}#features" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200">Features</a>
+                    <a href="{{ route('home') }}#how-it-works" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200">How It Works</a>
+                    <a href="{{ route('home') }}#integration" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200 flex items-center gap-1">
+                        API <i class="fas fa-code text-xs"></i>
                     </a>
-                    {{-- <a href="#faq">FAQ</a> --}}
+                    <a href="{{ route('scam.watch') }}" class="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 flex items-center gap-1.5 border border-red-200">
+                        <i class="fas fa-shield-alt text-xs"></i> Confirm
+                    </a>
                     
-                    <button class="btn btn-outline" id="search-transaction-btn"><i class="fas fa-search"></i> &nbsp; Search Transaction</button>
-                    @if (auth()->check())
-                        <button onclick="window.location.href='{{ route('user.dashboard') }}'" class="btn btn-outline"> <i class="fas fa-tachometer-alt"></i> &nbsp; Dashboard</button>
-                    @else
-                        <button onclick="window.location.href='{{ route('login') }}'" class="btn btn-outline"> <i class="fas fa-sign-in"></i> &nbsp;  Log In</button>
-                    @endif
+                    <div class="h-6 w-px bg-gray-300 mx-2"></div>
                     
-                    {{-- <a href="mailto:tickets@e-confirm.p.tawk.email" class="btn btn-primary" style="color:#ffffff;">
-                        Create Ticket 💬
-                    </a> --}}
-                    {{-- Logout Button --}}
+                    <button @click="searchPopupOpen = true" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-green-300 transition-all duration-200 flex items-center gap-2">
+                        <i class="fas fa-search text-xs"></i> Search Transaction
+                    </button>
 
                     @if (auth()->check())
-                        <a title="Logout" class="dropdown-item" href="{{ route('logout') }}"
-                            onclick="event.preventDefault();
-                                            document.getElementById('logout-form').submit();">
+                        <button onclick="window.location.href='{{ route('user.dashboard') }}'" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-green-300 transition-all duration-200 flex items-center gap-2">
+                            <i class="fas fa-tachometer-alt text-xs"></i> Dashboard
+                        </button>
+                        <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200" title="Logout">
                             <i class="fas fa-sign-out"></i>
                         </a>
-
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
                             @csrf
                         </form>
+                    @else
+                        <button onclick="window.location.href='{{ route('login') }}'" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-green-300 transition-all duration-200 flex items-center gap-2">
+                            <i class="fas fa-sign-in text-xs"></i> Log In
+                        </button>
                     @endif
                 </nav>
 
-                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                <!-- Mobile Menu Button -->
+                <button @click="mobileMenuOpen = !mobileMenuOpen" class="lg:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
+                    <svg x-show="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                    <svg x-show="mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: none;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
                 </button>
             </div>
             
-            <nav class="nav-mobile" id="mobileNav">
-                 <a href="#home">Get Started</a>
-                <a href="#features">Features</a>
-                <a href="#how-it-works">How It Works</a>
-                <a href="#integration">API</a>
-                {{-- <a href="#faq">FAQ</a> --}}
-               <button class="btn btn-outline" id="search-transaction-btn"><i class="fas fa-search"></i> &nbsp; Search Transaction</button>
-                    <button class="btn btn-outline"> <i class="fas fa-sign-in"></i> &nbsp;  Log In</button>
-                    <a href="mailto:tickets@e-confirm.p.tawk.email" class="btn btn-primary" style="color:#ffffff;">
-                        Create Ticket 💬
-                    </a>
+            <!-- Mobile Navigation -->
+            <nav x-show="mobileMenuOpen" x-transition class="lg:hidden pb-4 space-y-2 border-t border-gray-200 mt-2 pt-4" style="display: none;">
+                <a href="{{ route('home') }}#home" @click="mobileMenuOpen = false" class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-all duration-200">Get Started</a>
+                <a href="{{ route('home') }}#features" @click="mobileMenuOpen = false" class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-all duration-200">Features</a>
+                <a href="{{ route('home') }}#how-it-works" @click="mobileMenuOpen = false" class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-all duration-200">How It Works</a>
+                <a href="{{ route('home') }}#integration" @click="mobileMenuOpen = false" class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-all duration-200 flex items-center gap-2">
+                    <i class="fas fa-code text-xs"></i> API
+                </a>
+                <a href="{{ route('scam.watch') }}" @click="mobileMenuOpen = false" class="block px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-all duration-200 flex items-center gap-2 border border-red-200">
+                    <i class="fas fa-shield-alt text-xs"></i> Confirm
+                </a>
+                
+                <div class="h-px bg-gray-200 my-2"></div>
+                
+                <button @click="searchPopupOpen = true; mobileMenuOpen = false" class="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-green-300 transition-all duration-200 flex items-center gap-2">
+                    <i class="fas fa-search text-xs"></i> Search Transaction
+                </button>
+                @if (auth()->check())
+                    <button onclick="window.location.href='{{ route('user.dashboard') }}'" class="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-green-300 transition-all duration-200 flex items-center gap-2">
+                        <i class="fas fa-tachometer-alt text-xs"></i> Dashboard
+                    </button>
+                @else
+                    <button onclick="window.location.href='{{ route('login') }}'" class="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-green-300 transition-all duration-200 flex items-center gap-2">
+                        <i class="fas fa-sign-in text-xs"></i> Log In
+                    </button>
+                @endif
             </nav>
         </div>
     </header>
@@ -219,325 +236,333 @@
 
     @yield('content')
   
+    <!-- PWA Install Prompt -->
+    <div x-data="{ 
+        showInstallPrompt: false,
+        deferredPrompt: null,
+        isInstalled: false,
+        init() {
+            // Check if already installed
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                                 window.navigator.standalone;
+            
+            if (isStandalone) {
+                this.isInstalled = true;
+                console.log('App already installed');
+                return;
+            }
+
+            // Check if dismissed in this session
+            const dismissed = sessionStorage.getItem('pwa-prompt-dismissed');
+            if (dismissed === 'true') {
+                console.log('Prompt was dismissed in this session');
+                return;
+            }
+
+            const showPrompt = () => {
+                console.log('Attempting to show prompt. isInstalled:', this.isInstalled, 'dismissed:', sessionStorage.getItem('pwa-prompt-dismissed'));
+                if (!this.isInstalled && sessionStorage.getItem('pwa-prompt-dismissed') !== 'true') {
+                    console.log('Setting showInstallPrompt to true');
+                    this.showInstallPrompt = true;
+                    console.log('showInstallPrompt is now:', this.showInstallPrompt);
+                }
+            };
+
+            // Listen for beforeinstallprompt event
+            window.addEventListener('beforeinstallprompt', (e) => {
+                console.log('beforeinstallprompt event fired');
+                e.preventDefault();
+                this.deferredPrompt = e;
+                // Show prompt after 2 seconds
+                setTimeout(showPrompt, 2000);
+            });
+
+            // Listen for app installed event
+            window.addEventListener('appinstalled', () => {
+                console.log('App installed');
+                this.isInstalled = true;
+                this.showInstallPrompt = false;
+                this.deferredPrompt = null;
+            });
+
+            // Fallback: Show prompt after 3 seconds regardless
+            setTimeout(() => {
+                console.log('Fallback timer fired. Checking conditions...');
+                console.log('isInstalled:', this.isInstalled);
+                console.log('dismissed:', sessionStorage.getItem('pwa-prompt-dismissed'));
+                console.log('showInstallPrompt before:', this.showInstallPrompt);
+                
+                if (!this.isInstalled && sessionStorage.getItem('pwa-prompt-dismissed') !== 'true') {
+                    console.log('Conditions met, showing prompt');
+                    this.showInstallPrompt = true;
+                    console.log('showInstallPrompt after:', this.showInstallPrompt);
+                } else {
+                    console.log('Conditions not met, not showing prompt');
+                }
+            }, 3000);
+        },
+        async installApp() {
+            if (this.deferredPrompt) {
+                this.deferredPrompt.prompt();
+                const { outcome } = await this.deferredPrompt.userChoice;
+                
+                if (outcome === 'accepted') {
+                    this.isInstalled = true;
+                }
+                
+                this.deferredPrompt = null;
+            } else {
+                // Fallback: Show browser's native install prompt or instructions
+                alert('To install this app:\n\nChrome/Edge: Click the install icon in the address bar\nFirefox: Click the menu button and select "Install"\nSafari: Tap Share button and select "Add to Home Screen"');
+            }
+            
+            this.showInstallPrompt = false;
+        },
+        dismissPrompt() {
+            this.showInstallPrompt = false;
+            // Don't show again for this session
+            sessionStorage.setItem('pwa-prompt-dismissed', 'true');
+        }
+    }"
+    x-show="showInstallPrompt"
+    :style="showInstallPrompt ? 'display: block !important;' : 'display: none !important;'"
+    x-transition:enter="transition ease-out duration-300"
+    x-transition:enter-start="opacity-0 transform translate-y-4"
+    x-transition:enter-end="opacity-100 transform translate-y-0"
+    x-transition:leave="transition ease-in duration-200"
+    x-transition:leave-start="opacity-100 transform translate-y-0"
+    x-transition:leave-end="opacity-0 transform translate-y-4"
+    class="fixed bottom-20 lg:bottom-4 left-4 right-4 lg:left-auto lg:right-4 lg:w-96 z-40 bg-white rounded-xl shadow-2xl border-2 border-green-200 p-6 relative">
+        <button @click="dismissPrompt()" 
+                class="absolute -top-2 -right-2 w-8 h-8 flex items-center justify-center bg-red-500 hover:bg-red-600 rounded-full transition-colors text-white shadow-lg z-50">
+            <i class="fas fa-times text-sm"></i>
+        </button>
+        <div class="flex items-start gap-4">
+            <div class="flex-shrink-0">
+                <img src="{{ asset('uploads/favicon.png') }}" alt="eConfirm" class="w-16 h-16 rounded-lg">
+            </div>
+            <div class="flex-1">
+                <h3 class="text-lg font-bold text-gray-900 mb-1">Install eConfirm App</h3>
+                <p class="text-sm text-gray-600 mb-4">Get a better experience with our app. Install for quick access and offline support.</p>
+                <div class="flex gap-2">
+                    <button @click="installApp()" 
+                            class="flex-1 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                        <i class="fas fa-download text-sm"></i>
+                        Install Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg">
+        <div class="grid grid-cols-5 h-16">
+            <a href="{{ route('home') }}" class="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 transition-colors active:bg-gray-50">
+                <i class="fas fa-home text-lg mb-1"></i>
+                <span class="text-xs font-medium">Home</span>
+            </a>
+            <a href="{{ route('home') }}#home" class="flex flex-col items-center justify-center text-gray-600 hover:text-green-600 transition-colors active:bg-gray-50">
+                <i class="fas fa-shield-alt text-lg mb-1"></i>
+                <span class="text-xs font-medium">Escrow</span>
+            </a>
+            <a href="{{ route('scam.watch') }}" class="flex flex-col items-center justify-center text-gray-600 hover:text-red-600 transition-colors active:bg-gray-50">
+                <i class="fas fa-check-circle text-lg mb-1"></i>
+                <span class="text-xs font-medium">Confirm</span>
+            </a>
+            <a href="{{ route('scam.watch') }}#scam-list" class="flex flex-col items-center justify-center text-gray-600 hover:text-orange-600 transition-colors active:bg-gray-50">
+                <i class="fas fa-flag text-lg mb-1"></i>
+                <span class="text-xs font-medium">Report</span>
+            </a>
+            @if (auth()->check())
+                <a href="{{ route('user.dashboard') }}" class="flex flex-col items-center justify-center text-gray-600 hover:text-green-600 transition-colors active:bg-gray-50">
+                    <i class="fas fa-user-circle text-lg mb-1"></i>
+                    <span class="text-xs font-medium">Account</span>
+                </a>
+            @else
+                <a href="{{ route('login') }}" class="flex flex-col items-center justify-center text-gray-600 hover:text-green-600 transition-colors active:bg-gray-50">
+                    <i class="fas fa-sign-in-alt text-lg mb-1"></i>
+                    <span class="text-xs font-medium">Login</span>
+                </a>
+            @endif
+        </div>
+    </nav>
 
     <!-- Footer -->
     @include('front.footer')
 
-    <!-- Search Transaction Popup (Basic) -->
-    <div id="searchTransactionPopup" style="display:none; position:fixed; z-index:1050; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); align-items:center; justify-content:center;">
-        <div class="popup-content-anim" style="background:#fff; border-radius:10px; max-width:350px; width:90%; margin:auto; padding:2rem 1.5rem; box-shadow:0 8px 32px rgba(0,0,0,0.18); position:relative;">
-            <button id="closeSearchPopup" style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.5rem; color:#888; cursor:pointer;">&times;</button>
-            <h5 style="margin-bottom:1rem;">Search Transaction</h5>
-            <form id="basic-search-transaction-form">
-            <div class="form-group mb-3"> 
-                <label for="basic-search-transaction-id" class="form-label">Transaction ID</label>
-                <input type="text" class="form-control w-100" id="basic-search-transaction-id" name="transaction_id" placeholder="Enter Transaction ID" required>
-            </div>
-            <br>
-            <button type="submit" class="btn btn-outline w-100" id="search-btn">Search</button>
-            </form>
-            <div style="text-align: center; font-size:10px; line-height:1.2; padding-top: 10px;" id="basic-search-transaction-result" class="mt-3" style="display:none;"></div>
-        </div>
-    </div>
-
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"></script>
-
    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Toggle Mobile Menu
-            window.toggleMobileMenu = function () {
-                const mobileNav = document.getElementById('mobileNav');
-                if (mobileNav) {
-                    mobileNav.classList.toggle('active');
-                }
-            };
-
-            // Smooth Scrolling for Anchor Links
+        // Smooth scrolling for anchor links
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
                     e.preventDefault();
                     const target = document.querySelector(this.getAttribute('href'));
                     if (target) {
-                        target.scrollIntoView({ behavior: 'smooth' });
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                 });
             });
 
-            // On-scroll Animation using Intersection Observer
-            const observer = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('in-view');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.15 });
-
-            document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
-
-            // Transaction Type Animation
-            const transactionType = document.getElementById('transaction-type');
-            const customTypeGroup = document.getElementById('custom-transaction-type-group');
-            if (transactionType && customTypeGroup) {
-                customTypeGroup.style.display = transactionType.value === 'other' ? 'block' : 'none';
-
-                transactionType.addEventListener('change', function () {
-                    if (this.value === 'other') {
-                        customTypeGroup.style.display = 'block';
-                        customTypeGroup.style.opacity = 0;
-                        customTypeGroup.style.transition = 'opacity 0.4s cubic-bezier(0.4,0,0.2,1)';
-                        setTimeout(() => { customTypeGroup.style.opacity = 1; }, 10);
-                    } else {
-                        customTypeGroup.style.opacity = 0;
-                        customTypeGroup.style.transition = 'opacity 0.3s cubic-bezier(0.4,0,0.2,1)';
-                        setTimeout(() => { customTypeGroup.style.display = 'none'; }, 300);
-                    }
-                });
-            }
-
-            // AJAX Submit for Transaction Form
-            const form = document.querySelector('.transaction-form');
-            if (form) {
-                const submitBtn = form.querySelector('button[type="submit"]');
-                const defaultBtnHTML = 'Fund Your Escrow <svg style="vertical-align: middle; margin-left: 8px;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>';
-
-                form.addEventListener('submit', function (e) {
-                    e.preventDefault();
-                    const formData = new FormData(form);
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = 'Processing...';
-
-                    fetch('/submit-transaction', {
-                        method: 'POST',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-                        },
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = defaultBtnHTML;
-
-                        const mpesaResponse = document.getElementById('mpesa-response');
-                        if (mpesaResponse) {
-                            mpesaResponse.style.display = 'block';
-                            if (data.success) {
-                                
-                                mpesaResponse.textContent = 'STK push sent. Waiting for payment confirmation...';
-                                mpesaResponse.className = 'alert alert-success';
-                                // Check for CheckoutRequestID before polling
-                                const checkoutRequestId = data.CheckoutRequestID || (data.data && data.data.CheckoutRequestID);
-                                if (checkoutRequestId) {
-                                    form.reset();
-                                    pollTransactionStatus(checkoutRequestId);
-                                }
-                            } else {
-                                mpesaResponse.textContent = data.message || 'Submission failed. Please try again.';
-                                mpesaResponse.className = 'alert alert-warning';
-                            }
-                        }
-                    })
-                    .catch(() => {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = defaultBtnHTML;
-                        alert('Submission failed. Please try again.');
-                    });
-                });
-            }
-
-            // Polling function for transaction status
-            function pollTransactionStatus(checkoutRequestId) {
-                let pollInterval = 5000; // 5 seconds
-                let maxAttempts = 24; // 2 minutes
-                let attempts = 0;
-                const submitBtn = form.querySelector('button[type="submit"]');
-                submitBtn.innerHTML = 'Waiting for confirmation...';
-                const mpesaResponse = document.getElementById('mpesa-response');
-                const poll = setInterval(() => {
-                    attempts++;
-                    fetch(`/transaction/status/${checkoutRequestId}`, {
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.status === 'completed' || data.status === 'Success') {
-                            clearInterval(poll);
-                            if (mpesaResponse) {
-                                mpesaResponse.textContent = 'Payment received! Redirecting...';
-                                mpesaResponse.className = 'alert alert-success';
-                            }
-                            setTimeout(() => {
-                                window.location.href = `/get-transaction/${data.transaction_id}`; //only work with transaction_id
-                            }, 1500);
-                        } else if (data.status === 'Failed') {
-                            clearInterval(poll);
-                            if (mpesaResponse) {
-                                mpesaResponse.textContent = 'Payment failed. Please try again.';
-                                mpesaResponse.className = 'alert alert-danger';
-                            }
-                        } else if (attempts >= maxAttempts) {
-                            clearInterval(poll);
-                            if (mpesaResponse) {
-                                mpesaResponse.textContent = 'Payment confirmation timed out. Please check your transaction status later.';
-                                mpesaResponse.className = 'alert alert-warning';
-                            }
-                        }
-                    })
-                    .catch(() => {
-                        if (attempts >= maxAttempts) {
-                            clearInterval(poll);
-                            if (mpesaResponse) {
-                                mpesaResponse.textContent = 'Payment confirmation timed out. Please check your transaction status later.';
-                                mpesaResponse.className = 'alert alert-warning';
-                            }
-                        }
-                    });
-                }, pollInterval);
-            }
-
-            // Show Popup for Search Transaction
-            const searchBtn = document.getElementById('search-transaction-btn');
-            const popup = document.getElementById('searchTransactionPopup');
-            const closeBtn = document.getElementById('closeSearchPopup');
-            const popupContent = popup?.querySelector('.popup-content-anim');
-
-            if (searchBtn && popup) {
-                searchBtn.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    popup.classList.add('active');
-                    if (popupContent) {
-                        popupContent.classList.remove('popupIn');
-                        void popupContent.offsetWidth;
-                        popupContent.classList.add('popupIn');
-                    }
-                });
-            }
-
-            if (closeBtn && popup) {
-                closeBtn.addEventListener('click', function () {
-                    popup.classList.remove('active');
-                });
-            }
-
-            if (popup) {
-                popup.addEventListener('click', function (e) {
-                    if (e.target === popup) popup.classList.remove('active');
-                });
-            }
-
-            // Basic AJAX Search with Loading Spinner
-            const basicForm = document.getElementById('basic-search-transaction-form');
-            if (basicForm) {
-                basicForm.addEventListener('submit', function (e) {
-                    e.preventDefault();
-
-                    const resultDiv = document.getElementById('basic-search-transaction-result');
-                    const idInput = document.getElementById('basic-search-transaction-id');
-                    const btn = document.getElementById('search-btn');
-
-                    resultDiv.style.display = 'none';
-                    resultDiv.innerHTML = '';
-
-                    const id = idInput?.value.trim();
-                    if (!id) return;
-
-                    // Show loading spinner
-                    btn.classList.add('btn-loading');
-                    btn.innerHTML = 'Searching <span class="spinner"></span>';
-
-                    fetch(`/transaction/search?id=${encodeURIComponent(id)}`, {
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        btn.classList.remove('btn-loading');
-                        btn.innerHTML = 'Search';
-                        resultDiv.style.display = 'block';
-
-                        let transaction = null;
-                        if (data.transaction) {
-                            transaction = data.transaction;
-                        } else if (Array.isArray(data.data) && data.data.length > 0) {
-                            transaction = data.data[0];
-                        }
-
-                        if (data.success && transaction) {
-                            resultDiv.className = 'alert alert-success';
-                            resultDiv.innerHTML = `<strong>Transaction Found:</strong><br>ID: ${transaction.transaction_id || transaction.id}<br>Status: ${transaction.status}`;
-                            setTimeout(() => {
-                                const viewId = transaction.transaction_id || transaction.id;
-                                resultDiv.innerHTML += `<br><a href="/get-transaction/${viewId}" class="btn btn-outline mt-2 small-btn">View Transaction <i class='fas fa-arrow-right' style='margin-left:6px;'></i></a>`;
-                            }, 3000);
-                        } else {
-                            resultDiv.className = 'alert alert-warning';
-                            resultDiv.textContent = data.message || 'Transaction not found.';
-                        }
-                    })
-                    .catch(() => {
-                        btn.classList.remove('btn-loading');
-                        btn.innerHTML = 'Search';
-                        resultDiv.style.display = 'block';
-                        resultDiv.className = 'alert alert-danger';
-                        resultDiv.textContent = 'Error searching transaction.';
-                    });
-                });
-            }
-
-            //Paybill of buygoods
-            
-
-            // Preloader Hide on Page Load
+        // Preloader
             window.addEventListener('load', function () {
                 const preloader = document.getElementById('preloader');
                 if (preloader) {
-                    preloader.style.opacity = 0;
+                preloader.style.opacity = '0';
                     setTimeout(() => {
                         preloader.style.display = 'none';
                     }, 400);
                 }
-            });
         });
     </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Animate custom transaction type group
-            const transactionType = document.getElementById('transaction-type');
-            const customTransactionTypeGroup = document.getElementById('custom-transaction-type-group');
-            function updateTransactionType() {
-                if (transactionType.value === 'other') {
-                    customTransactionTypeGroup.style.display = '';
-                    customTransactionTypeGroup.style.opacity = 0;
-                    customTransactionTypeGroup.style.transition = 'opacity 0.4s cubic-bezier(0.4,0,0.2,1)';
-                    setTimeout(() => { customTransactionTypeGroup.style.opacity = 1; }, 10);
-                } else {
-                    customTransactionTypeGroup.style.opacity = 0;
-                    customTransactionTypeGroup.style.transition = 'opacity 0.3s cubic-bezier(0.4,0,0.2,1)';
-                    setTimeout(() => { customTransactionTypeGroup.style.display = 'none'; }, 300);
-                }
-            }
-            transactionType.addEventListener('change', updateTransactionType);
-            updateTransactionType();
 
-            // Animate paybill/till group
-            const paymentMethod = document.getElementById('payment-method');
-            const paybillTillGroup = document.getElementById('paybill-till-group');
-            function updatePaybillTill() {
-                if (paymentMethod.value === 'paybill') {
-                    paybillTillGroup.style.display = '';
-                    paybillTillGroup.style.opacity = 0;
-                    paybillTillGroup.style.transition = 'opacity 0.4s cubic-bezier(0.4,0,0.2,1)';
-                    setTimeout(() => { paybillTillGroup.style.opacity = 1; }, 10);
+    <!-- Search Transaction Popup -->
+    <div x-show="searchPopupOpen" 
+         @click.away="searchPopupOpen = false"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+         style="display: none;"
+         x-data="{ 
+            loading: false,
+            result: null,
+            error: null,
+            async search() {
+                this.loading = true;
+                this.result = null;
+                this.error = null;
+                const id = document.getElementById('basic-search-transaction-id').value.trim();
+                if (!id) { this.loading = false; return; }
+                
+                try {
+                    const res = await fetch(`/transaction/search?id=${encodeURIComponent(id)}`, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    const data = await res.json();
+                    const transaction = data.transaction || (Array.isArray(data.data) && data.data[0] ? data.data[0] : null);
+                    
+                    if (data.success && transaction) {
+                        this.result = transaction;
                 } else {
-                    paybillTillGroup.style.opacity = 0;
-                    paybillTillGroup.style.transition = 'opacity 0.3s cubic-bezier(0.4,0,0.2,1)';
-                    setTimeout(() => { paybillTillGroup.style.display = 'none'; }, 300);
+                        this.error = data.message || 'Transaction not found.';
+                    }
+                } catch (e) {
+                    this.error = 'Error searching transaction.';
+                } finally {
+                    this.loading = false;
                 }
             }
-            paymentMethod.addEventListener('change', updatePaybillTill);
-            updatePaybillTill();
+         }">
+        <div @click.stop 
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6 relative">
+            <button @click="searchPopupOpen = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">Search Transaction</h3>
+            <form @submit.prevent="search()">
+                <div class="mb-4">
+                    <label for="basic-search-transaction-id" class="block text-sm font-medium text-gray-700 mb-2">Transaction ID</label>
+                    <input type="text" 
+                           id="basic-search-transaction-id" 
+                           name="transaction_id" 
+                           placeholder="Enter Transaction ID" 
+                           required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition">
+                </div>
+                <button type="submit" 
+                        :disabled="loading"
+                        class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2">
+                    <span x-show="!loading">Search</span>
+                    <span x-show="loading" class="flex items-center gap-2">
+                        <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Searching...
+                    </span>
+                </button>
+            </form>
+            <div x-show="result || error" class="mt-4 p-3 rounded-lg" 
+                 :class="result ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'"
+                 style="display: none;">
+                <template x-if="result">
+                    <div class="space-y-3">
+                        <div>
+                            <p class="font-semibold mb-1">Transaction Found:</p>
+                            <p class="text-sm">ID: <span x-text="result.transaction_id || result.id"></span></p>
+                            <p class="text-sm">Status: <span x-text="result.status"></span></p>
+                        </div>
+                        <a :href="`/get-transaction/${result.transaction_id || result.id}`" 
+                           class="block w-full text-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+                            View Transaction <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                        <div class="pt-3 border-t border-green-200">
+                            <p class="text-xs text-gray-600 mb-2">Help us improve by leaving a review:</p>
+                            <a href="https://g.page/r/CXoxpsT3ArcfEAE/review" 
+                               target="_blank"
+                               class="inline-flex items-center justify-center gap-2 w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-medium rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-sm hover:shadow-md">
+                                <i class="fab fa-google"></i>
+                                Leave a Google Review
+                                <i class="fas fa-external-link-alt text-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+                </template>
+                <template x-if="error">
+                    <p class="text-sm" x-text="error"></p>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('Service Worker registered successfully:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+
+    <!-- Smooth Scroll for Anchor Links -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Enhanced smooth scroll for anchor links with offset for fixed header
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    const href = this.getAttribute('href');
+                    if (href && href.startsWith('#')) {
+                        const targetId = href.substring(1);
+                        const targetElement = document.getElementById(targetId);
+                        if (targetElement) {
+                            e.preventDefault();
+                            const headerOffset = 80;
+                            const elementPosition = targetElement.getBoundingClientRect().top;
+                            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                            
+                            window.scrollTo({
+                                top: offsetPosition,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+                });
+            });
         });
     </script>
 

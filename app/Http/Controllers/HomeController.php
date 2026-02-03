@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transaction;
+use App\Models\ScamReport;
+use App\Models\ScamReportLike;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Services\MpesaService;
@@ -40,6 +42,194 @@ class HomeController extends Controller
     public function security()
     {
         return view('front.security');
+    }
+
+    public function support()
+    {
+        return view('front.support');
+    }
+
+    public function help()
+    {
+        return view('front.help');
+    }
+
+    public function contact()
+    {
+        return view('front.contact');
+    }
+
+    public function submitContact(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        // TODO: Send email or save to database
+        // For now, just return success
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Thank you for contacting us! We will get back to you soon.'
+        ]);
+    }
+
+    public function sitemap()
+    {
+        $urls = [
+            [
+                'loc' => url('/'),
+                'lastmod' => now()->format('Y-m-d'),
+                'changefreq' => 'daily',
+                'priority' => '1.0'
+            ],
+            [
+                'loc' => route('scam.watch'),
+                'lastmod' => now()->format('Y-m-d'),
+                'changefreq' => 'daily',
+                'priority' => '0.9'
+            ],
+            [
+                'loc' => route('support'),
+                'lastmod' => now()->format('Y-m-d'),
+                'changefreq' => 'weekly',
+                'priority' => '0.8'
+            ],
+            [
+                'loc' => route('help'),
+                'lastmod' => now()->format('Y-m-d'),
+                'changefreq' => 'weekly',
+                'priority' => '0.8'
+            ],
+            [
+                'loc' => route('contact'),
+                'lastmod' => now()->format('Y-m-d'),
+                'changefreq' => 'monthly',
+                'priority' => '0.8'
+            ],
+            [
+                'loc' => route('terms.conditions'),
+                'lastmod' => now()->format('Y-m-d'),
+                'changefreq' => 'monthly',
+                'priority' => '0.7'
+            ],
+            [
+                'loc' => route('privacy.policy'),
+                'lastmod' => now()->format('Y-m-d'),
+                'changefreq' => 'monthly',
+                'priority' => '0.7'
+            ],
+            [
+                'loc' => route('security'),
+                'lastmod' => now()->format('Y-m-d'),
+                'changefreq' => 'monthly',
+                'priority' => '0.7'
+            ],
+            [
+                'loc' => route('complience'),
+                'lastmod' => now()->format('Y-m-d'),
+                'changefreq' => 'monthly',
+                'priority' => '0.7'
+            ],
+            [
+                'loc' => route('api-documentation'),
+                'lastmod' => now()->format('Y-m-d'),
+                'changefreq' => 'weekly',
+                'priority' => '0.6'
+            ],
+        ];
+
+        return response()->view('front.sitemap', ['urls' => $urls])
+            ->header('Content-Type', 'text/xml');
+    }
+
+    public function scamWatch()
+    {
+        $reports = ScamReport::withCount('likes')
+            ->whereIn('status', ['approved', 'pending'])
+            ->orderBy('report_count', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+            
+        return view('front.scam-watch', compact('reports'));
+    }
+
+    public function submitScamReport(Request $request)
+    {
+        // Validate the request
+        $validated = $request->validate([
+            'report_type' => 'required|in:website,phone,email',
+            'website' => 'required_if:report_type,website|nullable|string|max:255',
+            'phone' => 'required_if:report_type,phone|nullable|string|max:20',
+            'reported_email' => 'required_if:report_type,email|nullable|email|max:255',
+            'category' => 'required|string',
+            'description' => 'required|string|max:5000',
+            'email' => 'nullable|email|max:255',
+            'date_of_incident' => 'nullable|date',
+        ]);
+
+        // Check if this report already exists
+        $existingReport = ScamReport::where('report_type', $validated['report_type'])
+            ->where(function($query) use ($validated) {
+                if ($validated['report_type'] === 'website') {
+                    $query->where('website', $validated['website']);
+                } elseif ($validated['report_type'] === 'phone') {
+                    $query->where('phone', $validated['phone']);
+                } elseif ($validated['report_type'] === 'email') {
+                    $query->where('reported_email', $validated['reported_email']);
+                }
+            })
+            ->first();
+
+        if ($existingReport) {
+            // Increment report count
+            $existingReport->increment('report_count');
+        } else {
+            // Create new report - auto-approve for now (can add admin approval later)
+            $validated['status'] = 'approved';
+            ScamReport::create($validated);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Your report has been submitted successfully. It will be reviewed before being published.'
+        ]);
+    }
+
+    public function likeScamReport($id)
+    {
+        $report = ScamReport::findOrFail($id);
+        $ipAddress = request()->ip();
+        
+        // Check if user already liked this report
+        $existingLike = ScamReportLike::where('scam_report_id', $id)
+            ->where('ip_address', $ipAddress)
+            ->first();
+        
+        if ($existingLike) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have already liked this report.',
+                'likes_count' => $report->likes()->count()
+            ]);
+        }
+        
+        // Create new like
+        ScamReportLike::create([
+            'scam_report_id' => $id,
+            'ip_address' => $ipAddress,
+            'user_agent' => request()->userAgent(),
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Thank you for your feedback!',
+            'likes_count' => $report->fresh()->likes()->count()
+        ]);
     }
 
     //generateUniqueTransactionId
