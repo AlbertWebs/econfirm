@@ -5,31 +5,82 @@ namespace App\Services;
 class SmsService
 {
     protected $apiUrl;
-    protected $apiKey;
-    protected $userId;
-    protected $password;
+    protected $apiToken;
     protected $senderId;
 
     public function __construct()
     {
         // Get credentials from config/services.php
-        $this->apiUrl = config('services.sms.api_url', 'https://smsportal.hostpinnacle.co.ke/SMSApi/send');
-        $this->apiKey = config('services.sms.api_key');
-        $this->userId = config('services.sms.user_id');
-        $this->password = config('services.sms.password');
-        $this->senderId = config('services.sms.sender_id'); // Default sender ID
+        $this->apiUrl = config('services.sms.api_url', 'https://rebuetext.com/api/v1/send-sms');
+        $this->apiToken = config('services.sms.api_token');
+        $this->senderId = config('services.sms.sender_id');
     }
 
     /**
-     * Send an SMS message.
+     * Normalize phone number to format accepted by Rebue Text API
+     * Accepts: 254XXXXXXXXX, 07XXXXXXXX, 01XXXXXXXX, 7XXXXXXXX, 1XXXXXXXX
      *
-     * @param string $to Recipient phone number (in international format)
+     * @param string $phone Phone number
+     * @return string Normalized phone number
+     */
+    protected function normalizePhone($phone)
+    {
+        // Remove any spaces, dashes, or plus signs
+        $phone = preg_replace('/[\s+\-]/', '', $phone);
+
+        // If it starts with 254 (Kenya country code), return as is
+        if (preg_match('/^254\d{9}$/', $phone)) {
+            return $phone;
+        }
+
+        // If it starts with 07 or 01 (10 digits), add 254 prefix
+        if (preg_match('/^(07|01)\d{8}$/', $phone)) {
+            return '254' . substr($phone, 1);
+        }
+
+        // If it starts with 7 or 1 (9 digits), add 254 prefix
+        if (preg_match('/^(7|1)\d{8}$/', $phone)) {
+            return '254' . $phone;
+        }
+
+        // Return as is if already in correct format or unknown format
+        return $phone;
+    }
+
+    /**
+     * Send an SMS message using Rebue Text API.
+     *
+     * @param string $to Recipient phone number (various formats accepted)
      * @param string $message Message content
+     * @param string|null $correlator Optional unique identifier for tracking
      * @return array
      */
-    public function send($to, $message)
+    public function send($to, $message, $correlator = null)
     {
-        $senderId = $this->senderId;
+        if (empty($this->apiToken)) {
+            \Log::error('SMS API Token not configured');
+            return ['status' => false, 'message' => 'SMS API Token not configured'];
+        }
+
+        if (empty($this->senderId)) {
+            \Log::error('SMS Sender ID not configured');
+            return ['status' => false, 'message' => 'SMS Sender ID not configured'];
+        }
+
+        // Normalize phone number
+        $phone = $this->normalizePhone($to);
+
+        // Prepare request body
+        $payload = [
+            'sender' => $this->senderId,
+            'message' => $message,
+            'phone' => $phone,
+        ];
+
+        // Add optional correlator if provided
+        if ($correlator !== null) {
+            $payload['correlator'] = $correlator;
+        }
 
         $curl = curl_init();
 
@@ -41,33 +92,74 @@ class SmsService
             CURLOPT_TIMEOUT => 30,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => "POST",
-            CURLOPT_POSTFIELDS => http_build_query([
-                'userid' => $this->userId,
-                'password' => $this->password,
-                'mobile' => $to,
-                'msg' => $message,
-                'senderid' => $senderId,
-                'msgType' => 'text',
-                'duplicatecheck' => 'true',
-                'output' => 'json',
-                'sendMethod' => 'quick',
-            ]),
+            CURLOPT_POSTFIELDS => json_encode($payload),
             CURLOPT_HTTPHEADER => [
-                "apikey: {$this->apiKey}",
-                "cache-control: no-cache",
-                "content-type: application/x-www-form-urlencoded",
+                "Content-Type: application/json",
+                "Accept: application/json",
+                "Authorization: Bearer {$this->apiToken}",
             ],
         ]);
 
         $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $err = curl_error($curl);
 
         curl_close($curl);
 
         if ($err) {
-            return ['status' => 'error', 'message' => "cURL Error #: $err"];
+            \Log::error('SMS cURL Error', ['error' => $err, 'phone' => $phone]);
+            return ['status' => false, 'message' => "cURL Error: $err"];
         }
 
-        return json_decode($response, true);
+        $responseData = json_decode($response, true);
+
+        // Handle response - Rebue Text returns an array
+        if ($httpCode === 200 && is_array($responseData)) {
+            // If it's an array with a single response, return the first element
+            if (isset($responseData[0])) {
+                $result = $responseData[0];
+                // Log successful send
+                if (isset($result['status']) && $result['status']) {
+                    \Log::info('SMS sent successfully', [
+                        'phone' => $phone,
+                        'uniqueId' => $result['data']['uniqueId'] ?? null,
+                    ]);
+                } else {
+                    \Log::warning('SMS send failed', [
+                        'phone' => $phone,
+                        'message' => $result['message'] ?? 'Unknown error',
+                    ]);
+                }
+                return $result;
+            }
+            return $responseData;
+        }
+
+        // Handle error responses
+        \Log::error('SMS API Error', [
+            'http_code' => $httpCode,
+            'response' => $responseData,
+            'phone' => $phone,
+        ]);
+
+        return [
+            'status' => false,
+            'message' => $responseData['message'] ?? 'Failed to send SMS',
+            'http_code' => $httpCode,
+        ];
+    }
+
+    /**
+     * Send SMS to multiple recipients (comma-separated phone numbers).
+     *
+     * @param string $to Comma-separated phone numbers
+     * @param string $message Message content
+     * @param string|null $correlator Optional unique identifier for tracking
+     * @return array
+     */
+    public function sendBulk($to, $message, $correlator = null)
+    {
+        // Rebue Text API supports comma-separated phone numbers
+        return $this->send($to, $message, $correlator);
     }
 }

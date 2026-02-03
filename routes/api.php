@@ -15,6 +15,10 @@ Route::post('/mpesa/callback', [MpesaController::class, 'handleCallback'])->name
 Route::post('/mpesa/b2b/callback', [MpesaController::class, 'handleB2BCallback'])->name('mpesa.b2b.callback');
 Route::post('/mpesa/b2c/callback', [MpesaController::class, 'handleB2CCallback'])->name('mpesa.b2c.callback');
 
+// Authentication routes (public)
+Route::post('/auth/send-otp', [MobileApiController::class, 'sendOtp']);
+Route::post('/auth/verify-otp', [MobileApiController::class, 'verifyOtp']);
+
 // Mobile API Routes
 Route::prefix('mobile')->group(function () {
     // Public endpoints

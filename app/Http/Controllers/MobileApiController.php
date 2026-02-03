@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Transaction;
 use App\Models\MpesaStkPush;
+use App\Models\User;
+use App\Models\Otp;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Services\MpesaService;
@@ -11,6 +13,7 @@ use App\Services\SmsService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
 
 class MobileApiController extends Controller
 {
@@ -378,6 +381,273 @@ class MobileApiController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Search failed. Please try again.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Send OTP to phone number
+     */
+    public function sendOtp(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'phone_number' => 'required|string|regex:/^\+?254[0-9]{9}$/',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $phoneNumber = $request->phone_number;
+            
+            // Normalize phone number (remove + if present, ensure 254 format)
+            $phoneNumber = preg_replace('/^\+/', '', $phoneNumber);
+            if (!str_starts_with($phoneNumber, '254')) {
+                if (str_starts_with($phoneNumber, '0')) {
+                    $phoneNumber = '254' . substr($phoneNumber, 1);
+                } else {
+                    $phoneNumber = '254' . $phoneNumber;
+                }
+            }
+
+            // Create OTP
+            Log::info('Creating OTP', ['phone' => $phoneNumber]);
+            $otp = Otp::createForPhone($phoneNumber, 10); // 10 minutes expiry
+            
+            if (!$otp || !$otp->id) {
+                Log::error('Failed to create OTP', ['phone' => $phoneNumber]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to generate OTP. Please try again.'
+                ], 500);
+            }
+            
+            Log::info('OTP created successfully', [
+                'phone' => $phoneNumber,
+                'otp_id' => $otp->id,
+                'otp_code' => $otp->otp_code,
+                'expires_at' => $otp->expires_at
+            ]);
+
+            // Send SMS via SmsService
+            $smsService = new SmsService();
+            $message = "Your eConfirm verification code is: {$otp->otp_code}. Valid for 10 minutes. Do not share this code.";
+            
+            $smsResult = $smsService->send($phoneNumber, $message);
+
+            // Verify OTP was saved to database
+            $savedOtp = Otp::find($otp->id);
+            if (!$savedOtp) {
+                Log::error('OTP was not saved to database', [
+                    'phone' => $phoneNumber,
+                    'otp_id' => $otp->id
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to save OTP to database. Please try again.'
+                ], 500);
+            }
+
+            if ($smsResult['status'] ?? false) {
+                Log::info('OTP sent successfully', [
+                    'phone' => $phoneNumber,
+                    'otp_id' => $otp->id,
+                    'otp_code' => $otp->otp_code
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'OTP sent successfully to your phone number',
+                    'data' => [
+                        'expires_in' => 600, // 10 minutes in seconds
+                        'otp_id' => $otp->id, // For debugging
+                    ]
+                ]);
+            } else {
+                Log::error('Failed to send OTP SMS', [
+                    'phone' => $phoneNumber,
+                    'sms_error' => $smsResult['message'] ?? 'Unknown error',
+                    'otp_id' => $otp->id
+                ]);
+
+                // Still return success but log the SMS failure
+                // In production, you might want to return an error
+                return response()->json([
+                    'success' => true,
+                    'message' => 'OTP generated. Please check your phone for the code.',
+                    'data' => [
+                        'expires_in' => 600,
+                        'otp_id' => $otp->id, // For debugging
+                        'otp_code' => $otp->otp_code, // For development/testing only - remove in production
+                    ]
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Send OTP failed', [
+                'phone' => $request->phone_number ?? 'unknown',
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send OTP: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Verify OTP and create/update user
+     */
+    public function verifyOtp(Request $request): JsonResponse
+    {
+        Log::info('OTP verification request received', [
+            'phone_number' => $request->phone_number ?? 'not provided',
+            'otp_length' => strlen($request->otp ?? ''),
+            'request_data' => $request->all()
+        ]);
+
+        $validator = Validator::make($request->all(), [
+            'phone_number' => 'required|string|regex:/^\+?254[0-9]{9}$/',
+            'otp' => 'required|string|size:6',
+        ]);
+
+        if ($validator->fails()) {
+            Log::warning('OTP verification validation failed', [
+                'errors' => $validator->errors()->toArray(),
+                'request_data' => $request->all()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $phoneNumber = $request->phone_number;
+            
+            // Normalize phone number (same logic as sendOtp)
+            $phoneNumber = preg_replace('/^\+/', '', $phoneNumber);
+            if (!str_starts_with($phoneNumber, '254')) {
+                if (str_starts_with($phoneNumber, '0')) {
+                    $phoneNumber = '254' . substr($phoneNumber, 1);
+                } else {
+                    $phoneNumber = '254' . $phoneNumber;
+                }
+            }
+
+            $otpCode = $request->otp;
+
+            Log::info('Verifying OTP', [
+                'normalized_phone' => $phoneNumber,
+                'otp_code' => $otpCode,
+                'otp_length' => strlen($otpCode)
+            ]);
+
+            // Check if OTP exists in database before verification
+            $existingOtp = Otp::where('phone_number', $phoneNumber)
+                ->where('otp_code', $otpCode)
+                ->where('is_verified', false)
+                ->first();
+
+            if ($existingOtp) {
+                Log::info('OTP found in database', [
+                    'otp_id' => $existingOtp->id,
+                    'expires_at' => $existingOtp->expires_at->toDateTimeString(),
+                    'is_expired' => $existingOtp->isExpired(),
+                    'is_valid' => $existingOtp->isValid()
+                ]);
+            } else {
+                Log::warning('OTP not found in database', [
+                    'phone_number' => $phoneNumber,
+                    'otp_code' => $otpCode
+                ]);
+            }
+
+            // Verify OTP
+            $otp = Otp::verify($phoneNumber, $otpCode);
+
+            if (!$otp) {
+                Log::error('OTP verification failed', [
+                    'phone_number' => $phoneNumber,
+                    'otp_code' => $otpCode,
+                    'reason' => 'Invalid or expired OTP'
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid or expired OTP. Please request a new one.'
+                ], 400);
+            }
+
+            // Find or create user
+            $user = User::where('phone', $phoneNumber)->first();
+
+            if (!$user) {
+                // Create new user
+                // Generate a unique email if email is required (use phone-based email as placeholder)
+                // This ensures the email field is not null if the database requires it
+                $email = $phoneNumber . '@econfirm.local';
+                
+                try {
+                    $user = User::create([
+                        'phone' => $phoneNumber,
+                        'name' => 'User', // Default name, can be updated later
+                        'email' => $email, // Use phone-based email as placeholder
+                        'password' => Hash::make(uniqid()), // Random password, user can reset later
+                        'role' => 'user',
+                        'type' => 0, // 0 = user
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Failed to create user', [
+                        'phone' => $phoneNumber,
+                        'email' => $email,
+                        'error' => $e->getMessage()
+                    ]);
+                    throw $e;
+                }
+
+                Log::info('New user created via OTP verification', [
+                    'user_id' => $user->id,
+                    'phone' => $phoneNumber
+                ]);
+            } else {
+                Log::info('Existing user verified via OTP', [
+                    'user_id' => $user->id,
+                    'phone' => $phoneNumber
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Phone verified successfully',
+                'data' => [
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'phone' => $user->phone,
+                        'email' => $user->email,
+                    ]
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Verify OTP failed', [
+                'phone' => $request->phone_number,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to verify OTP. Please try again.'
             ], 500);
         }
     }

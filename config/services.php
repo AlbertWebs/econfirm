@@ -35,10 +35,8 @@ return [
     ],
 
     'sms' => [
-        'api_url'   => env('SMS_API_URL', 'https://smsportal.hostpinnacle.co.ke/SMSApi/send'),
-        'api_key'   => env('SMS_API_KEY'),
-        'user_id'   => env('SMS_USER_ID'),
-        'password'  => env('SMS_PASSWORD'),
+        'api_url'   => env('SMS_API_URL', 'https://rebuetext.com/api/v1/send-sms'),
+        'api_token' => env('SMS_API_TOKEN') ?: env('SMS_API_KEY'), // Support both SMS_API_TOKEN and SMS_API_KEY
         'sender_id' => env('SMS_SENDER_ID'),
     ],
 ];
