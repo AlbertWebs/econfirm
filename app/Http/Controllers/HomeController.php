@@ -457,6 +457,16 @@ class HomeController extends Controller
             $transaction->checkout_request_id = $mpesaResponse['data']['CheckoutRequestID'] ?? null;
             $transaction->merchant_request_id = $mpesaResponse['data']['MerchantRequestID'] ?? null;
             $transaction->save();
+
+            try {
+                (new SmsService())->notifyEscrowStkInitiated($transaction->fresh());
+            } catch (\Throwable $e) {
+                \Log::error('Escrow STK initiation SMS failed', [
+                    'transaction_id' => $transaction->transaction_id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Transaction submitted and STK push initiated! Check your phone for pin confirmation.',

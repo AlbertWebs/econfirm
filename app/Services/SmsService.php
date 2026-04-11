@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Transaction;
+
 class SmsService
 {
     protected $apiUrl;
@@ -161,5 +163,27 @@ class SmsService
     {
         // Rebue Text API supports comma-separated phone numbers
         return $this->send($to, $message, $correlator);
+    }
+
+    /**
+     * SMS when a user starts an escrow and M-Pesa STK prompt was sent (sender + receiver).
+     * Uses SMS_API_URL, SMS_API_TOKEN, SMS_SENDER_ID from .env via config/services.php.
+     */
+    public function notifyEscrowStkInitiated(Transaction $transaction): void
+    {
+        if (empty($this->apiToken) || empty($this->senderId)) {
+            \Log::warning('Escrow STK SMS skipped: SMS not configured in .env');
+
+            return;
+        }
+
+        $ref = $transaction->transaction_id;
+        $amt = number_format((float) $transaction->transaction_amount, 2);
+
+        $senderMsg = "eConfirm: Escrow {$ref} for KES {$amt}. Enter your M-Pesa PIN on your phone to fund this escrow.";
+        $receiverMsg = "eConfirm: Escrow {$ref} for KES {$amt} lists you as receiver. The sender is completing M-Pesa payment.";
+
+        $this->send($transaction->sender_mobile, $senderMsg, $ref.'-stk-sender');
+        $this->send($transaction->receiver_mobile, $receiverMsg, $ref.'-stk-recv');
     }
 }

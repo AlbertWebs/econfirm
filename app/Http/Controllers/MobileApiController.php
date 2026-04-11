@@ -179,6 +179,15 @@ class MobileApiController extends Controller
                 $transaction->merchant_request_id = $mpesaResponse['data']['MerchantRequestID'] ?? null;
                 $transaction->save();
 
+                try {
+                    (new SmsService())->notifyEscrowStkInitiated($transaction->fresh());
+                } catch (\Throwable $e) {
+                    Log::error('Escrow STK initiation SMS failed (mobile)', [
+                        'transaction_id' => $transaction->transaction_id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Payment request sent. Please check your phone for M-Pesa prompt.',
