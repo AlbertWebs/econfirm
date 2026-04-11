@@ -60,7 +60,9 @@
     <link rel="icon" href="{{ $siteUrl }}/assets/images/favicon.ico" type="image/x-icon">
 
     <!-- Schema.org JSON-LD Structured Data -->
+     @verbatim  
     <script type="application/ld+json">
+    
     {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -83,6 +85,7 @@
     }
     }
     </script>
+    @endverbatim
     @stack('structured_data')
 
     @stack('head_extra')
