@@ -26,6 +26,19 @@
      .min-vh-50 {
         min-height: 60vh;
     }
+    .password-toggle-btn {
+        border-color: #ced4da;
+        color: #495057;
+    }
+    .password-toggle-btn:hover,
+    .password-toggle-btn:focus {
+        background-color: #f8f9fa;
+        border-color: #18743c;
+        color: #18743c;
+    }
+    .input-group .form-control.is-invalid {
+        z-index: 0;
+    }
 </style>
 
 <div class="container">
@@ -57,11 +70,19 @@
                             <label for="password" class="form-label">
                                 <i class="bi bi-lock-fill me-1"></i> {{ __('Password') }}
                             </label>
-                            <input id="password" type="password"
-                                class="form-control @error('password') is-invalid @enderror"
-                                name="password" required autocomplete="current-password">
+                            <div class="input-group">
+                                <input id="password" type="password"
+                                    class="form-control @error('password') is-invalid @enderror"
+                                    name="password" required autocomplete="current-password"
+                                    aria-describedby="passwordToggle">
+                                <button type="button" class="btn password-toggle-btn" id="passwordToggle"
+                                    title="{{ __('Show password') }}" aria-label="{{ __('Show password') }}"
+                                    aria-pressed="false" tabindex="0">
+                                    <i class="fas fa-eye" id="passwordToggleIcon" aria-hidden="true"></i>
+                                </button>
+                            </div>
                             @error('password')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
 
@@ -93,3 +114,29 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('passwordToggle');
+    var input = document.getElementById('password');
+    var icon = document.getElementById('passwordToggleIcon');
+    if (!btn || !input || !icon) return;
+
+    function setVisible(visible) {
+        input.type = visible ? 'text' : 'password';
+        icon.classList.toggle('fa-eye', !visible);
+        icon.classList.toggle('fa-eye-slash', visible);
+        var showLabel = @json(__('Show password'));
+        var hideLabel = @json(__('Hide password'));
+        btn.setAttribute('aria-label', visible ? hideLabel : showLabel);
+        btn.setAttribute('title', visible ? hideLabel : showLabel);
+        btn.setAttribute('aria-pressed', visible ? 'true' : 'false');
+    }
+
+    btn.addEventListener('click', function () {
+        setVisible(input.type === 'password');
+    });
+});
+</script>
+@endpush

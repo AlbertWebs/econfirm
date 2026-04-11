@@ -1,6 +1,6 @@
 <footer class="bg-gray-900 text-gray-300 pb-16 lg:pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12 mb-8">
             <!-- Brand Column -->
             <div class="sm:col-span-2 lg:col-span-2">
                 <div class="mb-4">
@@ -22,6 +22,25 @@
                 </ul>
             </div>
             
+            <!-- Scam Watch (dynamic category & report topic pages) -->
+            <div>
+                <h3 class="text-white font-semibold text-lg mb-4">Scam Watch</h3>
+                <ul class="space-y-3">
+                    <li>
+                        <a href="{{ route('scam.watch') }}" class="text-gray-400 hover:text-red-400 transition-colors text-sm font-medium">
+                            All reported scams
+                        </a>
+                    </li>
+                    @foreach(\App\Models\ScamReport::CATEGORY_LABELS as $categoryKey => $categoryLabel)
+                        <li>
+                            <a href="{{ route('scam.watch.category', ['category' => $categoryKey]) }}" class="text-gray-400 hover:text-red-400 transition-colors text-sm">
+                                {{ $categoryLabel }}
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+
             <!-- Legal Column -->
             <div>
                 <h3 class="text-white font-semibold text-lg mb-4">Legal</h3>
@@ -32,9 +51,38 @@
                     <li><a href="{{ route('complience') }}" class="text-gray-400 hover:text-green-400 transition-colors text-sm">Compliance</a></li>
                 </ul>
             </div>
-            
-            
         </div>
+
+        @php
+            $footerScamReportLinks = \Illuminate\Support\Facades\Cache::remember(
+                'footer_scam_report_links_v1',
+                now()->addMinutes(10),
+                fn () => \App\Models\ScamReport::query()
+                    ->visible()
+                    ->orderByDesc('report_count')
+                    ->orderByDesc('created_at')
+                    ->limit(24)
+                    ->get()
+            );
+        @endphp
+        @if($footerScamReportLinks->isNotEmpty())
+        <div class="border-t border-gray-800 pt-8 mb-8">
+            <h3 class="text-white font-semibold text-lg mb-4 text-center sm:text-left">Latest scam reports</h3>
+            <p class="text-xs text-gray-500 mb-4 text-center sm:text-left max-w-3xl">Direct links to individual warning pages (updates every few minutes).</p>
+            <ul class="flex flex-wrap justify-center sm:justify-start gap-x-4 gap-y-2 text-sm">
+                @foreach($footerScamReportLinks as $report)
+                    <li>
+                        <a href="{{ route('scam.watch.show', ['report' => $report, 'slug' => $report->seoSlug()]) }}" class="text-gray-400 hover:text-red-400 transition-colors break-all max-w-[14rem] sm:max-w-none inline-block">
+                            {{ \Illuminate\Support\Str::limit((string) $report->reported_value, 42, '…') }}
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+            <p class="mt-4 text-center sm:text-left">
+                <a href="{{ route('scam.watch') }}" class="text-sm text-red-400 hover:text-red-300 font-medium">Browse all reports →</a>
+            </p>
+        </div>
+        @endif
 
         <!-- Support Links -->
         <div class="border-t border-gray-800 pt-8 mb-6">
@@ -50,6 +98,10 @@
                 <a href="{{ route('contact') }}" class="text-gray-400 hover:text-green-400 transition-colors text-sm font-medium flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-800">
                     <i class="fas fa-envelope"></i>
                     <span>Contact</span>
+                </a>
+                <a href="{{ route('api-documentation') }}" class="text-gray-400 hover:text-green-400 transition-colors text-sm font-medium flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-800">
+                    <i class="fas fa-code"></i>
+                    <span>API documentation</span>
                 </a>
                 <a href="{{ route('scam.watch') }}" class="text-gray-400 hover:text-green-400 transition-colors text-sm font-medium flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-800">
                     <i class="fas fa-shield-alt"></i>

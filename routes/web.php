@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Models\ScamReport;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DashboardController;
@@ -28,6 +29,11 @@ Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 Route::post('/contact', [HomeController::class, 'submitContact'])->name('submit.contact');
 Route::get('/sitemap.xml', [HomeController::class, 'sitemap'])->name('sitemap');
 Route::get('/scam-watch', [HomeController::class, 'scamWatch'])->name('scam.watch');
+Route::get('/scam-watch/report', [HomeController::class, 'scamWatchReportForm'])->name('scam.watch.report');
+Route::get('/scam-watch/category/{category}', [HomeController::class, 'scamWatchCategory'])
+    ->name('scam.watch.category')
+    ->whereIn('category', array_keys(ScamReport::CATEGORY_LABELS));
+Route::get('/scam-watch/reports/{report}/{slug?}', [HomeController::class, 'scamWatchShow'])->name('scam.watch.show');
 Route::post('/submit-scam-report', [HomeController::class, 'submitScamReport'])->name('submit.scam.report');
 Route::post('/like-scam-report/{id}', [HomeController::class, 'likeScamReport'])->name('like.scam.report');
 Route::get('/transaction/status/{id}', [HomeController::class, 'transactionStatus'])->name('transaction.status');

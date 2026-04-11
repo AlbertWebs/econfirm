@@ -18,33 +18,44 @@
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Trusted Escrow Services for Secure M-Pesa Payments in Kenya |  eConfirm </title>
-    <meta name="description" content="eConfirm provides secure, fast, and transparent escrow services for peer-to-peer M-Pesa payments in Kenya. Safeguard your transactions for goods, services, and contracts.">
-    <meta name="keywords" content="escrow services Kenya, M-Pesa escrow, secure peer to peer payments, escrow for goods and services, payment protection Kenya, eConfirm escrow platform, online escrow Kenya, buyer seller protection, safe M-Pesa payments, digital escrow solution">
+    @php
+        $defaultSeoTitle = 'Trusted Escrow Services for Secure M-Pesa Payments in Kenya | eConfirm';
+        $defaultSeoDescription = 'eConfirm provides secure, fast, and transparent escrow services for peer-to-peer M-Pesa payments in Kenya. Safeguard your transactions for goods, services, and contracts.';
+        $siteUrl = rtrim(config('app.url', url('/')), '/');
+        $defaultOgImage = $siteUrl . '/assets/images/social-share.jpg';
+        $seoTitle = trim($__env->yieldContent('seo_title')) ?: $defaultSeoTitle;
+        $seoDescription = trim($__env->yieldContent('seo_description')) ?: $defaultSeoDescription;
+        $canonicalHref = trim($__env->yieldContent('canonical_url')) ?: url()->current();
+        $ogImage = trim($__env->yieldContent('og_image')) ?: $defaultOgImage;
+        $ogType = trim($__env->yieldContent('og_type')) ?: 'website';
+    @endphp
+    <title>{{ $seoTitle }}</title>
+    <meta name="description" content="{{ $seoDescription }}">
+    <meta name="keywords" content="@yield('seo_keywords', 'escrow services Kenya, M-Pesa escrow, secure peer to peer payments, escrow for goods and services, payment protection Kenya, eConfirm escrow platform, online escrow Kenya, buyer seller protection, safe M-Pesa payments, digital escrow solution')">
     <meta name="author" content="eConfirm">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="@yield('seo_robots', 'index, follow')">
     <meta name="language" content="en">
 
     <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://econfirm.co.ke/">
-    <meta property="og:title" content="Trusted Escrow Services for Secure M-Pesa Payments in Kenya |  eConfirm ">
-    <meta property="og:description" content="Use eConfirm to protect your peer-to-peer transactions with reliable escrow services for M-Pesa payments. Trusted by businesses and individuals across Kenya.">
-    <meta property="og:image" content="https://econfirm.co.ke/assets/images/social-share.jpg">
+    <meta property="og:type" content="{{ $ogType }}">
+    <meta property="og:url" content="{{ $canonicalHref }}">
+    <meta property="og:title" content="{{ $seoTitle }}">
+    <meta property="og:description" content="{{ $seoDescription }}">
+    <meta property="og:image" content="{{ $ogImage }}">
     <meta property="og:site_name" content="eConfirm">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://econfirm.co.ke/">
-    <meta name="twitter:title" content="Trusted Escrow Services for Secure M-Pesa Payments in Kenya |  eConfirm ">
-    <meta name="twitter:description" content="eConfirm offers secure escrow services to protect your M-Pesa transactions in Kenya. Trusted platform for online payments, goods, and services.">
-    <meta name="twitter:image" content="https://econfirm.co.ke/assets/images/social-share.jpg">
+    <meta name="twitter:url" content="{{ $canonicalHref }}">
+    <meta name="twitter:title" content="{{ $seoTitle }}">
+    <meta name="twitter:description" content="{{ $seoDescription }}">
+    <meta name="twitter:image" content="{{ $ogImage }}">
 
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://econfirm.co.ke/">
+    <link rel="canonical" href="{{ $canonicalHref }}">
 
     <!-- Favicon -->
-    <link rel="icon" href="https://econfirm.co.ke/assets/images/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="{{ $siteUrl }}/assets/images/favicon.ico" type="image/x-icon">
 
     <!-- Schema.org JSON-LD Structured Data -->
     <script type="application/ld+json">
@@ -52,8 +63,8 @@
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "eConfirm",
-    "url": "https://econfirm.co.ke",
-    "logo": "https://econfirm.co.ke/uploads/logo.png",
+    "url": "{{ $siteUrl }}",
+    "logo": "{{ $siteUrl }}/uploads/logo.png",
     "description": "eConfirm is Kenya's leading escrow platform for secure peer-to-peer payments via M-Pesa. Ideal for buyers and sellers of goods, services, or contracts.",
     "sameAs": [
         "https://www.facebook.com/econfirmke",
@@ -70,6 +81,9 @@
     }
     }
     </script>
+    @stack('structured_data')
+
+    @stack('head_extra')
 
 
    
@@ -162,9 +176,6 @@
                     <a href="{{ route('home') }}#home" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200">Get Started</a>
                     <a href="{{ route('home') }}#features" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200">Features</a>
                     <a href="{{ route('home') }}#how-it-works" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200">How It Works</a>
-                    <a href="{{ route('home') }}#integration" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200 flex items-center gap-1">
-                        API <i class="fas fa-code text-xs"></i>
-                    </a>
                     <a href="{{ route('scam.watch') }}" class="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 flex items-center gap-1.5 border border-red-200">
                         <i class="fas fa-shield-alt text-xs"></i> Confirm
                     </a>
@@ -208,9 +219,6 @@
                 <a href="{{ route('home') }}#home" @click="mobileMenuOpen = false" class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-all duration-200">Get Started</a>
                 <a href="{{ route('home') }}#features" @click="mobileMenuOpen = false" class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-all duration-200">Features</a>
                 <a href="{{ route('home') }}#how-it-works" @click="mobileMenuOpen = false" class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-all duration-200">How It Works</a>
-                <a href="{{ route('home') }}#integration" @click="mobileMenuOpen = false" class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-all duration-200 flex items-center gap-2">
-                    <i class="fas fa-code text-xs"></i> API
-                </a>
                 <a href="{{ route('scam.watch') }}" @click="mobileMenuOpen = false" class="block px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-all duration-200 flex items-center gap-2 border border-red-200">
                     <i class="fas fa-shield-alt text-xs"></i> Confirm
                 </a>
@@ -236,94 +244,8 @@
 
     @yield('content')
   
-    <!-- PWA Install Prompt -->
-    <div x-data="{ 
-        showInstallPrompt: false,
-        deferredPrompt: null,
-        isInstalled: false,
-        init() {
-            // Check if already installed
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                                 window.navigator.standalone;
-            
-            if (isStandalone) {
-                this.isInstalled = true;
-                console.log('App already installed');
-                return;
-            }
-
-            // Check if dismissed in this session
-            const dismissed = sessionStorage.getItem('pwa-prompt-dismissed');
-            if (dismissed === 'true') {
-                console.log('Prompt was dismissed in this session');
-                return;
-            }
-
-            const showPrompt = () => {
-                console.log('Attempting to show prompt. isInstalled:', this.isInstalled, 'dismissed:', sessionStorage.getItem('pwa-prompt-dismissed'));
-                if (!this.isInstalled && sessionStorage.getItem('pwa-prompt-dismissed') !== 'true') {
-                    console.log('Setting showInstallPrompt to true');
-                    this.showInstallPrompt = true;
-                    console.log('showInstallPrompt is now:', this.showInstallPrompt);
-                }
-            };
-
-            // Listen for beforeinstallprompt event
-            window.addEventListener('beforeinstallprompt', (e) => {
-                console.log('beforeinstallprompt event fired');
-                e.preventDefault();
-                this.deferredPrompt = e;
-                // Show prompt after 2 seconds
-                setTimeout(showPrompt, 2000);
-            });
-
-            // Listen for app installed event
-            window.addEventListener('appinstalled', () => {
-                console.log('App installed');
-                this.isInstalled = true;
-                this.showInstallPrompt = false;
-                this.deferredPrompt = null;
-            });
-
-            // Fallback: Show prompt after 3 seconds regardless
-            setTimeout(() => {
-                console.log('Fallback timer fired. Checking conditions...');
-                console.log('isInstalled:', this.isInstalled);
-                console.log('dismissed:', sessionStorage.getItem('pwa-prompt-dismissed'));
-                console.log('showInstallPrompt before:', this.showInstallPrompt);
-                
-                if (!this.isInstalled && sessionStorage.getItem('pwa-prompt-dismissed') !== 'true') {
-                    console.log('Conditions met, showing prompt');
-                    this.showInstallPrompt = true;
-                    console.log('showInstallPrompt after:', this.showInstallPrompt);
-                } else {
-                    console.log('Conditions not met, not showing prompt');
-                }
-            }, 3000);
-        },
-        async installApp() {
-            if (this.deferredPrompt) {
-                this.deferredPrompt.prompt();
-                const { outcome } = await this.deferredPrompt.userChoice;
-                
-                if (outcome === 'accepted') {
-                    this.isInstalled = true;
-                }
-                
-                this.deferredPrompt = null;
-            } else {
-                // Fallback: Show browser's native install prompt or instructions
-                alert('To install this app:\n\nChrome/Edge: Click the install icon in the address bar\nFirefox: Click the menu button and select "Install"\nSafari: Tap Share button and select "Add to Home Screen"');
-            }
-            
-            this.showInstallPrompt = false;
-        },
-        dismissPrompt() {
-            this.showInstallPrompt = false;
-            // Don't show again for this session
-            sessionStorage.setItem('pwa-prompt-dismissed', 'true');
-        }
-    }"
+    <!-- PWA Install Prompt (logic: resources/js/app.js Alpine.data('pwaInstall')) -->
+    <div x-data="pwaInstall"
     x-show="showInstallPrompt"
     :style="showInstallPrompt ? 'display: block !important;' : 'display: none !important;'"
     x-transition:enter="transition ease-out duration-300"
@@ -528,9 +450,10 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
                     .then((registration) => {
                         console.log('Service Worker registered successfully:', registration.scope);
+                        registration.update();
                     })
                     .catch((error) => {
                         console.log('Service Worker registration failed:', error);

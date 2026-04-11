@@ -1,20 +1,113 @@
 @extends('front.master')
 
 @section('content')
+@php
+    $homeTransactionTypes = [
+        ['value' => 'ecommerce', 'label' => 'E-commerce Marketplace Transactions'],
+        ['value' => 'services', 'label' => 'Professional Services (Consulting, Legal, Accounting)'],
+        ['value' => 'real-estate', 'label' => 'Real Estate (Land, Plots, Rentals)'],
+        ['value' => 'vehicle', 'label' => 'Vehicle Sales (Cars, Motorbikes, Trucks)'],
+        ['value' => 'business', 'label' => 'Business Transfers & Partnerships'],
+        ['value' => 'freelance', 'label' => 'Freelance Work & Digital Services'],
+        ['value' => 'goods', 'label' => 'High-Value Goods (Electronics, Machinery, Furniture)'],
+        ['value' => 'construction', 'label' => 'Construction & Renovation Projects'],
+        ['value' => 'agriculture', 'label' => 'Agricultural Produce & Equipment'],
+        ['value' => 'legal', 'label' => 'Legal Settlements & Compensation'],
+        ['value' => 'import-export', 'label' => 'Import/Export Transactions'],
+        ['value' => 'tenders', 'label' => 'Government or Corporate Tender Payments'],
+        ['value' => 'education', 'label' => 'Education Payments (International Tuition, School Fees)'],
+        ['value' => 'personal', 'label' => 'Personal Loans & Informal Lending'],
+        ['value' => 'crypto', 'label' => 'Crypto & Forex Trading Agreements'],
+        ['value' => 'rentals', 'label' => 'Equipment & Property Rentals'],
+        ['value' => 'charity', 'label' => 'Charity Donations & Fundraising'],
+        ['value' => 'events', 'label' => 'Event Ticket Sales & Bookings'],
+        ['value' => 'subscriptions', 'label' => 'Subscription Services (Software, Memberships)'],
+        ['value' => 'affiliate', 'label' => 'Affiliate Marketing Payments'],
+        ['value' => 'other', 'label' => 'Other'],
+    ];
+@endphp
 <script>
 function transactionFormData() {
     return {
+        transactionTypes: @json($homeTransactionTypes),
+        selectedTransactionValue: '',
+        transactionTypeQuery: '',
+        transactionTypeOpen: false,
         showCustomType: false,
         showPaybill: false,
         submitting: false,
         mpesaResponse: null,
         checkoutRequestId: null,
+
+        get filteredTransactionTypes() {
+            const q = (this.transactionTypeQuery || '').toLowerCase().trim();
+            if (!q) {
+                return this.transactionTypes;
+            }
+            return this.transactionTypes.filter(function (t) {
+                return t.label.toLowerCase().includes(q) || t.value.toLowerCase().includes(q);
+            });
+        },
+
+        selectTransactionType(t) {
+            this.selectedTransactionValue = t.value;
+            this.transactionTypeQuery = t.label;
+            this.showCustomType = t.value === 'other';
+            this.transactionTypeOpen = false;
+        },
+
+        onTransactionTypeFocus() {
+            this.transactionTypeOpen = true;
+        },
+
+        onTransactionTypeInput() {
+            this.transactionTypeOpen = true;
+            const match = this.transactionTypes.find(function (ty) {
+                return ty.label.toLowerCase() === (this.transactionTypeQuery || '').toLowerCase().trim();
+            }.bind(this));
+            if (match) {
+                this.selectedTransactionValue = match.value;
+                this.showCustomType = match.value === 'other';
+            } else {
+                this.selectedTransactionValue = '';
+                this.showCustomType = false;
+            }
+        },
+
+        closeTransactionTypeDropdown() {
+            var self = this;
+            setTimeout(function () {
+                self.transactionTypeOpen = false;
+            }, 200);
+        },
+
+        syncTransactionTypeOnBlur() {
+            var q = (this.transactionTypeQuery || '').toLowerCase().trim();
+            if (!q) {
+                this.selectedTransactionValue = '';
+                this.showCustomType = false;
+                return;
+            }
+            var exact = this.transactionTypes.find(function (t) {
+                return t.label.toLowerCase() === q;
+            });
+            if (exact) {
+                this.selectedTransactionValue = exact.value;
+                this.transactionTypeQuery = exact.label;
+                this.showCustomType = exact.value === 'other';
+            }
+        },
         
         async submitForm(event) {
             this.submitting = true;
             this.mpesaResponse = null;
             
             const form = event.target;
+            if (!this.selectedTransactionValue) {
+                this.mpesaResponse = { type: 'error', message: 'Please select a transaction type from the list (use search to find one).' };
+                this.submitting = false;
+                return;
+            }
             const formData = new FormData(form);
             
             try {
@@ -34,6 +127,10 @@ function transactionFormData() {
                     const checkoutId = data.CheckoutRequestID || (data.data && data.data.CheckoutRequestID);
                     if (checkoutId) {
                         form.reset();
+                        this.selectedTransactionValue = '';
+                        this.transactionTypeQuery = '';
+                        this.transactionTypeOpen = false;
+                        this.showCustomType = false;
                         this.checkoutRequestId = checkoutId;
                         this.pollTransactionStatus();
                     }
@@ -199,36 +296,41 @@ function transactionFormData() {
                 </div>
                 
                     <form @submit.prevent="submitForm($event)" class="space-y-5">
-                        <div>
-                            <label for="transaction-type" class="block text-sm font-medium text-gray-700 mb-2">Transaction Type</label>
-                            <select @change="showCustomType = $event.target.value === 'other'"
-                                    id="transaction-type" 
-                                    name="transaction-type"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition">
-                                    <option value="">Select a transaction type</option>
-                                    <option value="ecommerce">E-commerce Marketplace Transactions</option>
-                                    <option value="services">Professional Services (Consulting, Legal, Accounting)</option>
-                                    <option value="real-estate">Real Estate (Land, Plots, Rentals)</option>
-                                    <option value="vehicle">Vehicle Sales (Cars, Motorbikes, Trucks)</option>
-                                    <option value="business">Business Transfers & Partnerships</option>
-                                    <option value="freelance">Freelance Work & Digital Services</option>
-                                    <option value="goods">High-Value Goods (Electronics, Machinery, Furniture)</option>
-                                    <option value="construction">Construction & Renovation Projects</option>
-                                    <option value="agriculture">Agricultural Produce & Equipment</option>
-                                    <option value="legal">Legal Settlements & Compensation</option>
-                                    <option value="import-export">Import/Export Transactions</option>
-                                    <option value="tenders">Government or Corporate Tender Payments</option>
-                                    <option value="education">Education Payments (International Tuition, School Fees)</option>
-                                    <option value="personal">Personal Loans & Informal Lending</option>
-                                    <option value="crypto">Crypto & Forex Trading Agreements</option>
-                                    <option value="rentals">Equipment & Property Rentals</option>   
-                                    <option value="charity">Charity Donations & Fundraising</option>
-                                    <option value="events">Event Ticket Sales & Bookings</option>
-                                    <option value="subscriptions">Subscription Services (Software, Memberships)</option>
-                                    <option value="affiliate">Affiliate Marketing Payments</option>
-                                    <option value="other">Other</option>
-                                </select>
+                        <div class="relative">
+                            <label for="transaction-type-search" class="block text-sm font-medium text-gray-700 mb-2">Transaction Type</label>
+                            <input type="hidden" name="transaction-type" id="transaction-type" x-model="selectedTransactionValue">
+                            <div class="relative">
+                                <input type="text"
+                                       id="transaction-type-search"
+                                       x-model="transactionTypeQuery"
+                                       @focus="onTransactionTypeFocus()"
+                                       @input="onTransactionTypeInput()"
+                                       @blur="syncTransactionTypeOnBlur(); closeTransactionTypeDropdown()"
+                                       autocomplete="off"
+                                       placeholder="Search or select transaction type…"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                                       role="combobox"
+                                       aria-autocomplete="list"
+                                       :aria-expanded="transactionTypeOpen">
+                                <ul x-show="transactionTypeOpen && filteredTransactionTypes.length > 0"
+                                    x-transition
+                                    x-cloak
+                                    class="absolute z-50 w-full mt-1 max-h-56 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg py-1"
+                                    role="listbox">
+                                    <template x-for="t in filteredTransactionTypes" :key="t.value">
+                                        <li role="option"
+                                            @mousedown.prevent="selectTransactionType(t)"
+                                            class="px-3 py-2.5 text-sm text-gray-800 cursor-pointer hover:bg-green-50 border-b border-gray-50 last:border-0"
+                                            x-text="t.label"></li>
+                                    </template>
+                                </ul>
+                                <p x-show="transactionTypeOpen && transactionTypeQuery && filteredTransactionTypes.length === 0"
+                                   x-cloak
+                                   class="absolute z-50 w-full mt-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                                    No matching types. Try different keywords.
+                                </p>
                             </div>
+                        </div>
                         
                         <div x-show="showCustomType" 
                              x-transition:enter="transition ease-out duration-300"

@@ -5,6 +5,7 @@ return [
     'passkey' => env('MPESA_PASSKEY', ''),
     'initiator' => env('MPESA_INITIATOR', ''),
     'security_credential' => env('MPESA_SECURITY_CREDENTIAL', ''),
+    'oauth_url' => env('MPESA_OAUTH_URL', 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'),
     'callback_url' => env('MPESA_CALLBACK_URL'),
     'b2b_callback_url' => env('MPESA_B2B_CALLBACK_URL'), // or 'live'
     'b2b_results_url' => env('MPESA_B2B_RESULTS_URL'),
@@ -24,5 +25,12 @@ return [
     'access_token' => env('MPESA_ACCESS_TOKEN', ''),
     'consumer_key' => env('MPESA_CONSUMER_KEY', ''),
     'consumer_secret' => env('MPESA_CONSUMER_SECRET', ''),
-    
+
+    /*
+     * SSL for Guzzle (OAuth + STK + all Daraja calls). Error 60 on Windows = missing CA bundle.
+     * Fix properly: set openssl.cafile and curl.cainfo in php.ini to cacert.pem, or set MPESA_CA_BUNDLE.
+     * Local-only workaround: MPESA_HTTP_VERIFY_SSL=false (never use false in production).
+     */
+    'verify_ssl' => filter_var(env('MPESA_HTTP_VERIFY_SSL', true), FILTER_VALIDATE_BOOLEAN),
+    'ca_bundle' => env('MPESA_CA_BUNDLE'),
 ];

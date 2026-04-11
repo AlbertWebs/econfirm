@@ -191,9 +191,17 @@ class MobileApiController extends Controller
                 $transaction->status = 'stk_failed';
                 $transaction->save();
 
+                Log::error('Mobile API: transaction saved but STK push failed', [
+                    'transaction_id' => $transaction->transaction_id,
+                    'mpesa_message' => $mpesaResponse['message'] ?? null,
+                    'mpesa_data' => $mpesaResponse['data'] ?? null,
+                ]);
+
+                $detail = $mpesaResponse['message'] ?? 'Unknown M-Pesa error';
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to initiate payment. Please try again.'
+                    'message' => 'Failed to initiate payment: '.$detail,
                 ], 500);
             }
 

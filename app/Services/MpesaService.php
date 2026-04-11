@@ -9,6 +9,24 @@ use App\Models\MpesaStkPush;
 class MpesaService
 {
     /**
+     * Guzzle SSL options: fixes cURL error 60 on Windows when php.ini has no CA bundle.
+     */
+    protected function mpesaHttp(): \Illuminate\Http\Client\PendingRequest
+    {
+        $opts = [];
+        if (! filter_var(config('mpesa.verify_ssl', true), FILTER_VALIDATE_BOOLEAN)) {
+            $opts['verify'] = false;
+        } else {
+            $ca = config('mpesa.ca_bundle');
+            if (is_string($ca) && $ca !== '' && is_file($ca)) {
+                $opts['verify'] = $ca;
+            }
+        }
+
+        return $opts === [] ? Http::withOptions([]) : Http::withOptions($opts);
+    }
+
+    /**
      * Initiate M-Pesa STK Push
      *
      * @param Transaction $transaction
@@ -32,6 +50,19 @@ class MpesaService
             'AccountReference' => $transaction->transaction_id,
             'TransactionDesc' => $transaction->transaction_details ?? 'Escrow Payment',
         ];
+
+        $callbackUrl = (string) ($payload['CallBackURL'] ?? '');
+        if ($callbackUrl !== '' && (
+            ! str_starts_with($callbackUrl, 'https://')
+            || str_contains($callbackUrl, 'localhost')
+            || str_contains($callbackUrl, '127.0.0.1')
+        )) {
+            \Log::warning('M-Pesa STK: CallBackURL will be rejected by Daraja (public HTTPS required)', [
+                'CallBackURL' => $callbackUrl,
+                'transaction_id' => $transaction->transaction_id,
+            ]);
+        }
+
         //Log Payload
         \Log::info('M-Pesa STK Push Payload', [
             'payload' => $payload,
@@ -40,12 +71,49 @@ class MpesaService
 
         $endpoint = config('mpesa.stk_url', 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest');
         $token = $this->getAccessToken();
+        if ($token === '') {
+            \Log::error('M-Pesa STK Push aborted: OAuth token empty', [
+                'transaction_id' => $transaction->transaction_id,
+                'endpoint' => $endpoint,
+            ]);
 
-        $response = Http::withToken($token)->acceptJson()->post($endpoint, $payload);
+            return [
+                'success' => false,
+                'message' => 'M-Pesa authentication failed. Check consumer key/secret and network, then try again.',
+                'data' => null,
+            ];
+        }
 
-        if ($response->successful() && isset($response['ResponseCode']) && $response['ResponseCode'] == '0') {
-            $responseData = $response->json();
+        try {
+            $response = $this->mpesaHttp()->timeout(60)
+                ->withToken($token)
+                ->acceptJson()
+                ->post($endpoint, $payload);
+        } catch (\Throwable $e) {
+            \Log::error('M-Pesa STK Push HTTP exception', [
+                'transaction_id' => $transaction->transaction_id,
+                'exception_class' => $e::class,
+                'message' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
+            return [
+                'success' => false,
+                'message' => 'STK request failed: '.$e->getMessage(),
+                'data' => null,
+            ];
+        }
+
+        $status = $response->status();
+        $body = $response->json();
+        $raw = $response->body();
+
+        $responseCode = is_array($body) ? ($body['ResponseCode'] ?? null) : null;
+        $responseCodeOk = is_array($body) && (string) ($body['ResponseCode'] ?? '') === '0';
+        $customerMessage = is_array($body) ? ($body['CustomerMessage'] ?? $body['errorMessage'] ?? $body['error_description'] ?? null) : null;
+
+        if ($response->successful() && $responseCodeOk) {
             // Save CheckoutRequestID and MerchantRequestID
             $MpesaStkPush = new MpesaStkPush();
             $MpesaStkPush->phone = $transaction->sender_mobile;
@@ -53,26 +121,45 @@ class MpesaService
             $MpesaStkPush->reference = $transaction->transaction_id;
             $MpesaStkPush->description = $transaction->transaction_details ?? 'Escrow Payment';
             $MpesaStkPush->status = 'Pending';
-            $MpesaStkPush->checkout_request_id = $responseData['CheckoutRequestID'];
-            $MpesaStkPush->merchant_request_id = $responseData['MerchantRequestID'];
+            $MpesaStkPush->checkout_request_id = $body['CheckoutRequestID'] ?? null;
+            $MpesaStkPush->merchant_request_id = $body['MerchantRequestID'] ?? null;
             $MpesaStkPush->save();
 
             return [
                 'success' => true,
                 'message' => 'STK push initiated.',
-                'data' => $responseData,
+                'data' => $body,
             ];
         }
 
-        //log responseData
-        \Log::error('M-Pesa STK Push Error', [
-            'response' => $response->json(),
+        \Log::error('M-Pesa STK Push failed (API or business error)', [
             'transaction_id' => $transaction->transaction_id,
+            'http_status' => $status,
+            'response_ok' => $response->successful(),
+            'response_code' => $responseCode,
+            'response_code_ok' => $responseCodeOk,
+            'customer_message' => $customerMessage,
+            'parsed_body' => $body,
+            'raw_body' => $raw,
+            'request_id' => $response->header('X-Request-ID') ?? $response->header('request-id'),
         ]);
+
+        $errorCode = is_array($body) ? ($body['errorCode'] ?? null) : null;
+
+        $userMessage = $customerMessage
+            ?? (is_array($body) ? ($body['errorMessage'] ?? null) : null)
+            ?? 'STK push failed.';
+
+        if ($errorCode === '400.002.02'
+            || (is_string($userMessage) && str_contains($userMessage, 'Invalid CallBackURL'))) {
+            $userMessage = 'Invalid CallBackURL: Safaricom requires a public HTTPS URL registered in the Developer Portal. '
+                .'Set MPESA_CALLBACK_URL in .env (e.g. https://your-tunnel.ngrok-free.app/api/mpesa/callback); http://localhost is not accepted.';
+        }
+
         return [
             'success' => false,
-            'message' => $response['errorMessage'] ?? 'STK push failed.',
-            'data' => $response->json(),
+            'message' => $userMessage,
+            'data' => is_array($body) ? $body : ['raw' => $raw],
         ];
     }
     /**
@@ -102,8 +189,8 @@ class MpesaService
             'Occasion' => $transaction['transaction_type'],
         ];
         // dd($payload);
-        $response = Http::withToken($token)->acceptJson()->post($endpoint, $payload);
-       
+        $response = $this->mpesaHttp()->withToken($token)->acceptJson()->post($endpoint, $payload);
+
         if ($response->successful() && isset($response['ResponseCode']) && $response['ResponseCode'] == '0') {
             $responseData = $response->json();
             // Log the response for debugging
@@ -174,8 +261,8 @@ class MpesaService
             'payload' => $payload,
             'transaction_id' => $transaction->transaction_id,
         ]);
-        $response = Http::withToken($token)->acceptJson()->post($endpoint, $payload);
-         
+        $response = $this->mpesaHttp()->withToken($token)->acceptJson()->post($endpoint, $payload);
+
         if ($response->successful() && isset($response['ResponseCode']) && $response['ResponseCode'] == '0') {
            $responseData = $response->json();
           
@@ -235,7 +322,7 @@ class MpesaService
             'payload' => $payload,
             'transaction_id' => $transactionId,
         ]);
-        $response = Http::withToken($token)->acceptJson()->post($endpoint, $payload);
+        $response = $this->mpesaHttp()->withToken($token)->acceptJson()->post($endpoint, $payload);
         return $response->json();
     }
 
@@ -256,48 +343,66 @@ class MpesaService
             'QueueTimeOutURL' => config('mpesa.balance_timeout_url', url('/mpesa/balance/timeout')),
             'ResultURL' => config('mpesa.balance_result_url', url('/mpesa/balance/result')),
         ];
-        $response = Http::withToken($token)->acceptJson()->post($endpoint, $payload);
+        $response = $this->mpesaHttp()->withToken($token)->acceptJson()->post($endpoint, $payload);
         return $response->json();
     }
 
     /**
-     * Get M-Pesa Access Token (dummy implementation)
-     * Replace with actual OAuth logic
+     * OAuth2 client_credentials against Daraja (sandbox or production per MPESA_OAUTH_URL).
      */
     public function getAccessToken(): string
     {
-        $consumerKey = config('mpesa.consumer_key', env('MPESA_CONSUMER_KEY'));
-        $consumerSecret = config('mpesa.consumer_secret', env('MPESA_CONSUMER_SECRET'));
+        $consumerKey = trim((string) config('mpesa.consumer_key'));
+        $consumerSecret = trim((string) config('mpesa.consumer_secret'));
 
+        if ($consumerKey === '' || $consumerSecret === '') {
+            \Log::error('M-Pesa OAuth: MPESA_CONSUMER_KEY or MPESA_CONSUMER_SECRET is empty');
 
-        // M-Pesa base URL (sandbox or production)
-        $url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials';
-
-        // Generate credentials for HTTP Basic Authentication
-        $credentials = base64_encode($consumerKey . ':' . $consumerSecret);
-
-        // Initialize cURL
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: Basic ' . $credentials,
-            'Content-Type: application/json'
-        ]);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-        // Execute request
-        $response = curl_exec($ch);
-        $err = curl_error($ch);
-        curl_close($ch);
-
-        if ($err) {
-            echo 'cURL Error: ' . $err;
-        } else {
-            $result = json_decode($response);
-            $accessToken = $result->access_token;
-
-            return $accessToken;
+            return '';
         }
+
+        $url = (string) config(
+            'mpesa.oauth_url',
+            'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
+        );
+
+        try {
+            $response = $this->mpesaHttp()->timeout(45)
+                ->withBasicAuth($consumerKey, $consumerSecret)
+                ->acceptJson()
+                ->get($url);
+        } catch (\Throwable $e) {
+            \Log::error('M-Pesa OAuth request exception', [
+                'message' => $e->getMessage(),
+                'oauth_url' => $url,
+            ]);
+
+            return '';
+        }
+
+        if (! $response->successful()) {
+            \Log::error('M-Pesa OAuth HTTP error', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'oauth_url' => $url,
+            ]);
+
+            return '';
+        }
+
+        $data = $response->json();
+        $token = is_array($data) ? ($data['access_token'] ?? null) : null;
+
+        if (! is_string($token) || $token === '') {
+            \Log::error('M-Pesa OAuth: missing access_token in response', [
+                'oauth_url' => $url,
+                'parsed' => $data,
+            ]);
+
+            return '';
+        }
+
+        return $token;
     }
 
     /**
@@ -316,7 +421,7 @@ class MpesaService
             'Msisdn' => $data['msisdn'],
             'BillRefNumber' => $data['reference'] ?? 'Escrow',
         ];
-        $response = Http::withToken($token)->acceptJson()->post($endpoint, $payload);
+        $response = $this->mpesaHttp()->withToken($token)->acceptJson()->post($endpoint, $payload);
         return $response->json();
     }
   

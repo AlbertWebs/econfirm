@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Transaction;
 use App\Models\ScamReport;
 use App\Models\ScamReportLike;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Services\MpesaService;
@@ -80,6 +81,8 @@ class HomeController extends Controller
 
     public function sitemap()
     {
+        $scamWatchUrls = $this->scamWatchSitemapEntries();
+
         $urls = [
             [
                 'loc' => url('/'),
@@ -93,6 +96,13 @@ class HomeController extends Controller
                 'changefreq' => 'daily',
                 'priority' => '0.9'
             ],
+            [
+                'loc' => route('scam.watch.report'),
+                'lastmod' => now()->format('Y-m-d'),
+                'changefreq' => 'monthly',
+                'priority' => '0.85'
+            ],
+            ...$scamWatchUrls,
             [
                 'loc' => route('support'),
                 'lastmod' => now()->format('Y-m-d'),
@@ -154,23 +164,166 @@ class HomeController extends Controller
             ->orderBy('report_count', 'desc')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
-            
-        return view('front.scam-watch', compact('reports'));
+
+        $categoryCounts = ScamReport::query()
+            ->whereIn('status', ['approved', 'pending'])
+            ->selectRaw('category, COUNT(*) as cnt')
+            ->groupBy('category')
+            ->pluck('cnt', 'category');
+
+        return view('front.scam-watch', compact('reports', 'categoryCounts'));
+    }
+
+    public function scamWatchReportForm()
+    {
+        return view('front.report-a-scam');
+    }
+
+    public function scamWatchShow(ScamReport $report, ?string $slug = null)
+    {
+        $expected = $report->seoSlug();
+        if ($slug !== $expected) {
+            return redirect()->route('scam.watch.show', ['report' => $report, 'slug' => $expected], 301);
+        }
+
+        $report->loadCount('likes');
+
+        $related = ScamReport::withCount('likes')
+            ->visible()
+            ->where('category', $report->category)
+            ->where('id', '!=', $report->id)
+            ->orderByDesc('report_count')
+            ->orderByDesc('created_at')
+            ->limit(8)
+            ->get();
+
+        $canonicalUrl = route('scam.watch.show', ['report' => $report, 'slug' => $expected]);
+        $pageTitle = $this->scamReportPageTitle($report);
+        $metaDescription = $this->scamReportMetaDescription($report);
+
+        return view('front.scam-watch-report', compact(
+            'report',
+            'related',
+            'canonicalUrl',
+            'pageTitle',
+            'metaDescription'
+        ));
+    }
+
+    public function scamWatchCategory(string $category)
+    {
+        if (! array_key_exists($category, ScamReport::CATEGORY_LABELS)) {
+            abort(404);
+        }
+
+        $label = ScamReport::CATEGORY_LABELS[$category];
+
+        $reports = ScamReport::withCount('likes')
+            ->visible()
+            ->where('category', $category)
+            ->orderBy('report_count', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        $canonicalUrl = route('scam.watch.category', ['category' => $category]);
+        $pageTitle = $label.' — reported scams & numbers | eConfirm Scam Watch';
+        $metaDescription = 'Browse community-reported '.$label.' on eConfirm: fake websites, phone numbers, and emails users flagged to help others stay safe.';
+
+        return view('front.scam-watch-category', compact(
+            'reports',
+            'category',
+            'label',
+            'canonicalUrl',
+            'pageTitle',
+            'metaDescription'
+        ));
+    }
+
+    /**
+     * @return array<int, array{loc: string, lastmod: string, changefreq: string, priority: string}>
+     */
+    private function scamWatchSitemapEntries(): array
+    {
+        $lastmod = now()->format('Y-m-d');
+        $entries = [];
+
+        $categories = ScamReport::query()
+            ->visible()
+            ->select('category')
+            ->distinct()
+            ->pluck('category');
+
+        foreach ($categories as $cat) {
+            if (! array_key_exists($cat, ScamReport::CATEGORY_LABELS)) {
+                continue;
+            }
+            $entries[] = [
+                'loc' => route('scam.watch.category', ['category' => $cat]),
+                'lastmod' => $lastmod,
+                'changefreq' => 'daily',
+                'priority' => '0.85',
+            ];
+        }
+
+        ScamReport::query()
+            ->visible()
+            ->select(['id', 'website', 'phone', 'reported_email', 'report_type', 'updated_at'])
+            ->orderBy('id')
+            ->chunk(500, function ($reports) use (&$entries, $lastmod) {
+                foreach ($reports as $r) {
+                    $entries[] = [
+                        'loc' => route('scam.watch.show', ['report' => $r, 'slug' => $r->seoSlug()]),
+                        'lastmod' => $r->updated_at?->format('Y-m-d') ?? $lastmod,
+                        'changefreq' => 'weekly',
+                        'priority' => '0.8',
+                    ];
+                }
+            });
+
+        return $entries;
+    }
+
+    private function scamReportPageTitle(ScamReport $report): string
+    {
+        $value = Str::limit((string) $report->reported_value, 55, '…');
+        $type = match ($report->report_type) {
+            'website' => 'Scam website',
+            'phone' => 'Scam phone number',
+            default => 'Scam email',
+        };
+
+        return $value.' — '.$type.' ('.$report->category_label.') | eConfirm Scam Watch';
+    }
+
+    private function scamReportMetaDescription(ScamReport $report): string
+    {
+        $summary = Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags($report->description))), 150, '…');
+        $value = Str::limit((string) $report->reported_value, 80, '…');
+
+        return 'Reported '.$report->category_label.': '.$value.'. '.$summary;
     }
 
     public function submitScamReport(Request $request)
     {
         // Validate the request
+        // Identifier fields use x-show in the form but stay in the DOM, so stray values
+        // (e.g. a long email left in "phone" after switching type) must not be validated.
         $validated = $request->validate([
             'report_type' => 'required|in:website,phone,email',
-            'website' => 'required_if:report_type,website|nullable|string|max:255',
-            'phone' => 'required_if:report_type,phone|nullable|string|max:20',
-            'reported_email' => 'required_if:report_type,email|nullable|email|max:255',
-            'category' => 'required|string',
+            'website' => 'exclude_unless:report_type,website|required_if:report_type,website|string|max:255',
+            'phone' => 'exclude_unless:report_type,phone|required_if:report_type,phone|string|max:20',
+            'reported_email' => 'exclude_unless:report_type,email|required_if:report_type,email|email|max:255',
+            'category' => 'required|string|in:ecommerce,services,investment,job,romance,other',
+            'category_other' => 'required_if:category,other|nullable|string|max:255',
             'description' => 'required|string|max:5000',
             'email' => 'nullable|email|max:255',
+            'reporter_phone' => 'nullable|string|max:40',
             'date_of_incident' => 'nullable|date',
         ]);
+
+        if ($validated['category'] !== 'other') {
+            $validated['category_other'] = null;
+        }
 
         // Check if this report already exists
         $existingReport = ScamReport::where('report_type', $validated['report_type'])
@@ -189,8 +342,8 @@ class HomeController extends Controller
             // Increment report count
             $existingReport->increment('report_count');
         } else {
-            // Create new report - auto-approve for now (can add admin approval later)
-            $validated['status'] = 'approved';
+            // Await review; public listing still shows pending entries (see ScamReport::scopeVisible).
+            $validated['status'] = 'pending';
             ScamReport::create($validated);
         }
         
@@ -312,9 +465,19 @@ class HomeController extends Controller
         } else {
             $transaction->status = 'stk_failed';
             $transaction->save();
+
+            \Log::error('Transaction saved but STK push failed', [
+                'transaction_id' => $transaction->transaction_id,
+                'mpesa_success' => $mpesaResponse['success'] ?? null,
+                'mpesa_message' => $mpesaResponse['message'] ?? null,
+                'mpesa_data' => $mpesaResponse['data'] ?? null,
+            ]);
+
+            $detail = $mpesaResponse['message'] ?? 'Unknown M-Pesa error';
+
             return response()->json([
                 'success' => false,
-                'message' => 'Transaction saved, but STK push failed.'
+                'message' => 'Transaction saved, but STK push failed: '.$detail,
             ]);
         }
     }
