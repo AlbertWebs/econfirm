@@ -239,4 +239,33 @@ class SmsService
         $this->send($transaction->sender_mobile, $senderMsg, $id.'-funded-sender');
         $this->send($transaction->receiver_mobile, $receiverMsg, $id.'-funded-recv');
     }
+
+    /**
+     * Sent only after Daraja B2B or B2C call succeeds (payout initiated).
+     *
+     * @param  bool  $isB2bToPaybill  true when payment_method is paybill (B2B to Paybill/Till); false for M-Pesa B2C to phone.
+     */
+    public function notifyPartiesAfterApprovedPayout(Transaction $transaction, bool $isB2bToPaybill): void
+    {
+        if (empty($this->apiToken) || empty($this->senderId)) {
+            \Log::warning('Post-approval payout SMS skipped: SMS not configured');
+
+            return;
+        }
+
+        $ref = $transaction->transaction_id;
+        $amt = number_format((float) $transaction->transaction_amount, 2);
+
+        $senderMsg = "eConfirm: You approved escrow {$ref}. We've started sending KES {$amt} to the recipient.";
+
+        if ($isB2bToPaybill) {
+            $pb = $transaction->paybill_till_number ?? '';
+            $receiverMsg = "eConfirm: Your payment has been approved! KES {$amt} is on its way to Paybill/Till {$pb} — coming your way in a bit.";
+        } else {
+            $receiverMsg = "eConfirm: Your payment has been approved! Your money is headed to your M-Pesa — transaction coming your way in a bit.";
+        }
+
+        $this->send($transaction->sender_mobile, $senderMsg, $ref.'-payout-sender');
+        $this->send($transaction->receiver_mobile, $receiverMsg, $ref.'-payout-recv');
+    }
 }

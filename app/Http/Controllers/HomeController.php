@@ -640,51 +640,60 @@ class HomeController extends Controller
             }
 
         }
-        //check if its mpesa or paybill
-        if($ValidateOTP->payment_method === 'paybill'){
-            //mpesa b2b
+        // Paybill path → B2B to Paybill/Till; M-Pesa path → B2C to recipient phone. SMS only after Daraja accepts the payout request.
+        if ($ValidateOTP->payment_method === 'paybill') {
             $mpesa = new MpesaService();
             $b2bResponse = $mpesa->b2b($ValidateOTP);
-            if ($b2bResponse['success']) {
-                //Update the transaction status to approved
-                $ValidateOTP->status = 'Completed';
-                $ValidateOTP->save();
-                //send sms to the sender and receiver
-                $smsService = new SmsService();
-                $smsService->send($ValidateOTP->sender_mobile, "Your transaction with ID {$ValidateOTP->transaction_id} has been approved for settlement.");
-                $smsService->send($ValidateOTP->receiver_mobile, "Your Payment with ID {$ValidateOTP->transaction_id}, Amount: {$ValidateOTP->transaction_amount} has been approved. Payment Sent to your Paybill {{$ValidateOTP->paybill_till_number}}.");
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Transaction approved successfully.',
-                ]);
-            }else{
+            if (! $b2bResponse['success']) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Transaction approval failed.',
+                    'message' => $b2bResponse['message'] ?? 'Payout to Paybill/Till could not be started. Try again or contact support.',
                 ]);
             }
-        } else {
-            $mpesa = new MpesaService();
-            $b2cResponse = $mpesa->b2c($ValidateOTP);
-            if (!$b2cResponse['success']) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Transaction approval failed.',
-                ]);
-            }else{
-                // Handle Paybill approval
-                $ValidateOTP->status = 'Completed';
-                $ValidateOTP->save();
-                //send sms to the sender and receiver
-                $smsService = new SmsService();
-                $smsService->send($ValidateOTP->sender_mobile, "Your transaction with ID {$ValidateOTP->transaction_id} has been approved.");
-                $smsService->send($ValidateOTP->receiver_mobile, "You have received a transaction with ID {$ValidateOTP->transaction_id}, Amount: {$ValidateOTP->transaction_amount} that has been approved.");
-                 return response()->json([
-                    'success' => true,
-                    'message' => 'Transaction approved successfully.',
+
+            $ValidateOTP->status = 'Completed';
+            $ValidateOTP->save();
+
+            try {
+                (new SmsService())->notifyPartiesAfterApprovedPayout($ValidateOTP->fresh(), true);
+            } catch (\Throwable $e) {
+                \Log::error('Post-approval SMS failed (B2B)', [
+                    'transaction_id' => $ValidateOTP->transaction_id,
+                    'error' => $e->getMessage(),
                 ]);
             }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaction approved. Payout to Paybill/Till has been initiated.',
+            ]);
         }
+
+        $mpesa = new MpesaService();
+        $b2cResponse = $mpesa->b2c($ValidateOTP);
+        if (! $b2cResponse['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $b2cResponse['message'] ?? 'Payout to M-Pesa could not be started. Try again or contact support.',
+            ]);
+        }
+
+        $ValidateOTP->status = 'Completed';
+        $ValidateOTP->save();
+
+        try {
+            (new SmsService())->notifyPartiesAfterApprovedPayout($ValidateOTP->fresh(), false);
+        } catch (\Throwable $e) {
+            \Log::error('Post-approval SMS failed (B2C)', [
+                'transaction_id' => $ValidateOTP->transaction_id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Transaction approved. Transfer to recipient M-Pesa has been initiated.',
+        ]);
     }
 
 

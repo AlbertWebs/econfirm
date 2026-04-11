@@ -141,7 +141,14 @@
                     </div>
                     <small id="otp-message" class="form-text text-success d-none">OTP sent!</small>
                 </div>
-                <button type="submit" class="btn btn-success w-100"><i class="fas fa-check me-1"></i> Approve Transaction</button>
+                <div id="approve-feedback" class="alert alert-info py-2 small d-none mb-3" role="status" aria-live="polite">
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span id="approve-feedback-text">Approving transaction…</span>
+                </div>
+                <button type="submit" class="btn btn-success w-100" id="approve-submit-btn">
+                    <span class="approve-btn-label"><i class="fas fa-check me-1"></i> Approve Transaction</span>
+                    <span class="approve-btn-loading d-none"><span class="spinner-border spinner-border-sm me-1" role="status"></span> Approving transaction…</span>
+                </button>
                 {{--  --}}
                 <br><br>
                 <div class="d-flex gap-2">
@@ -229,30 +236,68 @@
                 setTimeout(() => msg.classList.add('d-none'), 4000);
             });
         });
-        //approve-transaction-form
         const approveForm = document.getElementById('approve-transaction-form');
-        approveForm.addEventListener('submit', function(e) {
+        const approveSubmitBtn = document.getElementById('approve-submit-btn');
+        const approveFeedback = document.getElementById('approve-feedback');
+        const approveFeedbackText = document.getElementById('approve-feedback-text');
+
+        approveForm?.addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(approveForm);
+            const labelEl = approveSubmitBtn?.querySelector('.approve-btn-label');
+            const loadingEl = approveSubmitBtn?.querySelector('.approve-btn-loading');
+
+            approveFeedback?.classList.remove('d-none', 'alert-danger', 'alert-success');
+            approveFeedback?.classList.add('alert-info');
+            if (approveFeedbackText) approveFeedbackText.textContent = 'Approving transaction…';
+            approveFeedback?.querySelector('.spinner-border')?.classList.remove('d-none');
+            approveSubmitBtn && (approveSubmitBtn.disabled = true);
+            labelEl?.classList.add('d-none');
+            loadingEl?.classList.remove('d-none');
+
             fetch(approveForm.action, {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(async (res) => {
+                const data = await res.json().catch(() => ({}));
+                approveFeedback?.querySelector('.spinner-border')?.classList.add('d-none');
+                if (!res.ok) {
+                    if (approveFeedbackText) approveFeedbackText.textContent = data.message || ('Could not approve (' + res.status + ')');
+                    approveFeedback?.classList.remove('alert-info');
+                    approveFeedback?.classList.add('alert-danger');
+                    approveSubmitBtn && (approveSubmitBtn.disabled = false);
+                    labelEl?.classList.remove('d-none');
+                    loadingEl?.classList.add('d-none');
+                    return;
+                }
                 if (data.success) {
-                    // Handle successful approval
-                    alert('Transaction approved successfully!');
-                    location.reload();
+                    if (approveFeedbackText) approveFeedbackText.textContent = 'Transaction approved successfully.';
+                    approveFeedback?.classList.remove('alert-info');
+                    approveFeedback?.classList.add('alert-success');
+                    setTimeout(() => location.reload(), 1200);
                 } else {
-                    alert(data.message || 'Failed to approve transaction.');
+                    if (approveFeedbackText) approveFeedbackText.textContent = data.message || 'Failed to approve transaction.';
+                    approveFeedback?.classList.remove('alert-info');
+                    approveFeedback?.classList.add('alert-danger');
+                    approveSubmitBtn && (approveSubmitBtn.disabled = false);
+                    labelEl?.classList.remove('d-none');
+                    loadingEl?.classList.add('d-none');
                 }
             })
             .catch(() => {
-                // Handle network error
+                approveFeedback?.querySelector('.spinner-border')?.classList.add('d-none');
+                if (approveFeedbackText) approveFeedbackText.textContent = 'Network error. Please try again.';
+                approveFeedback?.classList.remove('alert-info');
+                approveFeedback?.classList.add('alert-danger');
+                approveSubmitBtn && (approveSubmitBtn.disabled = false);
+                labelEl?.classList.remove('d-none');
+                loadingEl?.classList.add('d-none');
             });
         });
         // Toggle transaction details with animation
