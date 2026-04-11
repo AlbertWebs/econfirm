@@ -11,7 +11,9 @@ use Illuminate\Http\JsonResponse;
 use App\Services\MpesaService;
 use App\Models\MpesaStkPush;
 use App\Services\SmsService;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class HomeController extends Controller
 {
@@ -672,7 +674,15 @@ class HomeController extends Controller
         }
         //Get stk where checkout_request_id is the same as the transaction checkout_request_id
         $stkPush = MpesaStkPush::where('checkout_request_id', $transaction->checkout_request_id)->first();
-        return view('process.transaction', compact('transaction', 'stkPush'));
+
+        $transactionSenderRegistered = false;
+        if (Schema::hasColumn('users', 'phone')) {
+            $transactionSenderRegistered = User::query()
+                ->where('phone', $transaction->sender_mobile)
+                ->exists();
+        }
+
+        return view('process.transaction', compact('transaction', 'stkPush', 'transactionSenderRegistered'));
 
     }
 

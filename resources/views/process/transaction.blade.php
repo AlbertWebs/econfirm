@@ -282,12 +282,7 @@
             100% { transform: translateY(-50%) scale(1); box-shadow: 0 0 8px 4px #ff386066; }
         }
     </style>
-    <?php
-        //Check if the user phone number is in users table phone column
-        $User = DB::table('users')->where('phone', $transaction->sender_mobile)->first();
-        //if user is available then show the update notification
-    ?>
-    @if(!$User)
+    @if(! $transactionSenderRegistered)
     <script>
         function showNotification() {
             document.getElementById('updateNotification').classList.add('show');
