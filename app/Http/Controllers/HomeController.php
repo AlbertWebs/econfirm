@@ -503,14 +503,13 @@ class HomeController extends Controller
                 $transaction->status = 'Escrow Funded';
                 $transaction->save();
             }
-            //send sms to the sender and receiver
-            $smsService = new SmsService();
-            $smsService->send($transaction->sender_mobile, "Your transaction with ID {$transaction->transaction_id} has been successfully funded.");
-            //if payment_method is mpesa, send sms to the receiver else send to receiver and include that the transaction will be sent to paybill/till paybill_till_number
-            if ($transaction->payment_method === 'mpesa') {
-                $smsService->send($transaction->receiver_mobile, "You have received a transaction with ID {$transaction->transaction_id}, Amount: {$transaction->transaction_amount} that has been successfully funded.");
-            } else {
-                $smsService->send($transaction->receiver_mobile, "You have received a transaction with ID {$transaction->transaction_id}, Amount: {$transaction->transaction_amount} that will be sent to Paybill/Till Number: {$transaction->paybill_till_number}.");
+            try {
+                (new SmsService())->notifyEscrowFunded($transaction);
+            } catch (\Throwable $e) {
+                \Log::error('Escrow funded SMS failed', [
+                    'transaction_id' => $transaction->transaction_id,
+                    'error' => $e->getMessage(),
+                ]);
             }
             return response()->json([
                 'success' => true,

@@ -262,14 +262,13 @@ class MobileApiController extends Controller
                     $transaction->status = 'Escrow Funded';
                     $transaction->save();
 
-                    // Send SMS notifications
-                    $smsService = new SmsService();
-                    $smsService->send($transaction->sender_mobile, "Your transaction {$transaction->transaction_id} has been successfully funded.");
-                    
-                    if ($transaction->payment_method === 'mpesa') {
-                        $smsService->send($transaction->receiver_mobile, "You have received a transaction {$transaction->transaction_id}, Amount: {$transaction->transaction_amount} that has been successfully funded.");
-                    } else {
-                        $smsService->send($transaction->receiver_mobile, "You have received a transaction {$transaction->transaction_id}, Amount: {$transaction->transaction_amount} that will be sent to Paybill/Till: {$transaction->paybill_till_number}.");
+                    try {
+                        (new SmsService())->notifyEscrowFunded($transaction);
+                    } catch (\Throwable $e) {
+                        Log::error('Escrow funded SMS failed (mobile)', [
+                            'transaction_id' => $transaction->transaction_id,
+                            'error' => $e->getMessage(),
+                        ]);
                     }
                 }
 

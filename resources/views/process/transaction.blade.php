@@ -1,10 +1,39 @@
 <!-- resources/views/view.blade.php -->
 @extends('process.master')
 
-@section('title', 'Transaction Details - e-confirm')
+@php
+    $portalUrl = \App\Services\SmsService::absoluteTransactionPortalUrl($transaction->transaction_id);
+    $siteUrl = rtrim(config('app.url', url('/')), '/');
+    $seoTitle = 'Escrow '.$transaction->transaction_id.' | eConfirm';
+    $typeLabel = $transaction->transaction_type ?? 'Escrow';
+    $seoDescription = 'eConfirm escrow '.$transaction->transaction_id.' — '.$typeLabel.'. Amount KES '.number_format((float) $transaction->transaction_amount, 2).'. Status: '.($transaction->status ?? '').'. Manage and approve your transaction.';
+    $ogImage = file_exists(public_path('assets/images/social-share.jpg'))
+        ? url(asset('assets/images/social-share.jpg'))
+        : url(asset('uploads/favicon.png'));
+@endphp
+@section('title', $seoTitle)
 
 @push('head')
-    <!-- Any additional head content can go here -->
+    <meta name="description" content="{{ $seoDescription }}">
+    <meta name="keywords" content="eConfirm, escrow, M-Pesa, {{ $transaction->transaction_id }}, Kenya escrow, secure payment">
+    <link rel="canonical" href="{{ $portalUrl }}">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ $portalUrl }}">
+    <meta property="og:title" content="{{ $seoTitle }}">
+    <meta property="og:description" content="{{ $seoDescription }}">
+    <meta property="og:image" content="{{ $ogImage }}">
+    <meta property="og:image:alt" content="eConfirm escrow transaction">
+    <meta property="og:locale" content="en_KE">
+    <meta property="og:site_name" content="eConfirm">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ $portalUrl }}">
+    <meta name="twitter:title" content="{{ $seoTitle }}">
+    <meta name="twitter:description" content="{{ $seoDescription }}">
+    <meta name="twitter:image" content="{{ $ogImage }}">
+
+    <meta name="robots" content="index, follow">
 @endpush
 
 @section('header-actions')

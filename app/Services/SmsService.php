@@ -178,12 +178,51 @@ class SmsService
         }
 
         $ref = $transaction->transaction_id;
-        $amt = number_format((float) $transaction->transaction_amount, 2);
+        $principal = (float) $transaction->transaction_amount;
+        $fee = (float) ($transaction->transaction_fee ?? 0);
+        $total = $principal + $fee;
+        $amt = number_format($total, 2);
 
-        $senderMsg = "eConfirm: Escrow {$ref} for KES {$amt}. Enter your M-Pesa PIN on your phone to fund this escrow.";
-        $receiverMsg = "eConfirm: Escrow {$ref} for KES {$amt} lists you as receiver. The sender is completing M-Pesa payment.";
+        $senderMsg = "eConfirm: Escrow {$ref} — pay KES {$amt} total (principal + fee) on your phone. Enter your M-Pesa PIN when prompted.";
+        $receiverMsg = "eConfirm: Escrow {$ref} for KES {$amt} total lists you as receiver. The sender is completing M-Pesa payment.";
 
         $this->send($transaction->sender_mobile, $senderMsg, $ref.'-stk-sender');
         $this->send($transaction->receiver_mobile, $receiverMsg, $ref.'-stk-recv');
+    }
+
+    /**
+     * Public HTTPS URL for the transaction portal (SMS, link previews).
+     */
+    public static function absoluteTransactionPortalUrl(string $transactionId): string
+    {
+        return route('transaction.index', ['id' => $transactionId], true);
+    }
+
+    /**
+     * SMS after M-Pesa confirms escrow is funded — includes link to view / approve on the portal.
+     */
+    public function notifyEscrowFunded(Transaction $transaction): void
+    {
+        if (empty($this->apiToken) || empty($this->senderId)) {
+            \Log::warning('Escrow funded SMS skipped: SMS not configured in .env');
+
+            return;
+        }
+
+        $url = self::absoluteTransactionPortalUrl($transaction->transaction_id);
+        $id = $transaction->transaction_id;
+        $amt = number_format((float) $transaction->transaction_amount, 2);
+
+        $senderMsg = "eConfirm: Escrow {$id} is funded. Review & approve next steps: {$url}";
+
+        if (($transaction->payment_method ?? 'mpesa') === 'mpesa') {
+            $receiverMsg = "eConfirm: Escrow {$id} — KES {$amt} secured. View details & approve: {$url}";
+        } else {
+            $pb = $transaction->paybill_till_number ?? '';
+            $receiverMsg = "eConfirm: Escrow {$id} — payout via Paybill/Till {$pb}. Details: {$url}";
+        }
+
+        $this->send($transaction->sender_mobile, $senderMsg, $id.'-funded-sender');
+        $this->send($transaction->receiver_mobile, $receiverMsg, $id.'-funded-recv');
     }
 }

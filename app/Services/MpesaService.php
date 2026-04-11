@@ -27,6 +27,17 @@ class MpesaService
     }
 
     /**
+     * Total KES to charge on STK: escrow principal + platform fee (whole shillings).
+     */
+    protected function stkChargeAmountKes(Transaction $transaction): int
+    {
+        $principal = (float) $transaction->transaction_amount;
+        $fee = (float) ($transaction->transaction_fee ?? 0);
+
+        return (int) round($principal + $fee, 0);
+    }
+
+    /**
      * Initiate M-Pesa STK Push
      *
      * @param Transaction $transaction
@@ -67,6 +78,9 @@ class MpesaService
         \Log::info('M-Pesa STK Push Payload', [
             'payload' => $payload,
             'transaction_id' => $transaction->transaction_id,
+            'principal_kes' => $transaction->transaction_amount,
+            'fee_kes' => $transaction->transaction_fee ?? 0,
+            'stk_total_kes' => $amountKes,
         ]);
 
         $endpoint = config('mpesa.stk_url', 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest');
@@ -117,7 +131,7 @@ class MpesaService
             // Save CheckoutRequestID and MerchantRequestID
             $MpesaStkPush = new MpesaStkPush();
             $MpesaStkPush->phone = $transaction->sender_mobile;
-            $MpesaStkPush->amount = $transaction->transaction_amount;
+            $MpesaStkPush->amount = $this->stkChargeAmountKes($transaction);
             $MpesaStkPush->reference = $transaction->transaction_id;
             $MpesaStkPush->description = $transaction->transaction_details ?? 'Escrow Payment';
             $MpesaStkPush->status = 'Pending';

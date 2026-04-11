@@ -369,6 +369,7 @@ function transactionFormData() {
                                            placeholder="Amount"
                                            class="w-full pl-16 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition">
                                 </div>
+                                <p class="mt-1.5 text-xs text-gray-500">Escrow principal. A 1% platform fee is added — your M-Pesa prompt shows the total to pay.</p>
                             </div>
                                 </div>
                         

@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Str; // Optional for slug formatting
-use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Str;
 
 class ContractController extends Controller
 {
@@ -41,7 +39,9 @@ class ContractController extends Controller
             // other fields...
         ];
 
-        $pdf = Pdf::loadView('front.contracts.escrow-agreement', $data); 
+        // Resolve via container (barryvdh/laravel-dompdf). On production, run: composer install --no-dev
+        $pdf = app()->make('dompdf.wrapper')->loadView('front.contracts.escrow-agreement', $data);
+
         return $pdf->download($filename);
     }
 }
