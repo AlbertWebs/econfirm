@@ -9,7 +9,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="eConfirm">
     <link rel="apple-touch-icon" href="{{ asset('uploads/favicon.png') }}">
-     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @if (file_exists(public_path('hot')) || file_exists(public_path('build/manifest.json')))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @endif
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="{{ asset('uploads/favicon.png') }}">
     <link rel="manifest" href="{{ asset('manifest.json') }}">

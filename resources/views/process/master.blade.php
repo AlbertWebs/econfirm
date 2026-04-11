@@ -34,27 +34,22 @@
                     </div>
                 </div>
                 <div class="d-flex align-items-center">
-                     <a href="{{route('user.dashboard')}}" class="btn btn-outline-primary btn-sm me-3 position-relative"> 
-                        <i class="fas fa-dashboard me-1"></i>
-                        My Account
-                     </a>
+                    @auth
+                        <a href="{{ route('user.dashboard') }}" class="btn btn-outline-primary btn-sm me-3 position-relative">
+                            <i class="fas fa-dashboard me-1"></i>
+                            My Account
+                        </a>
+                    @endauth
                     @yield('header-actions')
-                    {{-- <div class="d-flex align-items-center me-3">
-                        <div class="bg-primary bg-opacity-25 rounded-circles p-2 me-2" style="border-radius: 5px;">
-                            <i class="fas fa-user" style="color:#ffffff"></i>
-                        </div>
-                        <span class="fw-medium">@yield('user-phone', 'N/A')</span>
-                    </div> --}}
-                 
-                    <a  class="btn btn-outline-secondary btn-sm" title="Logout" class="dropdown-item" href="{{ route('logout') }}"
-                            onclick="event.preventDefault();
-                                            document.getElementById('logout-form').submit();">
+                    @auth
+                        <a class="btn btn-outline-secondary btn-sm" title="{{ __('Logout') }}" href="{{ route('logout') }}"
+                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                             <i class="fas fa-sign-out"></i>
                         </a>
-
                         <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                             @csrf
                         </form>
+                    @endauth
                 </div>
             </div>
         </div>
