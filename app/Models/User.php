@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Services\SmsService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -67,5 +68,25 @@ class User extends Authenticatable
         return Attribute::make(
             get: fn ($value) => isset(["user", "admin", "manager"][$value]) ? ["user", "admin", "manager"][$value] : "user",
         );
+    }
+
+    /**
+     * Find a user by Kenya phone, matching common stored formats (254…, 07…, 7…).
+     */
+    public static function findByKenyaPhone(string $input): ?self
+    {
+        $normalized = SmsService::normalizeKenyaTo254($input);
+        if (! preg_match('/^254\d{9}$/', $normalized)) {
+            return null;
+        }
+
+        return static::query()
+            ->whereNotNull('phone')
+            ->where(function ($q) use ($normalized) {
+                $q->where('phone', $normalized)
+                    ->orWhere('phone', '0' . substr($normalized, 3))
+                    ->orWhere('phone', substr($normalized, 3));
+            })
+            ->first();
     }
 }

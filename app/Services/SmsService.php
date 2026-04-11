@@ -19,34 +19,35 @@ class SmsService
     }
 
     /**
-     * Normalize phone number to format accepted by Rebue Text API
-     * Accepts: 254XXXXXXXXX, 07XXXXXXXX, 01XXXXXXXX, 7XXXXXXXX, 1XXXXXXXX
-     *
+     * Normalize a Kenya mobile number to 254XXXXXXXXX for SMS and lookups.
+     * Accepts: 254XXXXXXXXX, 07XXXXXXXX, 01XXXXXXXX, 7XXXXXXXX, 1XXXXXXXX, +254…
+     */
+    public static function normalizeKenyaTo254(string $phone): string
+    {
+        $phone = preg_replace('/[\s+\-]/', '', $phone);
+
+        if (preg_match('/^254\d{9}$/', $phone)) {
+            return $phone;
+        }
+
+        if (preg_match('/^(07|01)\d{8}$/', $phone)) {
+            return '254' . substr($phone, 1);
+        }
+
+        if (preg_match('/^(7|1)\d{8}$/', $phone)) {
+            return '254' . $phone;
+        }
+
+        return $phone;
+    }
+
+    /**
      * @param string $phone Phone number
      * @return string Normalized phone number
      */
     protected function normalizePhone($phone)
     {
-        // Remove any spaces, dashes, or plus signs
-        $phone = preg_replace('/[\s+\-]/', '', $phone);
-
-        // If it starts with 254 (Kenya country code), return as is
-        if (preg_match('/^254\d{9}$/', $phone)) {
-            return $phone;
-        }
-
-        // If it starts with 07 or 01 (10 digits), add 254 prefix
-        if (preg_match('/^(07|01)\d{8}$/', $phone)) {
-            return '254' . substr($phone, 1);
-        }
-
-        // If it starts with 7 or 1 (9 digits), add 254 prefix
-        if (preg_match('/^(7|1)\d{8}$/', $phone)) {
-            return '254' . $phone;
-        }
-
-        // Return as is if already in correct format or unknown format
-        return $phone;
+        return self::normalizeKenyaTo254($phone);
     }
 
     /**

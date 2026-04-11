@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MpesaController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\Auth\PhoneOtpLoginController;
 
 
 
@@ -56,6 +57,18 @@ Route::post('/custom-login', [DashboardController::class, 'customLogin'])->name(
 
 
 Auth::routes();
+
+Route::middleware('guest')->group(function () {
+    Route::post('/login/phone/send-otp', [PhoneOtpLoginController::class, 'sendOtp'])
+        ->middleware('throttle:5,1')
+        ->name('login.phone.send-otp');
+    Route::post('/login/phone', [PhoneOtpLoginController::class, 'verify'])
+        ->middleware('throttle:12,1')
+        ->name('login.phone');
+    Route::get('/login/phone/cancel', [PhoneOtpLoginController::class, 'cancel'])
+        ->name('login.phone.cancel');
+});
+
 // DashboardController routes
 
 Route::get('/home', [DashboardController::class, 'index'])->name('home.dashboard');
