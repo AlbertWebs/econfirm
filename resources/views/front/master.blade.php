@@ -116,7 +116,7 @@
           height: 60px;
           animation: spin 1s linear infinite;
         }
-        @keyframes spin {
+        @@keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
@@ -135,7 +135,7 @@
         #searchTransactionPopup .popup-content-anim {
           animation: popupIn 0.4s cubic-bezier(0.4,0,0.2,1);
         }
-        @keyframes popupIn {
+        @@keyframes popupIn {
           0% { transform: scale(0.95) translateY(30px); opacity: 0; }
           100% { transform: scale(1) translateY(0); opacity: 1; }
         }
