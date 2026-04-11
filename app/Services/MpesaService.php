@@ -48,12 +48,14 @@ class MpesaService
         $timestamp = now()->format('YmdHis');
         $password = base64_encode(config('mpesa.shortcode') . config('mpesa.passkey') . $timestamp);
 
+        $amountKes = $this->stkChargeAmountKes($transaction);
+
         $payload = [
             'BusinessShortCode' => config('mpesa.shortcode'),
             'Password' => $password,
             'Timestamp' => $timestamp,
             'TransactionType' => 'CustomerPayBillOnline',
-            'Amount' => (int) preg_replace('/[\s+]/', '', $transaction->transaction_amount),
+            'Amount' => $amountKes,
             'PartyA' => preg_replace('/[\s+]/', '', $transaction->sender_mobile),
             'PartyB' => config('mpesa.shortcode'),
             'PhoneNumber' => preg_replace('/[\s+]/', '', $transaction->sender_mobile),
