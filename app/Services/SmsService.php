@@ -50,6 +50,20 @@ class SmsService
     }
 
     /**
+     * Whether Rebue Text / cURL response indicates the SMS was accepted for delivery.
+     */
+    public static function resultIndicatesSuccess(array $result): bool
+    {
+        if (isset($result['status'])) {
+            $s = $result['status'];
+
+            return $s === true || $s === 1 || $s === '1' || $s === 'success';
+        }
+
+        return ! empty($result['data']['uniqueId']);
+    }
+
+    /**
      * Send an SMS message using Rebue Text API.
      *
      * @param string $to Recipient phone number (various formats accepted)

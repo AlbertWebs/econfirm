@@ -193,15 +193,24 @@
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
                     transaction_id: '{{ $transaction->transaction_id }}',
-                    phone: '{{ $stkPush->phone ?? $transaction->receiver_mobile ?? "" }}'
+                    phone: '{{ $stkPush->phone ?? $transaction->sender_mobile ?? "" }}'
                 })
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(async (res) => {
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    msg.textContent = data.message || ('Request failed (' + res.status + ')');
+                    msg.classList.remove('text-success');
+                    msg.classList.add('text-danger');
+                    setTimeout(() => msg.classList.add('d-none'), 6000);
+                    return;
+                }
                 if (data.success) {
                     msg.textContent = 'OTP sent!';
                     msg.classList.remove('text-danger');
@@ -214,7 +223,7 @@
                 setTimeout(() => msg.classList.add('d-none'), 4000);
             })
             .catch(() => {
-                msg.textContent = 'Failed to send OTP.';
+                msg.textContent = 'Failed to send OTP (network error).';
                 msg.classList.remove('text-success');
                 msg.classList.add('text-danger');
                 setTimeout(() => msg.classList.add('d-none'), 4000);

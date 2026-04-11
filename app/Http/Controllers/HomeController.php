@@ -526,30 +526,72 @@ class HomeController extends Controller
     }
 
     //createOTP
-    public function createOTP(Request $request)
+    public function createOTP(Request $request): JsonResponse
     {
         $transaction = Transaction::where('transaction_id', $request->input('transaction_id'))->first();
-        if (!$transaction) {
+        if (! $transaction) {
             return response()->json([
                 'success' => false,
                 'message' => 'Transaction not found.',
-            ]);
+            ], 404);
         }
 
-        // Generate a random OTP
-        $otp = rand(100000, 999999);
+        $otp = random_int(100000, 999999);
+        $message = "Your eConfirm OTP is: {$otp}. Do not share it. Valid for 3 minutes.";
 
-        // Save the OTP to the transaction
+        $destination = $request->filled('phone')
+            ? trim((string) $request->input('phone'))
+            : (string) $transaction->sender_mobile;
+
+        if ($destination === '') {
+            return response()->json([
+                'success' => false,
+                'message' => 'No phone number available for this transaction.',
+            ], 422);
+        }
+
+        try {
+            $smsService = new SmsService();
+            $smsResult = $smsService->send(
+                $destination,
+                $message,
+                $transaction->transaction_id.'-otp'
+            );
+        } catch (\Throwable $e) {
+            \Log::error('createOTP SMS exception', [
+                'transaction_id' => $transaction->transaction_id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not send OTP. Please try again.',
+            ], 500);
+        }
+
+        if (! SmsService::resultIndicatesSuccess($smsResult)) {
+            $detail = is_array($smsResult)
+                ? (string) ($smsResult['message'] ?? 'SMS gateway error')
+                : 'SMS gateway error';
+
+            \Log::warning('createOTP SMS not accepted', [
+                'transaction_id' => $transaction->transaction_id,
+                'destination' => $destination,
+                'sms_result' => $smsResult,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send OTP: '.$detail,
+            ], 422);
+        }
+
         $transaction->otp = $otp;
         $transaction->save();
 
-        // Send the OTP to the user via SMS
-        $smsService = new SmsService();
-        $smsService->send($transaction->sender_mobile, "Your OTP is: $otp, Do not share this OTP with anyone. It is valid for 3 minutes.");
-
         return response()->json([
             'success' => true,
-            'message' => 'OTP created and sent via SMS.',
+            'message' => 'OTP sent via SMS.',
         ]);
     }
 
