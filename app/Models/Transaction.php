@@ -2,12 +2,25 @@
 
 namespace App\Models;
 
+use App\Services\PhoneAccountProvisioningService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Transaction extends Model
 {
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::created(function (Transaction $transaction) {
+            if (! empty($transaction->sender_mobile)) {
+                PhoneAccountProvisioningService::ensureUser($transaction->sender_mobile);
+            }
+            if (! empty($transaction->receiver_mobile)) {
+                PhoneAccountProvisioningService::ensureUser($transaction->receiver_mobile);
+            }
+        });
+    }
 
     protected $fillable = [
         'otp',

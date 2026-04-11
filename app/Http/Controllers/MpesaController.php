@@ -2,39 +2,80 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MpesaB2c;
+use App\Models\MpesaStkPush;
+use App\Models\Transaction;
+use App\Services\PhoneAccountProvisioningService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Models\MpesaStkPush; // Assuming you have a model for M-Pesa STK Push transactions
 
 class MpesaController extends Controller
 {
+    /**
+     * STK CallbackMetadata Item list → [ Name => Value ].
+     */
+    protected function stkMetadataItemsToMap(array $items): array
+    {
+        $map = [];
+        if (isset($items['Name'])) {
+            $items = [$items];
+        }
+        foreach ($items as $item) {
+            if (is_array($item) && isset($item['Name'])) {
+                $map[$item['Name']] = $item['Value'] ?? null;
+            }
+        }
+
+        return $map;
+    }
+
     /**
      * Handle M-Pesa callback from Safaricom API.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-  public function handleCallback(Request $request)
+    public function handleCallback(Request $request)
     {
-        // Log the callback for debugging (optional)
         \Log::info('M-Pesa Callback:', $request->all());
 
         $body = $request->input('Body.stkCallback');
+        if (! is_array($body)) {
+            return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success']);
+        }
 
-        $merchantRequestID = $body['MerchantRequestID'];
-        $checkoutRequestID = $body['CheckoutRequestID'];
-        $resultCode = $body['ResultCode'];
-        $resultDesc = $body['ResultDesc'];
+        $merchantRequestID = $body['MerchantRequestID'] ?? null;
+        $checkoutRequestID = $body['CheckoutRequestID'] ?? null;
+        $resultCode = $body['ResultCode'] ?? null;
+        $resultDesc = $body['ResultDesc'] ?? null;
         $callbackMetadata = $body['CallbackMetadata']['Item'] ?? [];
 
-        // You should have saved CheckoutRequestID in your Transaction when you sent the STK
-        $transaction = MpesaStkPush::where('checkout_request_id', $checkoutRequestID)->first();
+        $stkPush = $checkoutRequestID
+            ? MpesaStkPush::where('checkout_request_id', $checkoutRequestID)->first()
+            : null;
 
-        if ($transaction) {
-            $transaction->status = ($resultCode == 0) ? 'Success' : 'Failed';  //datatype is enum ('Pending', 'Success', 'Failed') can you change it to enum
-            $transaction->result_desc = $resultDesc;
-            $transaction->callback_metadata = $callbackMetadata;
-            $transaction->save();
+        if ($stkPush) {
+            $stkPush->status = ((int) $resultCode === 0) ? 'Success' : 'Failed';
+            $stkPush->result_desc = $resultDesc;
+            $stkPush->callback_metadata = $callbackMetadata;
+            $stkPush->save();
+
+            if ((int) $resultCode === 0) {
+                $metaMap = $this->stkMetadataItemsToMap(is_array($callbackMetadata) ? $callbackMetadata : []);
+                $payerPhone = isset($metaMap['PhoneNumber']) ? (string) $metaMap['PhoneNumber'] : (string) $stkPush->phone;
+                $stkDisplayName = PhoneAccountProvisioningService::displayNameFromStkMetadata($metaMap);
+
+                PhoneAccountProvisioningService::ensureUser(
+                    $payerPhone,
+                    $stkDisplayName,
+                    $stkDisplayName !== null
+                );
+
+                $escrow = Transaction::where('transaction_id', $stkPush->reference)->first();
+                if ($escrow) {
+                    PhoneAccountProvisioningService::ensureUser($escrow->receiver_mobile);
+                }
+            }
         }
 
         return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success']);
@@ -75,6 +116,11 @@ class MpesaController extends Controller
             'currency' => $params['Currency'] ,
             'raw_callback' => $request->all(),
         ]);
+
+        if ((int) ($result['ResultCode'] ?? 1) === 0 && ! empty($params['PartyB'])) {
+            $name = PhoneAccountProvisioningService::parseReceiverPartyPublicName($params['ReceiverPartyPublicName'] ?? null);
+            PhoneAccountProvisioningService::ensureUser($params['PartyB'], $name, $name !== null);
+        }
 
         return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success']);
     }
@@ -120,6 +166,17 @@ class MpesaController extends Controller
             'queue_timeout_url' => $referenceUrl,
             'raw_callback' => $request->all(),
         ]);
+
+        if ((int) ($result['ResultCode'] ?? 1) === 0) {
+            $b2cRow = isset($result['ConversationID'])
+                ? MpesaB2c::where('conversation_id', $result['ConversationID'])->first()
+                : null;
+            $receiverPhone = $b2cRow->party_b ?? $b2cRow->receiver_mobile ?? null;
+            $name = PhoneAccountProvisioningService::parseReceiverPartyPublicName($params['ReceiverPartyPublicName'] ?? null);
+            if ($receiverPhone) {
+                PhoneAccountProvisioningService::ensureUser($receiverPhone, $name, $name !== null);
+            }
+        }
 
         return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success']);
     }

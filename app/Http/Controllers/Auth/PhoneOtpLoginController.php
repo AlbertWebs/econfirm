@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Otp;
 use App\Models\User;
+use App\Services\PhoneAccountProvisioningService;
 use App\Services\SmsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,10 +36,10 @@ class PhoneOtpLoginController extends Controller
             ]);
         }
 
-        $user = User::findByKenyaPhone($validated['phone']);
+        $user = PhoneAccountProvisioningService::ensureUser($validated['phone']);
         if (! $user) {
             throw ValidationException::withMessages([
-                'phone' => __('No account is registered with this phone number. Use email login or contact support.'),
+                'phone' => __('Could not create or find an account for this number.'),
             ]);
         }
 
@@ -106,7 +107,8 @@ class PhoneOtpLoginController extends Controller
             ]);
         }
 
-        $user = User::findByKenyaPhone($phone);
+        $user = User::findByKenyaPhone($phone)
+            ?? PhoneAccountProvisioningService::ensureUser($phone);
         if (! $user) {
             $request->session()->forget(['login_otp_phone', 'login_otp_sent_at']);
 
