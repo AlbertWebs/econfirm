@@ -248,39 +248,6 @@
 
 
     @yield('content')
-  
-    <!-- PWA Install Prompt (logic: resources/js/app.js Alpine.data('pwaInstall')) -->
-    <div x-data="pwaInstall"
-    x-show="showInstallPrompt"
-    :style="showInstallPrompt ? 'display: block !important;' : 'display: none !important;'"
-    x-transition:enter="transition ease-out duration-300"
-    x-transition:enter-start="opacity-0 transform translate-y-4"
-    x-transition:enter-end="opacity-100 transform translate-y-0"
-    x-transition:leave="transition ease-in duration-200"
-    x-transition:leave-start="opacity-100 transform translate-y-0"
-    x-transition:leave-end="opacity-0 transform translate-y-4"
-    class="fixed bottom-20 lg:bottom-4 left-4 right-4 lg:left-auto lg:right-4 lg:w-96 z-40 bg-white rounded-xl shadow-2xl border-2 border-green-200 p-6 relative">
-        <button @click="dismissPrompt()" 
-                class="absolute -top-2 -right-2 w-8 h-8 flex items-center justify-center bg-red-500 hover:bg-red-600 rounded-full transition-colors text-white shadow-lg z-50">
-            <i class="fas fa-times text-sm"></i>
-        </button>
-        <div class="flex items-start gap-4">
-            <div class="flex-shrink-0">
-                <img src="{{ asset('uploads/favicon.png') }}" alt="eConfirm" class="w-16 h-16 rounded-lg">
-            </div>
-            <div class="flex-1">
-                <h3 class="text-lg font-bold text-gray-900 mb-1">Install eConfirm App</h3>
-                <p class="text-sm text-gray-600 mb-4">Get a better experience with our app. Install for quick access and offline support.</p>
-                <div class="flex gap-2">
-                    <button @click="installApp()" 
-                            class="flex-1 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
-                        <i class="fas fa-download text-sm"></i>
-                        Install Now
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Mobile Bottom Navigation -->
     <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg">
@@ -493,6 +460,44 @@
             });
         });
     </script>
+
+    {{-- PWA install: full-viewport fixed shell (out of document flow) + bottom-right card. Logic: resources/js/app.js --}}
+    <div x-data="pwaInstall"
+         x-show="showInstallPrompt"
+         x-cloak
+         x-transition.opacity.duration.300ms
+         class="fixed inset-0 z-[70] pointer-events-none flex items-end justify-end p-2.5 pb-20 sm:p-4 sm:pb-20 lg:pb-6"
+         role="presentation">
+        <div class="pointer-events-auto w-[min(17.5rem,calc(100vw-1.25rem))] sm:w-[min(22rem,calc(100vw-2rem))] lg:max-w-sm bg-white rounded-lg sm:rounded-xl shadow-lg sm:shadow-2xl border border-green-200 sm:border-2 p-3 sm:p-5 lg:p-6 relative origin-bottom-right scale-[0.96] sm:scale-100"
+             role="dialog"
+             aria-modal="false"
+             aria-labelledby="pwa-install-title"
+             @click.stop>
+            <button type="button"
+                    @click="dismissPrompt()"
+                    aria-label="Dismiss install prompt"
+                    class="absolute top-2 right-2 sm:top-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-red-500 hover:bg-red-600 rounded-full transition-colors text-white shadow-md z-10">
+                <i class="fas fa-times text-xs sm:text-sm" aria-hidden="true"></i>
+            </button>
+            <div class="flex items-start gap-2.5 sm:gap-4 pr-7 sm:pr-8">
+                <div class="flex-shrink-0">
+                    <img src="{{ asset('uploads/favicon.png') }}" alt="" class="w-11 h-11 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-md sm:rounded-lg" width="64" height="64" loading="lazy" decoding="async">
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-sm sm:text-base lg:text-lg font-bold text-gray-900 mb-0.5 sm:mb-1 leading-snug" id="pwa-install-title">Install eConfirm App</h3>
+                    <p class="text-[11px] sm:text-sm text-gray-600 mb-2.5 sm:mb-4 leading-relaxed">Get a better experience with our app. Install for quick access and offline support.</p>
+                    <div class="flex gap-1.5 sm:gap-2">
+                        <button type="button"
+                                @click="installApp()"
+                                class="flex-1 px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-green-600 text-white font-medium rounded-md sm:rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-1.5 sm:gap-2">
+                            <i class="fas fa-download text-[10px] sm:text-sm shrink-0" aria-hidden="true"></i>
+                            Install Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>
