@@ -161,7 +161,7 @@
         }
     </style>
 </head>
-<body class="bg-white antialiased" x-data="{ mobileMenuOpen: false, searchPopupOpen: false }">
+<body class="bg-white antialiased overflow-x-hidden" x-data="{ mobileMenuOpen: false, searchPopupOpen: false }">
 <div id="preloader" class="fixed inset-0 z-50 flex items-center justify-center bg-white transition-opacity duration-400">
     <div class="w-16 h-16 border-4 border-gray-200 border-t-green-700 rounded-full animate-spin"></div>
 </div>

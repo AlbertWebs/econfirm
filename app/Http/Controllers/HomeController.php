@@ -27,6 +27,14 @@ class HomeController extends Controller
         return view('front.welcome-v2');
     }
 
+    /**
+     * Single-page feature detail (hash navigation: #secure-transactions, etc.).
+     */
+    public function features()
+    {
+        return view('front.features');
+    }
+
      //Legalities
     public function termsAndConditions()
     {
@@ -494,35 +502,71 @@ class HomeController extends Controller
         }
     }
 
-     public function transactionStatus($id)
+    public function transactionStatus($id)
     {
-        $StkPush = MpesaStkPush::where('checkout_request_id', $id)->first();
-        if ($StkPush && $StkPush->status === 'Success') {
-            $transaction = Transaction::where('checkout_request_id', $id)->first();
-            if ($transaction) {
-                $transaction->status = 'Escrow Funded';
-                $transaction->save();
-            }
+        $stk = MpesaStkPush::where('checkout_request_id', $id)->first();
+
+        if (! $stk) {
+            return response()->json([
+                'success' => false,
+                'status' => 'unknown',
+                'message' => 'Payment session not found.',
+            ], 404);
+        }
+
+        if ($stk->status === 'Failed') {
+            return response()->json([
+                'success' => false,
+                'status' => 'Failed',
+                'message' => 'Payment was declined or cancelled.',
+            ]);
+        }
+
+        if ($stk->status !== 'Success') {
+            return response()->json([
+                'success' => true,
+                'status' => 'Pending',
+                'message' => 'Awaiting M-Pesa confirmation (after you enter your PIN, this usually takes a few seconds).',
+            ]);
+        }
+
+        $transaction = Transaction::where('checkout_request_id', $id)->first();
+
+        if (! $transaction) {
+            \Log::error('STK Success but no matching escrow transaction', [
+                'checkout_request_id' => $id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'status' => 'Success',
+                'transaction_id' => null,
+                'message' => 'Payment received; transaction record is missing. Contact support with your CheckoutRequestID.',
+            ]);
+        }
+
+        $alreadyFunded = in_array($transaction->status, ['Escrow Funded', 'Completed'], true);
+
+        if (! $alreadyFunded) {
+            $transaction->status = 'Escrow Funded';
+            $transaction->save();
+
             try {
-                (new SmsService())->notifyEscrowFunded($transaction);
+                (new SmsService())->notifyEscrowFunded($transaction->fresh());
             } catch (\Throwable $e) {
                 \Log::error('Escrow funded SMS failed', [
                     'transaction_id' => $transaction->transaction_id,
                     'error' => $e->getMessage(),
                 ]);
             }
-            return response()->json([
-                'success' => true,
-                'message' => 'Transaction successful.',
-                'transaction_id' => $transaction->transaction_id ?? null,
-                'status' => $StkPush->status,
-            ]);
-        } else {
-            return response()->json([
-                'success' => false,
-                'message' => 'Transaction not found or not successful.',
-            ]);
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Transaction successful.',
+            'transaction_id' => $transaction->transaction_id,
+            'status' => 'Success',
+        ]);
     }
 
     //createOTP

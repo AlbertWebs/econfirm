@@ -157,18 +157,25 @@ function transactionFormData() {
                 })
                 .then(res => res.json())
                 .then(data => {
-                    if (data.status === 'completed' || data.status === 'Success') {
+                    const st = (data.status != null ? String(data.status) : '').toLowerCase();
+                    if (st === 'success' || st === 'completed') {
                         clearInterval(poll);
+                        if (!data.transaction_id) {
+                            self.mpesaResponse = { type: 'warning', message: data.message || 'Payment received. Contact support if the page does not update.' };
+                            return;
+                        }
                         self.mpesaResponse = { type: 'success', message: 'Payment received! Redirecting...' };
                         setTimeout(() => {
-                            window.location.href = '/get-transaction/' + data.transaction_id;
+                            window.location.href = '/get-transaction/' + encodeURIComponent(data.transaction_id);
                         }, 1500);
-                    } else if (data.status === 'Failed') {
+                    } else if (st === 'failed') {
                         clearInterval(poll);
-                        self.mpesaResponse = { type: 'error', message: 'Payment failed. Please try again.' };
+                        self.mpesaResponse = { type: 'error', message: data.message || 'Payment failed. Please try again.' };
+                    } else if (st === 'pending' && attempts % 3 === 0) {
+                        self.mpesaResponse = { type: 'success', message: 'Waiting for M-Pesa… (PIN entered? This can take up to a minute.)' };
                     } else if (attempts >= maxAttempts) {
                         clearInterval(poll);
-                        self.mpesaResponse = { type: 'warning', message: 'Payment confirmation timed out. Please check your transaction status later.' };
+                        self.mpesaResponse = { type: 'warning', message: 'No confirmation yet. Check SMS or search your transaction ID on this site.' };
                     }
                 })
                 .catch(() => {
@@ -498,10 +505,10 @@ function transactionFormData() {
                 
         <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             <template x-for="(feature, index) in [
-                { icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z', title: 'Secure Transactions', desc: 'Our escrow service protects both buyers and sellers with a secure and reliable payment system.', stat: '100%', statLabel: 'Secure' },
-                { icon: 'M3 11h18M7 11V7a5 5 0 0 1 10 0v4M12 16v-5M12 16h.01', title: 'Fraud Protection', desc: 'Advanced security measures and verification processes to prevent fraud and scams.', stat: '99.9%', statLabel: 'Protected' },
-                { icon: 'M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z', title: 'Quick Processing', desc: 'Fast transaction processing with real-time updates on the status of your escrow.', stat: '<24hrs', statLabel: 'Processing' },
-                { icon: 'M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm6 3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0z', title: 'Dispute Resolution', desc: 'Professional mediation services to resolve disputes between parties fairly and efficiently.', stat: '24/7', statLabel: 'Support' }
+                { slug: 'secure-transactions', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z', title: 'Secure Transactions', desc: 'Our escrow service protects both buyers and sellers with a secure and reliable payment system.', stat: '100%', statLabel: 'Secure' },
+                { slug: 'fraud-protection', icon: 'M3 11h18M7 11V7a5 5 0 0 1 10 0v4M12 16v-5M12 16h.01', title: 'Fraud Protection', desc: 'Advanced security measures and verification processes to prevent fraud and scams.', stat: '99.9%', statLabel: 'Protected' },
+                { slug: 'quick-processing', icon: 'M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z', title: 'Quick Processing', desc: 'Fast transaction processing with real-time updates on the status of your escrow.', stat: '<24hrs', statLabel: 'Processing' },
+                { slug: 'dispute-resolution', icon: 'M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm6 3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0z', title: 'Dispute Resolution', desc: 'Professional mediation services to resolve disputes between parties fairly and efficiently.', stat: '24/7', statLabel: 'Support' }
             ]" :key="index">
                 <div x-data="{ inView: true }"
                      x-intersect="inView = true"
@@ -534,7 +541,7 @@ function transactionFormData() {
                             
                             <!-- Learn more link -->
                             <div class="mt-6 pt-4 border-t border-gray-100">
-                                <a href="#how-it-works" class="inline-flex items-center gap-2 text-sm font-medium text-green-600 hover:text-green-700 group-hover:gap-3 transition-all duration-200">
+                                <a :href="'{{ route('features') }}#' + feature.slug" class="inline-flex items-center gap-2 text-sm font-medium text-green-600 hover:text-green-700 group-hover:gap-3 transition-all duration-200">
                                     <span>Learn more</span>
                                     <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
