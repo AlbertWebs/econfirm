@@ -640,21 +640,11 @@ class HomeController extends Controller
                 $stk->status = 'Success';
                 $stk->result_desc = $query['message'] ?? $stk->result_desc;
                 $stk->save();
-            } elseif (($query['status'] ?? null) === 'Failed') {
-                $stk->status = 'Failed';
-                $stk->result_desc = $query['message'] ?? $stk->result_desc;
-                $stk->save();
-
-                return response()->json([
-                    'success' => false,
-                    'status' => 'Failed',
-                    'message' => $query['message'] ?? 'Payment failed or was cancelled.',
-                ]);
             } else {
                 return response()->json([
                     'success' => true,
                     'status' => 'Pending',
-                    'message' => 'Awaiting M-Pesa confirmation (after you enter your PIN, this usually takes a few seconds).',
+                    'message' => $query['message'] ?? 'Awaiting M-Pesa confirmation (after you enter your PIN, this usually takes a few seconds).',
                 ]);
             }
         }
