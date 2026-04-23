@@ -38,6 +38,8 @@ function transactionFormData() {
         submitting: false,
         mpesaResponse: null,
         checkoutRequestId: null,
+        manualStatusChecking: false,
+        _statusPollTimer: null,
 
         get filteredTransactionTypes() {
             const q = (this.transactionTypeQuery || '').toLowerCase().trim();
@@ -144,24 +146,65 @@ function transactionFormData() {
             }
         },
         
+        _clearStatusTimer() {
+            if (this._statusPollTimer) {
+                clearTimeout(this._statusPollTimer);
+                this._statusPollTimer = null;
+            }
+        },
+
+        checkPaymentStatusNow() {
+            if (!this.checkoutRequestId) {
+                return;
+            }
+            this._clearStatusTimer();
+            if (typeof this._statusPollOne === 'function') {
+                this._statusPollOne(true);
+            }
+        },
+
         pollTransactionStatus() {
-            let attempts = 0;
+            const self = this;
             const maxAttempts = 24;
             const pollInterval = 5000;
-            const self = this;
-            
-            const poll = setInterval(() => {
-                attempts++;
+            this._clearStatusTimer();
+            let attempts = 0;
+
+            const scheduleNext = function () {
+                self._clearStatusTimer();
+                self._statusPollTimer = setTimeout(function () {
+                    pollOne(false);
+                }, pollInterval);
+            };
+
+            const pollOne = function (isManual) {
+                if (isManual) {
+                    self.manualStatusChecking = true;
+                } else {
+                    if (attempts >= maxAttempts) {
+                        self.mpesaResponse = { type: 'warning', message: 'No confirmation yet. Check SMS or search your transaction ID on this site. You can use the button below to check again.' };
+                        return;
+                    }
+                    attempts++;
+                }
+                if (self._statusPollTimer) {
+                    clearTimeout(self._statusPollTimer);
+                    self._statusPollTimer = null;
+                }
                 fetch('/transaction/status/' + self.checkoutRequestId, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 })
                 .then(res => res.json())
                 .then(data => {
+                    if (isManual) {
+                        self.manualStatusChecking = false;
+                    }
                     const st = (data.status != null ? String(data.status) : '').toLowerCase();
                     if (st === 'success' || st === 'completed') {
-                        clearInterval(poll);
+                        self._clearStatusTimer();
                         if (!data.transaction_id) {
                             self.mpesaResponse = { type: 'warning', message: data.message || 'Payment received. Contact support if the page does not update.' };
+                            self.checkoutRequestId = null;
                             return;
                         }
                         self.mpesaResponse = { type: 'success', message: 'Payment received! Redirecting...' };
@@ -169,31 +212,40 @@ function transactionFormData() {
                             window.location.href = '/get-transaction/' + encodeURIComponent(data.transaction_id);
                         }, 1500);
                     } else if (st === 'failed') {
-                        clearInterval(poll);
+                        self._clearStatusTimer();
                         self.mpesaResponse = { type: 'error', message: data.message || 'Payment failed. Please try again.' };
                     } else if (st === 'unknown' || (data.success === false && st === '')) {
-                        clearInterval(poll);
+                        self._clearStatusTimer();
                         self.mpesaResponse = { type: 'error', message: data.message || 'Payment session not found. Please retry the transaction.' };
                     } else if (st === 'pending') {
-                        // Always show backend message (query/callback diagnostics) instead of a hardcoded wait text.
                         if (attempts % 2 === 0) {
                             self.mpesaResponse = {
                                 type: 'success',
                                 message: data.message || 'Waiting for M-Pesa… (PIN entered? This can take up to a minute.)'
                             };
                         }
+                        scheduleNext();
                     } else if (attempts >= maxAttempts) {
-                        clearInterval(poll);
-                        self.mpesaResponse = { type: 'warning', message: 'No confirmation yet. Check SMS or search your transaction ID on this site.' };
+                        self._clearStatusTimer();
+                        self.mpesaResponse = { type: 'warning', message: 'No confirmation yet. Check SMS or search your transaction ID on this site. You can use the button below to check again.' };
+                    } else {
+                        scheduleNext();
                     }
                 })
                 .catch(() => {
+                    if (isManual) {
+                        self.manualStatusChecking = false;
+                    }
                     if (attempts >= maxAttempts) {
-                        clearInterval(poll);
-                        self.mpesaResponse = { type: 'warning', message: 'Payment confirmation timed out. Please check your transaction status later.' };
+                        self._clearStatusTimer();
+                        self.mpesaResponse = { type: 'warning', message: 'Payment confirmation timed out. Please check your transaction status later. You can use the button below to try again.' };
+                    } else {
+                        scheduleNext();
                     }
                 });
-            }, pollInterval);
+            };
+            this._statusPollOne = pollOne;
+            pollOne(false);
         }
     };
 }
@@ -464,6 +516,21 @@ function transactionFormData() {
                              class="p-3 rounded-lg border text-sm text-center"
                              style="display: none;"
                              x-text="mpesaResponse?.message">
+                        </div>
+                        <div x-show="checkoutRequestId" x-cloak class="text-center" style="display: none;">
+                            <button type="button"
+                                    @click="checkPaymentStatusNow()"
+                                    :disabled="manualStatusChecking"
+                                    class="mt-2 px-4 py-2 text-sm font-medium text-green-800 bg-green-100 border border-green-200 rounded-lg hover:bg-green-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                                <span x-show="!manualStatusChecking">Check payment status now</span>
+                                <span x-show="manualStatusChecking" class="inline-flex items-center gap-2">
+                                    <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Checking…
+                                </span>
+                            </button>
                         </div>
                         
                         <p class="text-xs text-center text-gray-500 leading-relaxed">

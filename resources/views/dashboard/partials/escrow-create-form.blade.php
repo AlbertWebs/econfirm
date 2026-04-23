@@ -156,6 +156,9 @@
                 </svg>
             </button>
             <p style="text-align:center; margin:0 auto; font-size:10px; display:none;" id="mpesa-response"></p>
+            <div id="mpesa-manual-check-wrap" style="display: none; text-align: center; margin-top: 0.5rem;">
+                <button type="button" id="mpesa-check-status-btn" class="btn btn-outline-primary btn-sm">Check payment status now</button>
+            </div>
             <p class="form-disclaimer">
                 By submitting this form, you agree to our <a target="_blank" rel="noopener noreferrer" href="{{ route('terms.conditions') }}">Terms of Service</a> and <a target="_blank" rel="noopener noreferrer" href="{{ route('privacy.policy') }}">Privacy Policy</a>.
             </p>
