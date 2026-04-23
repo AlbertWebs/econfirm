@@ -420,11 +420,17 @@ class HomeController extends Controller
         $validated = $request->validate([
             'transaction-type' => 'required|string',
             'transaction-amount' => 'required|numeric|min:1',
-            'sender-mobile' => 'required|string',
-            'receiver-mobile' => 'required|string',
+            'sender-mobile' => ['required', 'string', 'max:20', 'regex:/^(?:\+?254|0)(?:7|1)\d{8}$/'],
+            'receiver-mobile' => ['required', 'string', 'max:20', 'regex:/^(?:\+?254|0)(?:7|1)\d{8}$/'],
             'transaction-details' => 'nullable|string',
             'payment-method' => 'required|string',
+        ], [
+            'sender-mobile.regex' => 'Enter a valid Kenya number starting with +254 or 07/01.',
+            'receiver-mobile.regex' => 'Enter a valid Kenya number starting with +254 or 07/01.',
         ]);
+
+        $validated['sender-mobile'] = SmsService::normalizeKenyaTo254(trim((string) $validated['sender-mobile']));
+        $validated['receiver-mobile'] = SmsService::normalizeKenyaTo254(trim((string) $validated['receiver-mobile']));
 
         // Save transaction to database add transaction_id to the transaction
         $transaction = Transaction::create([

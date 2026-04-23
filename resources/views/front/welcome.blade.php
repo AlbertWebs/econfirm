@@ -412,7 +412,7 @@ function transactionFormData() {
                                 <input type="tel" 
                                        id="sender-mobile" 
                                        name="sender-mobile" 
-                                       placeholder="+254723000000"
+                                       placeholder="07XXXXXXXX or +2547XXXXXXXX"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition">
                                 </div>
                             <div>
@@ -420,7 +420,7 @@ function transactionFormData() {
                                 <input type="tel" 
                                        id="receiver-mobile" 
                                        name="receiver-mobile" 
-                                       placeholder="+254723000000"
+                                       placeholder="07XXXXXXXX or +2547XXXXXXXX"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition">
                             </div>
                             </div>

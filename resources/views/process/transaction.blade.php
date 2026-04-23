@@ -85,6 +85,27 @@
     transform: translateY(0);
 }
 
+@media (max-width: 767.98px) {
+    .update-notification,
+    .loginPrompt {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        max-width: none;
+    }
+
+    .tx-action-buttons .btn {
+        font-size: 0.82rem;
+        padding: 0.38rem 0.62rem;
+        line-height: 1.2;
+    }
+
+    .tx-action-buttons .btn i {
+        font-size: 0.74rem;
+        margin-right: 0.25rem !important;
+    }
+}
+
 </style>
 
 @section('content')
@@ -146,13 +167,13 @@
                 </div>
                 <small class="text-muted">{{ $progress }}% complete</small>
             </div>
-            <div class="d-flex gap-2">
-                <a href="{{ route('home') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i> Back</a>
+            <div class="d-flex flex-wrap gap-2 tx-action-buttons">
+                <a href="{{ route('home') }}" class="btn btn-outline-secondary w-100 w-sm-auto"><i class="fas fa-arrow-left me-1"></i> Back</a>
                 @if($transaction->status === 'pending' || $transaction->status === 'Escrow Funded')
-                    <a href="{{ route('approve.transaction', $transaction->transaction_id) }}" class="btn btn-success"><i class="fas fa-check me-1"></i> Approve</a>
-                    <button class="btn btn-danger"><i class="fas fa-times me-1"></i> Cancel</button>
+                    <a href="{{ route('approve.transaction', $transaction->transaction_id) }}" class="btn btn-success w-100 w-sm-auto"><i class="fas fa-check me-1"></i> Approve</a>
+                    <button class="btn btn-danger w-100 w-sm-auto"><i class="fas fa-times me-1"></i> Cancel</button>
                 @endif
-                <a href="{{ route('e-contract.print', $transaction->id) }}" class="btn btn-outline-primary"><i class="fas fa-download me-1"></i> Export Contract</a>
+                <a href="{{ route('e-contract.print', $transaction->id) }}" class="btn btn-outline-primary w-100 w-sm-auto"><i class="fas fa-download me-1"></i> Export Contract</a>
             </div>
         </div>
     </div>
@@ -174,7 +195,7 @@
     </div>
 
   
-   <div id="loginPrompt" class="loginPrompt position-fixed bottom-0 end-0 m-4" style="z-index: 1055; max-width: 360px;">
+   <div id="loginPrompt" class="loginPrompt position-fixed bottom-0 end-0 m-3 m-md-4" style="z-index: 1055; max-width: 360px;">
         <div class="border rounded-3 shadow-lg bg-light p-3 d-flex gap-3 align-items-start">
             <div class="mt-1 text-success">
                 <i class="fas fa-user-check fs-3"></i>
@@ -277,7 +298,7 @@
 
 
     {{-- Raise Dispute Button with Glow Effect --}}
-    <div class="raise-dispute-glow position-fixed bottom-0 end-0 m-4">
+    <div class="raise-dispute-glow position-fixed bottom-0 end-0 m-3 m-md-4">
         <button class="btn btn-danger">
             <i class="fas fa-exclamation-triangle me-1"></i> Raise Dispute
         </button>
@@ -309,6 +330,19 @@
             40% { transform: translateY(-50%) scale(1); box-shadow: 0 0 8px 4px #ff386066; }
             60% { transform: translateY(-50%) scale(1.2); box-shadow: 0 0 16px 8px #ff386099; }
             100% { transform: translateY(-50%) scale(1); box-shadow: 0 0 8px 4px #ff386066; }
+        }
+
+        @media (max-width: 767.98px) {
+            .raise-dispute-glow {
+                left: 12px;
+                right: 12px;
+                bottom: 12px !important;
+                margin: 0 !important;
+                z-index: 1040;
+            }
+            .raise-dispute-glow .btn {
+                width: 100%;
+            }
         }
     </style>
     @if(! $transactionSenderRegistered)
