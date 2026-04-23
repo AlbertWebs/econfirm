@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <link href="{{ asset('theme/dashboard.css') }}?v=3" rel="stylesheet">
+    <link href="{{ asset('theme/dashboard.css') }}?v=4" rel="stylesheet">
     <link rel="icon" type="image/png" href="{{ asset('uploads/favicon.png') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#0f6b3a">
@@ -47,7 +47,7 @@
         </div>
     </header>
 
-    <div class="container py-4">
+    <div class="container py-4 db-page--mnav">
         <nav class="db-nav-wrap" aria-label="Portal sections">
             <ul class="nav nav-pills flex-nowrap db-nav" id="portalTabs" role="tablist">
                 <li class="nav-item" role="presentation">
@@ -185,6 +185,12 @@
                             Your transactions
                         </h5>
                         <p class="text-muted small mb-0 mt-1">Search, filter, and open any escrow you are part of.</p>
+                        <p class="small mb-0 mt-2">
+                            <a href="{{ route('e-contract') }}" class="text-decoration-none fw-semibold" style="color: var(--bs-primary, #0f6b3a);">
+                                <i class="fas fa-file-signature me-1"></i>Escrow contracts
+                            </a>
+                            <span class="text-muted">— terms, fees, and how the agreement works. Each transaction can download its <strong>contract PDF</strong> on the right.</span>
+                        </p>
                     </div>
                     <div class="card-body">
                         <!-- Filters -->
@@ -260,12 +266,15 @@
                                         <h3 class="fw-bold">kes {{$transaction->transaction_amount}}</h3>
                                         <small class="text-muted">Escrow Amount</small>
                                     </div>
-                                    <div class="d-flex flex-column flex-lg-row gap-2">
-                                        <a href="{{route('view.transaction', $transaction->id)}}" class="btn btn-outline-primary btn-sm">
-                                            <i class="fas fa-eye me-1"></i> View
+                                    <div class="d-flex flex-wrap flex-lg-row align-items-stretch justify-content-lg-end gap-2">
+                                        <a href="{{ route('view.transaction', $transaction->id) }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye me-1"></i>View
                                         </a>
-                                        <a href="{{ route('e-contract.print', $transaction->id) }}" class="btn btn-outline-secondary btn-sm">
-                                            <i class="fas fa-download me-1"></i> Export
+                                        <a href="{{ route('e-contract.print', $transaction->id) }}"
+                                           class="btn btn-success btn-sm"
+                                           target="_blank" rel="noopener"
+                                           title="Open escrow contract (PDF)">
+                                            <i class="fas fa-file-signature me-1"></i>Contract
                                         </a>
                                     </div>
                                 </div>
@@ -801,10 +810,53 @@
 
 
    @include('dashboard.scripts')
+    <script>
+        (function () {
+            function activateProfilePersonalPill() {
+                var btn = document.querySelector('#profile [data-bs-target="#personal-info"]');
+                if (!btn) {
+                    return;
+                }
+                try {
+                    bootstrap.Tab.getOrCreateInstance(btn).show();
+                } catch (e) { /* no-op */ }
+            }
 
+            function showTopTabFromHash() {
+                var h = window.location.hash;
+                if (h === '#transactions' && document.getElementById('transactions-tab')) {
+                    try { new bootstrap.Tab(document.getElementById('transactions-tab')).show(); } catch (e) {}
+                } else if (h === '#profile' && document.getElementById('profile-tab')) {
+                    try { new bootstrap.Tab(document.getElementById('profile-tab')).show(); } catch (e) {}
+                }
+            }
 
+            document.addEventListener('DOMContentLoaded', function () {
+                var profileTab = document.getElementById('profile-tab');
+                if (profileTab) {
+                    profileTab.addEventListener('shown.bs.tab', function () {
+                        activateProfilePersonalPill();
+                    });
+                    // Clicking "Profile" again while on Profile does not fire shown.bs.tab; still default to Personal.
+                    profileTab.addEventListener('click', function () {
+                        setTimeout(activateProfilePersonalPill, 0);
+                    });
+                }
 
+                showTopTabFromHash();
+                if (window.location.hash === '#profile') {
+                    requestAnimationFrame(function () { activateProfilePersonalPill(); });
+                }
 
-    {{--  --}}
+                window.addEventListener('hashchange', function () {
+                    showTopTabFromHash();
+                    if (window.location.hash === '#profile') {
+                        requestAnimationFrame(function () { activateProfilePersonalPill(); });
+                    }
+                });
+            });
+        }());
+    </script>
+    @include('dashboard.partials.mobile-bottom-nav', ['mnavActive' => 'dashboard'])
 </body>
 </html>
