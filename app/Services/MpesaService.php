@@ -358,6 +358,23 @@ class MpesaService
     }
 
     /**
+     * M-Pesa STK Query often returns raw ResultDesc like "The service request is... still under processing"
+     * when polled immediately after STK. Map those to a clearer, calmer line for the UI.
+     */
+    public static function friendlyStkQueryPendingMessage(string $raw): string
+    {
+        $d = trim($raw);
+        if ($d === '') {
+            return 'Awaiting M-Pesa confirmation (after you enter your PIN, this usually takes a few seconds).';
+        }
+        if (preg_match('/under\s+processing|being\s+processed|still\s+processing|transaction.*process/i', $d)) {
+            return 'M-Pesa is still handling this request. If you have not yet approved, look for the payment prompt on your phone and enter your PIN.';
+        }
+
+        return $d;
+    }
+
+    /**
      * Query STK push status by CheckoutRequestID.
      */
     public function stkPushQuery(string $checkoutRequestId): array
@@ -421,7 +438,7 @@ class MpesaService
             return [
                 'success' => false,
                 'status' => 'Pending',
-                'message' => $resultDesc,
+                'message' => self::friendlyStkQueryPendingMessage($resultDesc),
                 'data' => is_array($body) ? $body : null,
             ];
         }

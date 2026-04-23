@@ -635,6 +635,16 @@ class HomeController extends Controller
         $allowFundWithoutCallbackItems = false;
 
         if ($stk->status !== 'Success') {
+            // Querying STK too soon after the push often returns ResultDesc "still under processing"
+            // and scares users who have not seen the phone prompt yet. Defer the first real query briefly.
+            $minAgeBeforeStkQuerySeconds = 5;
+            if ($stk->created_at && $stk->created_at->diffInSeconds(now()) < $minAgeBeforeStkQuerySeconds) {
+                return response()->json([
+                    'success' => true,
+                    'status' => 'Pending',
+                    'message' => 'M-Pesa prompt sent. Approve the payment on your phone when you get the request, then wait a few seconds for confirmation here.',
+                ]);
+            }
             // Callback can be delayed/missed; fallback to Daraja STK query.
             $query = (new MpesaService())->stkPushQuery($id);
 
@@ -654,10 +664,12 @@ class HomeController extends Controller
                     'message' => $query['message'] ?? 'Payment was declined or cancelled.',
                 ]);
             } else {
+                $pendingText = $query['message'] ?? 'Awaiting M-Pesa confirmation (after you enter your PIN, this usually takes a few seconds).';
+
                 return response()->json([
                     'success' => true,
                     'status' => 'Pending',
-                    'message' => $query['message'] ?? 'Awaiting M-Pesa confirmation (after you enter your PIN, this usually takes a few seconds).',
+                    'message' => MpesaService::friendlyStkQueryPendingMessage($pendingText),
                 ]);
             }
         } elseif (! $this->hasStkCallbackItemMetadata($stk->callback_metadata)) {
@@ -666,10 +678,12 @@ class HomeController extends Controller
             if (($query['status'] ?? null) === 'Success') {
                 $allowFundWithoutCallbackItems = true;
             } else {
+                $pendingText = $query['message'] ?? 'Payment detected. Finalizing on our side…';
+
                 return response()->json([
                     'success' => true,
                     'status' => 'Pending',
-                    'message' => $query['message'] ?? 'Payment detected. Finalizing on our side…',
+                    'message' => MpesaService::friendlyStkQueryPendingMessage($pendingText),
                 ]);
             }
         }
