@@ -529,9 +529,6 @@ class HomeController extends Controller
             if (($query['status'] ?? null) === 'Success') {
                 $stk->status = 'Success';
                 $stk->result_desc = $query['message'] ?? $stk->result_desc;
-                if (isset($query['data']) && is_array($query['data'])) {
-                    $stk->callback_metadata = $query['data'];
-                }
                 $stk->save();
             } elseif (($query['status'] ?? null) === 'Failed') {
                 $stk->status = 'Failed';
@@ -550,6 +547,24 @@ class HomeController extends Controller
                     'message' => 'Awaiting M-Pesa confirmation (after you enter your PIN, this usually takes a few seconds).',
                 ]);
             }
+        }
+
+        // Business rule: only treat escrow as funded (and notify receiver) once actual callback metadata exists.
+        // Query fallback may mark status as Success before callback arrives.
+        $callbackItems = $stk->callback_metadata;
+        $hasRealCallback = is_array($callbackItems)
+            && ! empty($callbackItems)
+            && (
+                isset($callbackItems[0]['Name'])
+                || isset($callbackItems['Name'])
+            );
+
+        if (! $hasRealCallback) {
+            return response()->json([
+                'success' => true,
+                'status' => 'Pending',
+                'message' => 'Payment detected. Waiting for M-Pesa callback sync to finalize escrow funding.',
+            ]);
         }
 
         $transaction = Transaction::where('checkout_request_id', $id)->first();
