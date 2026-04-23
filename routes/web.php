@@ -46,6 +46,7 @@ Route::get('/api/documentation', [HomeController::class, 'getAPIDocumentation'])
 
 Route::get('/e-contract', [HomeController::class, 'getEContract'])->name('e-contract');
 Route::get('/e-contract-print/{transactionID}', [ContractController::class, 'generateEscrowPdf'])->name('e-contract.print');
+Route::view('/thank-you', 'process.thank-you')->name('thank.you');
 Route::get('/livechat/start/{transactionId}', [LiveChatController::class, 'start'])->name('livechat.start');
 Route::get('/livechat/admin/{token}', [LiveChatController::class, 'showAdmin'])->name('livechat.admin');
 Route::get('/livechat/{token}', [LiveChatController::class, 'showUser'])->name('livechat.user');

@@ -99,6 +99,12 @@ class LiveChatController extends Controller
         return response()->json([
             'success' => true,
             'message_id' => $msg->id,
+            'message' => [
+                'id' => $msg->id,
+                'sender_type' => $msg->sender_type,
+                'message' => $msg->message,
+                'created_at' => optional($msg->created_at)->toISOString(),
+            ],
         ]);
     }
 
