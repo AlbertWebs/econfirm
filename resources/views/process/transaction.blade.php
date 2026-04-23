@@ -318,7 +318,7 @@
                 <div class="modal-body">
                     <p class="mb-2 fw-semibold">Need help with this escrow transaction?</p>
                     <p class="text-muted small mb-3">
-                        Start a live chat with support to raise a dispute, share evidence, or get immediate guidance.
+                        Start a live chat on a dedicated page with this transaction summary preloaded.
                     </p>
                     <div class="d-grid gap-2">
                         <button type="button" class="btn btn-danger" onclick="openLiveChat()">
@@ -416,15 +416,8 @@
             const modalEl = document.getElementById('liveChatModal');
             const modalInstance = modalEl ? bootstrap.Modal.getOrCreateInstance(modalEl) : null;
             if (modalInstance) modalInstance.hide();
-
-            // If Tawk chat is available, open it directly.
-            if (window.Tawk_API && typeof window.Tawk_API.maximize === 'function') {
-                window.Tawk_API.maximize();
-                return;
-            }
-
-            // Fallback to support page if live chat widget is unavailable on this page.
-            window.location.href = "{{ route('support') }}";
+            const chatUrl = "{{ route('livechat.start', ['transactionId' => $transaction->transaction_id]) }}";
+            window.open(chatUrl, '_blank', 'noopener,noreferrer');
         }
 
         $(document).ready(function () {

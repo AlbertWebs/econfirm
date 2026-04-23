@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MpesaController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\LiveChatController;
 use App\Http\Controllers\Auth\PhoneOtpLoginController;
 
 
@@ -45,6 +46,11 @@ Route::get('/api/documentation', [HomeController::class, 'getAPIDocumentation'])
 
 Route::get('/e-contract', [HomeController::class, 'getEContract'])->name('e-contract');
 Route::get('/e-contract-print/{transactionID}', [ContractController::class, 'generateEscrowPdf'])->name('e-contract.print');
+Route::get('/livechat/start/{transactionId}', [LiveChatController::class, 'start'])->name('livechat.start');
+Route::get('/livechat/admin/{token}', [LiveChatController::class, 'showAdmin'])->name('livechat.admin');
+Route::get('/livechat/{token}', [LiveChatController::class, 'showUser'])->name('livechat.user');
+Route::get('/livechat/{token}/messages', [LiveChatController::class, 'messages'])->name('livechat.messages');
+Route::post('/livechat/{token}/send', [LiveChatController::class, 'send'])->name('livechat.send');
 
 // Test SMS route - Send SMS to +254723014032
 Route::get('/test-sms', [HomeController::class, 'testSms'])->name('test.sms');

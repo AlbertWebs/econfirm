@@ -66,6 +66,41 @@
             </div>
         </div>
     </div>
+    <div class="card mx-auto" style="max-width: 600px;">
+        <div class="card-body text-center">
+            <h6 class="fw-bold mb-2">Escrow Complete</h6>
+            <p class="text-muted small mb-3">
+                This escrow is complete. You can now close it and share your experience.
+            </p>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#closeEscrowModal">
+                <i class="fas fa-check-circle me-1"></i> Close Escrow
+            </button>
+        </div>
+    </div>
+
+    <div class="modal fade" id="closeEscrowModal" tabindex="-1" aria-labelledby="closeEscrowModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="closeEscrowModalLabel">
+                        <i class="fas fa-star me-1"></i> Close Escrow
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">
+                        Thank you for using eConfirm. Please leave us a quick Google review after closing this escrow.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Not now</button>
+                    <a href="https://g.page/r/CXoxpsT3ArcfEAE/review" target="_blank" rel="noopener noreferrer" class="btn btn-success">
+                        <i class="fab fa-google me-1"></i> Leave Google Review
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
     @else
     <div class="d-flex justify-content-center">
         <button class="btn btn-link mb-3 theme-color" type="button" id="toggle-details-btn">
