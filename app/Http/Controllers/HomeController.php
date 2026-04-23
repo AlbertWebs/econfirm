@@ -632,14 +632,27 @@ class HomeController extends Controller
             ]);
         }
 
+        $allowFundWithoutCallbackItems = false;
+
         if ($stk->status !== 'Success') {
-            // Callback can be delayed/missed in local dev; fallback to Daraja STK query.
+            // Callback can be delayed/missed; fallback to Daraja STK query.
             $query = (new MpesaService())->stkPushQuery($id);
 
             if (($query['status'] ?? null) === 'Success') {
                 $stk->status = 'Success';
                 $stk->result_desc = $query['message'] ?? $stk->result_desc;
                 $stk->save();
+                $allowFundWithoutCallbackItems = true;
+            } elseif (($query['status'] ?? null) === 'Failed') {
+                $stk->status = 'Failed';
+                $stk->result_desc = $query['message'] ?? $stk->result_desc;
+                $stk->save();
+
+                return response()->json([
+                    'success' => false,
+                    'status' => 'Failed',
+                    'message' => $query['message'] ?? 'Payment was declined or cancelled.',
+                ]);
             } else {
                 return response()->json([
                     'success' => true,
@@ -647,23 +660,31 @@ class HomeController extends Controller
                     'message' => $query['message'] ?? 'Awaiting M-Pesa confirmation (after you enter your PIN, this usually takes a few seconds).',
                 ]);
             }
+        } elseif (! $this->hasStkCallbackItemMetadata($stk->callback_metadata)) {
+            // STK row already Success (e.g. from a prior poll) but no usable metadata yet — confirm with live query.
+            $query = (new MpesaService())->stkPushQuery($id);
+            if (($query['status'] ?? null) === 'Success') {
+                $allowFundWithoutCallbackItems = true;
+            } else {
+                return response()->json([
+                    'success' => true,
+                    'status' => 'Pending',
+                    'message' => $query['message'] ?? 'Payment detected. Finalizing on our side…',
+                ]);
+            }
         }
 
-        // Business rule: only treat escrow as funded (and notify receiver) once actual callback metadata exists.
-        // Query fallback may mark status as Success before callback arrives.
-        $callbackItems = $stk->callback_metadata;
-        $hasRealCallback = is_array($callbackItems)
-            && ! empty($callbackItems)
-            && (
-                isset($callbackItems[0]['Name'])
-                || isset($callbackItems['Name'])
-            );
-
-        if (! $hasRealCallback) {
+        if (! $this->hasStkCallbackItemMetadata($stk->callback_metadata) && ! $allowFundWithoutCallbackItems) {
             return response()->json([
                 'success' => true,
                 'status' => 'Pending',
                 'message' => 'Payment detected. Waiting for M-Pesa callback sync to finalize escrow funding.',
+            ]);
+        }
+
+        if ($allowFundWithoutCallbackItems) {
+            \Log::info('Escrow fund gate: using STK query confirmation (callback items missing or delayed)', [
+                'checkout_request_id' => $id,
             ]);
         }
 
@@ -704,6 +725,28 @@ class HomeController extends Controller
             'transaction_id' => $transaction->transaction_id,
             'status' => 'Success',
         ]);
+    }
+
+    /**
+     * True if M-Pesa CallbackMetadata items look usable (list of Name/Value, or a single item).
+     */
+    protected function hasStkCallbackItemMetadata(mixed $raw): bool
+    {
+        if (! is_array($raw) || $raw === []) {
+            return false;
+        }
+
+        if (isset($raw['Name'])) {
+            return true;
+        }
+
+        foreach ($raw as $row) {
+            if (is_array($row) && isset($row['Name'])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     //createOTP

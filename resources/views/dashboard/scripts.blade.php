@@ -104,54 +104,85 @@
                 });
             }
 
-            // Polling function for transaction status
+            // Polling function: first check runs immediately, then every 4s (faster than waiting 5s for first status)
             function pollTransactionStatus(checkoutRequestId) {
-                let pollInterval = 5000; // 5 seconds
-                let maxAttempts = 24; // 2 minutes
+                const pollInterval = 4000;
+                const maxAttempts = 45;
                 let attempts = 0;
                 const submitBtn = form.querySelector('button[type="submit"]');
-                submitBtn.innerHTML = 'Waiting for confirmation...';
-                const mpesaResponse = document.getElementById('mpesa-response');
-                const poll = setInterval(() => {
+                if (submitBtn) {
+                    submitBtn.innerHTML = 'Waiting for confirmation...';
+                }
+                const box = document.getElementById('mpesa-response');
+
+                function run() {
+                    if (attempts >= maxAttempts) {
+                        if (box) {
+                            box.textContent = 'Still waiting for M-Pesa. You can return to the dashboard and look up this transaction, or check your M-Pesa SMS.';
+                            box.className = 'alert alert-warning';
+                        }
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = 'Fund Your Escrow <svg style="vertical-align: middle; margin-left: 8px;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>';
+                        }
+                        return;
+                    }
                     attempts++;
-                    fetch(`/transaction/status/${checkoutRequestId}`, {
+                    const url = '/transaction/status/' + encodeURIComponent(checkoutRequestId) + '?_=' + Date.now();
+                    fetch(url, {
+                        cache: 'no-store',
                         headers: { 'X-Requested-With': 'XMLHttpRequest' }
                     })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.status === 'completed' || data.status === 'Success') {
-                            clearInterval(poll);
-                            if (mpesaResponse) {
-                                mpesaResponse.textContent = 'Payment received! Redirecting...';
-                                mpesaResponse.className = 'alert alert-success';
-                            }
-                            setTimeout(() => {
-                                window.location.href = `/get-transaction/${data.transaction_id}`; //only work with transaction_id
-                            }, 1500);
-                        } else if (data.status === 'Failed') {
-                            clearInterval(poll);
-                            if (mpesaResponse) {
-                                mpesaResponse.textContent = 'Payment failed. Please try again.';
-                                mpesaResponse.className = 'alert alert-danger';
-                            }
-                        } else if (attempts >= maxAttempts) {
-                            clearInterval(poll);
-                            if (mpesaResponse) {
-                                mpesaResponse.textContent = 'Payment confirmation timed out. Please check your transaction status later.';
-                                mpesaResponse.className = 'alert alert-warning';
-                            }
+                    .then(function (res) {
+                        if (res.status === 404) {
+                            throw new Error('not_found');
                         }
+                        return res.json();
                     })
-                    .catch(() => {
-                        if (attempts >= maxAttempts) {
-                            clearInterval(poll);
-                            if (mpesaResponse) {
-                                mpesaResponse.textContent = 'Payment confirmation timed out. Please check your transaction status later.';
-                                mpesaResponse.className = 'alert alert-warning';
+                    .then(function (data) {
+                        if (data.status === 'completed' || data.status === 'Success') {
+                            if (box) {
+                                box.textContent = (data && data.message) ? data.message : 'Payment received! Redirecting...';
+                                box.className = 'alert alert-success';
                             }
+                            if (data && data.transaction_id) {
+                                setTimeout(function () {
+                                    window.location.href = '/get-transaction/' + data.transaction_id;
+                                }, 1200);
+                            }
+                            if (submitBtn) {
+                                submitBtn.innerHTML = 'Fund Your Escrow <svg style="vertical-align: middle; margin-left: 8px;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>';
+                            }
+                            return;
+                        }
+                        if (data.status === 'Failed') {
+                            if (box) {
+                                box.textContent = (data && data.message) ? data.message : 'Payment was declined or cancelled.';
+                                box.className = 'alert alert-danger';
+                            }
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = 'Fund Your Escrow <svg style="vertical-align: middle; margin-left: 8px;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>';
+                            }
+                            return;
+                        }
+                        if (box && data && data.message) {
+                            box.textContent = data.message;
+                            box.className = 'alert alert-info';
+                        }
+                        setTimeout(run, pollInterval);
+                    })
+                    .catch(function () {
+                        if (box) {
+                            box.textContent = 'Could not read payment status. Check your connection or your dashboard using your transaction ID.';
+                            box.className = 'alert alert-warning';
+                        }
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
                         }
                     });
-                }, pollInterval);
+                }
+                run();
             }
 
             // Show Popup for Search Transaction
