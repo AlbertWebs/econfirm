@@ -136,11 +136,13 @@ class PhoneOtpLoginController extends Controller
 
     protected function redirectAfterPhoneLogin(User $user): RedirectResponse
     {
-        if ($user->type == '1') {
+        $role = $this->resolveUserRole($user);
+
+        if ($role === 'admin') {
             return redirect()->intended(route('admin.dashboard', absolute: false));
         }
 
-        if ($user->type == '2') {
+        if ($role === 'api') {
             if (Route::has('api.home')) {
                 return redirect()->intended(route('api.home', absolute: false));
             }
@@ -149,5 +151,17 @@ class PhoneOtpLoginController extends Controller
         }
 
         return redirect()->intended(route('user.dashboard', absolute: false));
+    }
+
+    protected function resolveUserRole(User $user): string
+    {
+        $rawType = (string) ($user->getRawOriginal('type') ?? '');
+        $displayType = strtolower((string) ($user->type ?? ''));
+
+        return match (true) {
+            in_array($rawType, ['1'], true), in_array($displayType, ['admin'], true) => 'admin',
+            in_array($rawType, ['2'], true), in_array($displayType, ['api', 'manager'], true) => 'api',
+            default => 'user',
+        };
     }
 }

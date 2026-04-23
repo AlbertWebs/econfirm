@@ -23,25 +23,19 @@ class UserAccess
         }
 
         // Normalize user type and allow access when it matches route middleware parameter.
-        $typeMap = [
-            'admin' => '1',
-            'user' => '0',
-            'api' => '2',
-        ];
+        $requiredRole = strtolower((string) $userType);
+        $currentRole = $this->resolveUserRole($user);
 
-        $requiredType = $typeMap[(string) $userType] ?? null;
-        $currentType = (string) $user->type;
-
-        if ($requiredType !== null && $currentType === $requiredType) {
+        if ($currentRole !== null && $requiredRole === $currentRole) {
             return $next($request);
         }
 
         // Redirect authenticated users to the dashboard that matches their role.
-        if ($currentType === '1') {
+        if ($currentRole === 'admin') {
             return redirect()->route('admin.dashboard');
-        } elseif ($currentType === '0') {
+        } elseif ($currentRole === 'user') {
             return redirect()->route('user.dashboard');
-        } elseif ($currentType === '2' && \Illuminate\Support\Facades\Route::has('api.home')) {
+        } elseif ($currentRole === 'api' && \Illuminate\Support\Facades\Route::has('api.home')) {
             return redirect()->route('api.home');
         }
 
@@ -52,6 +46,28 @@ class UserAccess
 
         return redirect()->route('login')
             ->with('error', 'Your account role is not configured. Please contact support.');
+    }
+
+    protected function resolveUserRole(object $user): ?string
+    {
+        $rawType = (string) ($user->getRawOriginal('type') ?? '');
+        $displayType = strtolower((string) ($user->type ?? ''));
+
+        $map = [
+            '0' => 'user',
+            'user' => 'user',
+            '1' => 'admin',
+            'admin' => 'admin',
+            '2' => 'api',
+            'api' => 'api',
+            'manager' => 'api',
+        ];
+
+        if (isset($map[$rawType])) {
+            return $map[$rawType];
+        }
+
+        return $map[$displayType] ?? null;
     }
 
 }

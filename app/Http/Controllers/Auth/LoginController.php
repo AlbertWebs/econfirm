@@ -58,10 +58,16 @@ class LoginController extends Controller
         if(auth()->attempt(array('email' => $input['email'], 'password' => $input['password'])))
         
         {
-            // dd(auth()->user()->type);
-            if (auth()->user()->type == '1') {
+            $user = auth()->user();
+            $rawType = (string) ($user->getRawOriginal('type') ?? '');
+            $displayType = strtolower((string) ($user->type ?? ''));
+
+            $isAdmin = $rawType === '1' || $displayType === 'admin';
+            $isApi = $rawType === '2' || in_array($displayType, ['api', 'manager'], true);
+
+            if ($isAdmin) {
                 return redirect()->route('admin.dashboard');
-            }else if (auth()->user()->type == '2') {
+            }else if ($isApi) {
                 return redirect()->route('api.home');
             }else{
                 return redirect()->route('user.dashboard');
