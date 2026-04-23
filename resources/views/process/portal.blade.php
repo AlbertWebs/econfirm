@@ -14,12 +14,12 @@
         <div class="card-body">
             <h4 class="fw-bold mb-1">Customer Portal</h4>
             <p class="text-muted mb-0">Real-time escrow data tied to your phone number.</p>
-        </div>
-    </div>
+                    </div>
+                </div>
 
     @if(!$portalPhone)
         <div class="card border-0 shadow-sm">
-            <div class="card-body">
+                            <div class="card-body">
                 <h6 class="fw-bold mb-2">Access with Phone + OTP</h6>
                 <p class="text-muted small mb-3">
                     Enter the phone number you used while creating escrow, then verify with OTP.
@@ -39,16 +39,16 @@
                     </div>
                 </div>
                 <div id="portalOtpMsg" class="small mt-2 text-muted"></div>
-            </div>
-        </div>
+                    </div>
+                            </div>
     @else
         <div class="alert alert-success d-flex align-items-center justify-content-between mb-4">
             <div>
                 <strong>Portal phone:</strong> {{ $portalPhone }}
-            </div>
+                        </div>
             <a href="{{ route('home') }}" class="btn btn-sm btn-outline-success">Create New Escrow</a>
-        </div>
-
+                        </div>
+                        
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
                 <div class="card h-100 border-0 shadow-sm">
@@ -79,15 +79,15 @@
                     <div class="card-body">
                         <div class="text-muted small">Recent Records</div>
                         <div class="fs-4 fw-bold">{{ $transactions->count() }}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white">
                 <h6 class="mb-0 fw-bold">Your Escrow Transactions</h6>
-            </div>
+                                        </div>
             <div class="card-body p-0">
                 @if($transactions->isEmpty())
                     <div class="p-4 text-muted">No transactions found for this phone.</div>
@@ -124,7 +124,7 @@
             </div>
         </div>
     @endif
-</div>
+    </div>
 
 <script>
 (() => {

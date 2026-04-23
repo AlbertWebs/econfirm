@@ -247,9 +247,9 @@ class SmsService
 
         if ($isB2bToPaybill) {
             $pb = $transaction->paybill_till_number ?? '';
-            $receiverMsg = "eConfirm: Your payment has been approved! KES {$amt} is on its way to Paybill/Till {$pb} — coming your way in a bit.";
+            $receiverMsg = "eConfirm: Your payment has been approved! KES {$amt} is on its way to Paybill/Till {$pb}.";
         } else {
-            $receiverMsg = "eConfirm: Your payment has been approved. Your money is headed to your M-Pesa. Transaction coming your way shortly.";
+            $receiverMsg = "eConfirm: Your payment has been approved. Your money is headed to your M-Pesa.";
         }
 
         $this->send($transaction->sender_mobile, $senderMsg, $ref.'-payout-sender');
