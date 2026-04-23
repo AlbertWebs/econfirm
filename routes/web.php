@@ -17,6 +17,8 @@ use App\Http\Controllers\Auth\PhoneOtpLoginController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/v2', [HomeController::class, 'indexV2'])->name('home.v2');
 Route::get('/portal', [HomeController::class, 'portal'])->name('portal');
+Route::post('/portal/phone/send-otp', [HomeController::class, 'portalSendOtp'])->name('portal.phone.send-otp');
+Route::post('/portal/phone/verify-otp', [HomeController::class, 'portalVerifyOtp'])->name('portal.phone.verify-otp');
 Route::get('/features', [HomeController::class, 'features'])->name('features');
 Route::get('/get-transaction/{id}', [HomeController::class, 'transaction'])->name('transaction.index');
 Route::get('/approve-transaction/{id}', [HomeController::class, 'approveTransaction'])->name('approve.transaction');

@@ -10,10 +10,12 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Services\MpesaService;
 use App\Models\MpesaStkPush;
+use App\Models\Otp;
 use App\Services\SmsService;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
@@ -29,7 +31,103 @@ class HomeController extends Controller
 
     public function portal()
     {
-        return view('process.portal');
+        $phone = $this->resolvePortalPhone();
+        $transactions = collect();
+        $completedCount = 0;
+        $activeCount = 0;
+        $totalValue = 0;
+
+        if ($phone) {
+            $variants = [$phone, '0' . substr($phone, 3), substr($phone, 3)];
+            $transactions = Transaction::query()
+                ->whereIn('sender_mobile', $variants)
+                ->orderByDesc('created_at')
+                ->limit(20)
+                ->get();
+
+            $completedCount = (int) $transactions->where('status', 'Completed')->count();
+            $activeCount = (int) $transactions->whereIn('status', ['pending', 'stk_initiated', 'Escrow Funded'])->count();
+            $totalValue = (float) $transactions->sum('transaction_amount');
+        }
+
+        return view('process.portal', [
+            'portalPhone' => $phone,
+            'transactions' => $transactions,
+            'completedCount' => $completedCount,
+            'activeCount' => $activeCount,
+            'totalValue' => $totalValue,
+        ]);
+    }
+
+    public function portalSendOtp(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'phone' => ['required', 'string', 'max:20'],
+        ]);
+
+        $normalized = SmsService::normalizeKenyaTo254($validated['phone']);
+        if (! preg_match('/^254\d{9}$/', $normalized)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Enter a valid Kenya number (+254..., 07..., or 01...).',
+            ], 422);
+        }
+
+        $otp = Otp::createForPhone($normalized, 10);
+        $sms = new SmsService();
+        $message = "Your eConfirm portal code is: {$otp->otp_code}. Valid for 10 minutes.";
+        $result = $sms->send($normalized, $message, 'portal-otp-'.$normalized);
+
+        if (! is_array($result) || ! SmsService::resultIndicatesSuccess($result)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not send OTP right now. Please try again.',
+            ], 422);
+        }
+
+        session([
+            'portal_otp_phone' => $normalized,
+            'portal_otp_sent_at' => now()->timestamp,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OTP sent to your phone.',
+        ]);
+    }
+
+    public function portalVerifyOtp(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'otp' => ['required', 'string', 'size:6'],
+        ]);
+
+        $phone = session('portal_otp_phone');
+        if (! $phone || ! preg_match('/^254\d{9}$/', (string) $phone)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Request OTP first.',
+            ], 422);
+        }
+
+        $otpRecord = Otp::verify((string) $phone, (string) $validated['otp']);
+        if (! $otpRecord) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired OTP.',
+            ], 422);
+        }
+
+        session([
+            'portal_phone' => $phone,
+            'portal_phone_verified' => true,
+        ]);
+        session()->forget(['portal_otp_phone', 'portal_otp_sent_at']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Phone verified successfully.',
+        ]);
     }
 
     /**
@@ -436,6 +534,7 @@ class HomeController extends Controller
 
         $validated['sender-mobile'] = SmsService::normalizeKenyaTo254(trim((string) $validated['sender-mobile']));
         $validated['receiver-mobile'] = SmsService::normalizeKenyaTo254(trim((string) $validated['receiver-mobile']));
+        session(['portal_phone' => $validated['sender-mobile']]);
 
         // Save transaction to database add transaction_id to the transaction
         $transaction = Transaction::create([
@@ -899,5 +998,25 @@ class HomeController extends Controller
                 'message' => 'Error sending SMS: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    protected function resolvePortalPhone(): ?string
+    {
+        if (Auth::check() && ! empty(Auth::user()->phone)) {
+            $normalized = SmsService::normalizeKenyaTo254((string) Auth::user()->phone);
+            if (preg_match('/^254\d{9}$/', $normalized)) {
+                return $normalized;
+            }
+        }
+
+        $portalPhone = session('portal_phone');
+        if (is_string($portalPhone)) {
+            $normalized = SmsService::normalizeKenyaTo254($portalPhone);
+            if (preg_match('/^254\d{9}$/', $normalized)) {
+                return $normalized;
+            }
+        }
+
+        return null;
     }
 }
