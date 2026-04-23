@@ -46,6 +46,16 @@
         border-radius: 12px;
         padding: 10px;
     }
+    .chat-status {
+        font-size: 0.8rem;
+        color: #6b7280;
+        min-height: 1.1rem;
+        margin-top: 6px;
+    }
+    .chat-bubble.pending {
+        opacity: 0.75;
+        border: 1px dashed #94a3b8;
+    }
     @media (max-width: 767.98px) {
         .chat-window { height: 52vh; padding: 10px; }
         .chat-bubble { max-width: 92%; font-size: 0.88rem; }
@@ -85,6 +95,7 @@
             <input id="chatMessage" type="text" class="form-control" maxlength="2000" placeholder="Type your message..." required>
             <button id="chatSendBtn" type="submit" class="btn btn-danger">Send</button>
         </div>
+        <div id="chatStatus" class="chat-status"></div>
     </form>
 </div>
 
@@ -97,24 +108,70 @@
     const form = document.getElementById('chatForm');
     const input = document.getElementById('chatMessage');
     const btn = document.getElementById('chatSendBtn');
+    const statusEl = document.getElementById('chatStatus');
     let lastId = 0;
+    const renderedIds = new Set();
+    let typingTimer = null;
+    let pendingEl = null;
 
     function scrollToBottom() { win.scrollTop = win.scrollHeight; }
     function escapeHtml(s) {
         return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     }
 
+    function fmtTime(raw) {
+        const d = raw ? new Date(raw) : new Date();
+        return d.toTimeString().slice(0, 5);
+    }
+
     function appendMessage(m) {
+        const mid = Number(m.id || 0);
+        if (mid && renderedIds.has(mid)) return;
         const div = document.createElement('div');
         div.className = `chat-bubble ${m.sender_type}`;
-        const time = (m.created_at || '').slice(11, 16);
+        if (mid) {
+            div.setAttribute('data-mid', String(mid));
+            renderedIds.add(mid);
+        }
+        const time = fmtTime(m.created_at);
         div.innerHTML = `${escapeHtml(m.message)}<div class="small text-muted mt-1">${time}</div>`;
         win.appendChild(div);
-        lastId = Math.max(lastId, Number(m.id || 0));
+        lastId = Math.max(lastId, mid);
+    }
+
+    function showStatus(text = '') {
+        if (!statusEl) return;
+        statusEl.textContent = text;
+    }
+
+    function setTypingIndicator(active) {
+        if (active) {
+            showStatus('Typing...');
+            if (typingTimer) clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => showStatus(''), 900);
+        }
+    }
+
+    function addPendingBubble(text) {
+        const div = document.createElement('div');
+        div.className = 'chat-bubble user pending';
+        div.setAttribute('data-pending', '1');
+        div.innerHTML = `${escapeHtml(text)}<div class="small text-muted mt-1">Sending...</div>`;
+        win.appendChild(div);
+        pendingEl = div;
+        scrollToBottom();
+    }
+
+    function clearPendingBubble() {
+        if (pendingEl && pendingEl.parentNode) {
+            pendingEl.parentNode.removeChild(pendingEl);
+        }
+        pendingEl = null;
     }
 
     // initialize lastId from rendered messages
     const ids = Array.from(win.querySelectorAll('.chat-bubble[data-mid]')).map(el => Number(el.getAttribute('data-mid') || 0));
+    ids.forEach(id => renderedIds.add(id));
     if (ids.length) lastId = Math.max(...ids);
     scrollToBottom();
 
@@ -128,14 +185,20 @@
                 data.messages.forEach(appendMessage);
                 scrollToBottom();
             }
-        } catch (_) {}
+        } catch (_) {
+            showStatus('Connection issue. Retrying…');
+        }
     }
+
+    input.addEventListener('input', () => setTypingIndicator(input.value.trim().length > 0));
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const message = input.value.trim();
         if (!message) return;
         btn.disabled = true;
+        showStatus('Sending…');
+        addPendingBubble(message);
         try {
             const res = await fetch(`/livechat/${encodeURIComponent(token)}/send`, {
                 method: 'POST',
@@ -149,8 +212,22 @@
             const data = await res.json();
             if (data && data.success) {
                 input.value = '';
-                await poll();
+                clearPendingBubble();
+                if (data.message) {
+                    appendMessage(data.message);
+                    scrollToBottom();
+                } else {
+                    await poll();
+                }
+                showStatus('Sent');
+                setTimeout(() => showStatus(''), 1200);
+            } else {
+                clearPendingBubble();
+                showStatus((data && data.message) ? data.message : 'Could not send message.');
             }
+        } catch (_) {
+            clearPendingBubble();
+            showStatus('Failed to send. Check your connection and retry.');
         } finally {
             btn.disabled = false;
             input.focus();

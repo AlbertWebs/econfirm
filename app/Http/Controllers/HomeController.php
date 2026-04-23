@@ -27,6 +27,11 @@ class HomeController extends Controller
         return view('front.welcome-v2');
     }
 
+    public function portal()
+    {
+        return view('process.portal');
+    }
+
     /**
      * Single-page feature detail (hash navigation: #secure-transactions, etc.).
      */
