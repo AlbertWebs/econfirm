@@ -87,8 +87,6 @@ Route::get('/view/{id}', [DashboardController::class, 'viewTransaction'])->name(
 Route::post('/approve-transaction/{id}', [DashboardController::class, 'approveTransaction'])->name('transaction.approves');
 Route::post('/reject-transaction/{id}', [DashboardController::class, 'rejectTransaction'])->name('reject.transaction');
 Route::get('/transaction.export', [DashboardController::class, 'exportTransactions'])->name('transaction.export');
-Route::post('/user/update', [DashboardController::class, 'update'])->name('user.update');
-Route::post('/user/update-password', [DashboardController::class, 'updatePassword'])->name('user.update-password');
 
 Route::get('/profile/edit/{id}', [DashboardController::class, 'editProfile'])->name('profile.edit');
 Route::post('/profile/update', [DashboardController::class, 'updateProfile'])->name('profile.update');
@@ -100,7 +98,10 @@ All Normal Users Routes List
 --------------------------------------------
 --------------------------------------------*/
 Route::middleware(['auth', 'user-access:user'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('user.dashboard');    
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('user.dashboard');
+    Route::get('/dashboard/create-transaction', [DashboardController::class, 'createTransaction'])->name('user.dashboard.create');
+    Route::post('/user/update', [DashboardController::class, 'update'])->name('user.update');
+    Route::post('/user/update-password', [DashboardController::class, 'updatePassword'])->name('user.update-password');
 });
 /*------------------------------------------
 --------------------------------------------

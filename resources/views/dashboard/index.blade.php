@@ -17,7 +17,7 @@
 <body class="bg-light">
     <!-- Header -->
     <header class="bg-white border-bottom shadow-sm">
-        <div class="container-fluid">
+        <div class="container">
             <div class="d-flex justify-content-between align-items-center py-3">
                 <div class="d-flex align-items-center">
                     <div class="p-2 bg-primary rounded me-3">
@@ -36,7 +36,7 @@
                     </button> --}}
                     <div class="d-flex align-items-center me-3">
                        
-                        <span class="fw-medium">{{Auth::User()->name}}</span>
+                        <span class="fw-medium js-dashboard-user-name">{{ Auth::user()->name }}</span>
                     </div>
                     <button onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="btn btn-outline-secondary btn-sm">
                         <i class="fas fa-sign-out-alt"></i>
@@ -52,7 +52,7 @@
         </div>
     </header>
 
-    <div class="container-fluid py-4">
+    <div class="container py-4">
         <!-- Navigation Tabs -->
         <ul class="nav nav-tabs mb-4" id="portalTabs" role="tablist">
             <li class="nav-item" role="presentation">
@@ -66,9 +66,9 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="create-transaction-tab" data-bs-toggle="tab" data-bs-target="#create-transaction" type="button" role="tab">
+                <a class="nav-link" href="{{ route('user.dashboard.create') }}" id="create-transaction-link">
                     Create Transaction
-                </button>
+                </a>
             </li>
             {{-- <li class="nav-item" role="presentation">
                 <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab">
@@ -153,244 +153,32 @@
                     </div> --}}
                 </div>
 
-                <!-- Recent Activity -->
+                <!-- Recent Activity (from your transactions) -->
                 <div class="card">
                     <div class="card-header">
                         <h5 class="card-title mb-0">Recent Activity</h5>
                     </div>
                     <div class="card-body">
-                        <div class="d-flex align-items-center p-3 bg-success bg-opacity-10 rounded mb-3">
-                            <div class="bg-success rounded-circle me-3" style="width: 8px; height: 8px;"></div>
-                            <div class="flex-grow-1">
-                                <div class="fw-medium">Transaction ESC-2024-001 completed</div>
-                                <small class="text-muted">2 hours ago</small>
+                        @forelse(($recentActivities ?? collect()) as $activity)
+                            <div class="d-flex align-items-center p-3 rounded mb-3 {{ $activity['row_class'] }}">
+                                <div class="{{ $activity['dot_class'] }} rounded-circle me-3" style="width: 8px; height: 8px;"></div>
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="fw-medium text-break">{{ $activity['title'] }}</div>
+                                    <small class="text-muted">
+                                        @if(!empty($activity['at']))
+                                            {{ $activity['at']->diffForHumans() }}
+                                        @endif
+                                    </small>
+                                </div>
+                                <span class="badge {{ $activity['badge_class'] }}">{{ $activity['label'] }}</span>
                             </div>
-                            <span class="badge bg-success">Completed</span>
-                        </div>
-                        
-                        <div class="d-flex align-items-center p-3 bg-primary bg-opacity-10 rounded mb-3">
-                            <div class="bg-primary rounded-circle me-3" style="width: 8px; height: 8px;"></div>
-                            <div class="flex-grow-1">
-                                <div class="fw-medium">Document uploaded for ESC-2024-003</div>
-                                <small class="text-muted">1 day ago</small>
-                            </div>
-                            <span class="badge bg-primary">Updated</span>
-                        </div>
-                        
-                        <div class="d-flex align-items-center p-3 bg-warning bg-opacity-10 rounded">
-                            <div class="bg-warning rounded-circle me-3" style="width: 8px; height: 8px;"></div>
-                            <div class="flex-grow-1">
-                                <div class="fw-medium">ESC-2024-002 waiting for buyer signature</div>
-                                <small class="text-muted">2 days ago</small>
-                            </div>
-                            <span class="badge bg-warning">Pending</span>
-                        </div>
+                        @empty
+                            <p class="text-muted mb-0">No recent activity yet. Create a transaction to see updates here.</p>
+                        @endforelse
                     </div>
                 </div>
             </div>
 
-            <div class="tab-pane fade" id="create-transaction" role="tabpanel">
-                <!-- Welcome Section -->
-                
-                <style>
-                /* Form Styles */
-                .hero-form {
-                    background: white;
-                    border-radius: 0.75rem;
-                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-                    border: 3px solid #18743c;
-                }
-
-                .form-container {
-                    padding: 1.5rem;
-                }
-
-                .form-container h3 {
-                    text-align: center;
-                    margin-bottom: 1.5rem;
-                    font-size: 1.25rem;
-                }
-
-                .transaction-form {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 1rem;
-                }
-
-                .form-group {
-                    display: flex;
-                    flex-direction: column;
-                }
-
-                .form-group label {
-                    font-weight: 500;
-                    color: #374151;
-                    margin-bottom: 0.25rem;
-                    font-size: 0.875rem;
-                }
-
-                .form-group input,
-                .form-group select,
-                .form-group textarea {
-                    padding: 0.5rem 0.75rem;
-                    border: 1px solid #d1d5db;
-                    border-radius: 0.375rem;
-                    font-size: 0.875rem;
-                    transition: border-color 0.2s, box-shadow 0.2s;
-                }
-
-                .form-group input:focus,
-                .form-group select:focus,
-                .form-group textarea:focus {
-                    outline: none;
-                    border-color: #18743c;
-                    box-shadow: 0 0 0 3px rgba(24, 116, 60, 0.1);
-                }
-
-                .input-with-prefix {
-                    position: relative;
-                }
-
-                .prefix {
-                    position: absolute;
-                    left: 0.75rem;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    color: #000000;
-                    font-size: 0.875rem;
-                }
-
-                .input-with-prefix input {
-                    padding-left: 3rem;
-                }
-
-                .form-row {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 1rem;
-                }
-
-                .form-disclaimer {
-                    font-size: 0.75rem;
-                    color: #000000;
-                    text-align: center;
-                    margin-top: 0.5rem;
-                }
-
-                .form-disclaimer a {
-                    color: #18743c;
-                    text-decoration: none;
-                }
-
-                .form-disclaimer a:hover {
-                    text-decoration: underline;
-                }
-
-                </style>
-                {{--  --}}
-                <div class="hero-form animate-on-scroll" style="max-width: 600px; margin: 0 auto; ">
-                    <div class="form-container">
-                        <h3>Start a Secure Transaction</h3>
-                        <form class="transaction-form">
-                            <div class="form-group">
-                                <label for="transaction-type">Transaction Type</label>
-                                <select id="transaction-type" name="transaction-type">
-                                    <option value="">Select a transaction type</option>
-                                    <option value="ecommerce">E-commerce Marketplace Transactions</option>
-                                    <option value="services">Professional Services (Consulting, Legal, Accounting)</option>
-                                    <option value="real-estate">Real Estate (Land, Plots, Rentals)</option>
-                                    <option value="vehicle">Vehicle Sales (Cars, Motorbikes, Trucks)</option>
-                                    <option value="business">Business Transfers & Partnerships</option>
-                                    <option value="freelance">Freelance Work & Digital Services</option>
-                                    <option value="goods">High-Value Goods (Electronics, Machinery, Furniture)</option>
-                                    <option value="construction">Construction & Renovation Projects</option>
-                                    <option value="agriculture">Agricultural Produce & Equipment</option>
-                                    <option value="legal">Legal Settlements & Compensation</option>
-                                    <option value="import-export">Import/Export Transactions</option>
-                                    <option value="tenders">Government or Corporate Tender Payments</option>
-                                    <option value="education">Education Payments (International Tuition, School Fees)</option>
-                                    <option value="personal">Personal Loans & Informal Lending</option>
-                                    <option value="crypto">Crypto & Forex Trading Agreements</option>
-                                    <option value="rentals">Equipment & Property Rentals</option>   
-                                    <option value="charity">Charity Donations & Fundraising</option>
-                                    <option value="events">Event Ticket Sales & Bookings</option>
-                                    <option value="subscriptions">Subscription Services (Software, Memberships)</option>
-                                    <option value="affiliate">Affiliate Marketing Payments</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                            <div class="form-group" id="custom-transaction-type-group" style="display:none;">
-                                <label for="custom-transaction-type">Specify Transaction Type</label>
-                                <input type="text" id="custom-transaction-type" name="custom-transaction-type" placeholder="Enter custom transaction type" class="w-100">
-                            </div>
-                            
-                            {{-- <div class="form-group">
-                                <label for="transaction-amount">Transaction Amount</label>
-                                <div class="input-with-prefix">
-                                    <span class="prefix">kes &nbsp;</span>
-                                    <input type="number" id="transaction-amount" name="transaction-amount" placeholder="Amount" class="w-100">
-                                </div>
-                            </div> --}}
-
-                            <div class="form-row">
-                                
-                                <div class="form-group">
-                                    <label for="payment-method">Payment Method</label>
-                                    <select id="payment-method" name="payment-method">
-                                        <option value="mpesa">M-Pesa Number</option>
-                                        <option value="paybill">Paybill/Buy Goods</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="transaction-amount">Transaction Amount</label>
-                                    <div class="input-with-prefix">
-                                        <span class="prefix">kes &nbsp;</span>
-                                        <input type="number" id="transaction-amount" name="transaction-amount" placeholder="Amount" class="w-100">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group" id="paybill-till-group" style="display:none;">
-                                <label for="paybill-till-number">Buy Goods or Paybill Number</label>
-                                <div>
-                                    <input type="text" id="paybill-till-number" name="paybill-till-number" value="{{ old('paybill-till-number') }}" placeholder="Buy Goods or Paybill Number" class="w-100">
-                                </div>
-                            </div> 
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="sender-mobile">Your Mobile Number</label>
-                                    <input type="tel" value="{{Auth::User()->phone}}" id="sender-mobile" name="sender-mobile" placeholder="+254723000000">
-                                </div>
-                                <div class="form-group">
-                                    <label for="receiver-mobile">Recipient Mobile Number</label>
-                                    <input type="tel" id="receiver-mobile" name="receiver-mobile" placeholder="+254723000000">
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="transaction-details">Transaction Details</label>
-                                <textarea id="transaction-details" name="transaction-details" rows="3" placeholder="Describe your transaction..."></textarea>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary btn-full">
-                                Fund Your Escrow
-                                <svg style="vertical-align: middle; margin-left: 8px;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="5" y1="12" x2="19" y2="12" />
-                                    <polyline points="12 5 19 12 12 19" />
-                                </svg>
-                            </button>
-                            <p style="text-align:center; margin:0 auto; font-size:10px; display:none;" id="mpesa-response"></p>
-
-                            <p class="form-disclaimer">
-                                By submitting this form, you agree to our <a target="new" href="{{route('terms.conditions')}}">Terms of Service</a> and <a target="new" href="{{route('privacy.policy')}}">Privacy Policy</a>.
-                            </p>
-                        </form>
-                    </div>
-                </div>
-                {{--  --}}
-             
-            </div>
-            
             <!-- Transactions Tab -->
             <div class="tab-pane fade" id="transactions" role="tabpanel">
                 <div class="card">
@@ -634,8 +422,9 @@
 
                         <div class="tab-content">
                             <div class="tab-pane fade show active" id="personal-info">
-                                <form method="POST" action="{{ route('user.update') }}" id="profileForm">
+                                <form method="POST" action="{{ route('user.update') }}" id="profileForm" data-profile-section="personal">
                                     @csrf
+                                    <div id="formResponse" class="mb-3" role="status" aria-live="polite"></div>
                                     <div class="row g-3 mb-4">
                                         <div class="col-md-6">
                                             <label class="form-label">Full Name</label>
@@ -738,34 +527,46 @@
                             </div>
 
                             <div class="tab-pane fade" id="notification-settings">
-                                <h6 class="mb-3">
-                                    <i class="fas fa-bell me-2"></i>
-                                    Notification Preferences
-                                </h6>
-                                
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between align-items-center p-3 border rounded">
-                                        <div>
-                                            <div class="fw-medium">Email Notifications</div>
-                                            <small class="text-muted">Receive updates about your transactions via email</small>
-                                        </div>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" checked>
+                                <form method="POST" action="{{ route('user.update') }}" id="notificationPreferencesForm" data-profile-section="notifications">
+                                    @csrf
+                                    <input type="hidden" name="update_section" value="notifications">
+                                    <h6 class="mb-3">
+                                        <i class="fas fa-bell me-2"></i>
+                                        Notification Preferences
+                                    </h6>
+                                    <p class="text-muted small mb-3">Choose how we reach you. Click <strong>Save preferences</strong> to store your choices in your account.</p>
+                                    <div id="notificationFormResponse" class="mb-3" role="status" aria-live="polite"></div>
+                                    @php
+                                        $u = Auth::user();
+                                        $nEmail = (bool) old('notify_email', \Illuminate\Support\Facades\Schema::hasColumn('users', 'notify_email') ? $u->notify_email : true);
+                                        $nSms = (bool) old('notify_sms', \Illuminate\Support\Facades\Schema::hasColumn('users', 'notify_sms') ? $u->notify_sms : false);
+                                    @endphp
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center p-3 border rounded">
+                                            <div>
+                                                <div class="fw-medium">Email Notifications</div>
+                                                <small class="text-muted">Receive updates about your transactions via email</small>
+                                            </div>
+                                            <div class="form-check form-switch">
+                                                <input type="hidden" name="notify_email" value="0">
+                                                <input class="form-check-input" type="checkbox" name="notify_email" value="1" id="notify_email" @checked($nEmail)>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between align-items-center p-3 border rounded">
-                                        <div>
-                                            <div class="fw-medium">SMS Notifications</div>
-                                            <small class="text-muted">Get important alerts via text message</small>
-                                        </div>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox">
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center p-3 border rounded">
+                                            <div>
+                                                <div class="fw-medium">SMS Notifications</div>
+                                                <small class="text-muted">Get important alerts via text message</small>
+                                            </div>
+                                            <div class="form-check form-switch">
+                                                <input type="hidden" name="notify_sms" value="0">
+                                                <input class="form-check-input" type="checkbox" name="notify_sms" value="1" id="notify_sms" @checked($nSms)>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                    <button type="submit" class="btn btn-primary" id="notificationSaveBtn">Save notification preferences</button>
+                                </form>
                             </div>
 {{-- 
                             <div class="tab-pane fade" id="billing-info">
@@ -821,10 +622,10 @@
 
     <!-- Toast Notification -->
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055">
-        <div id="formToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div id="formToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="polite" aria-atomic="true" data-bs-delay="4500">
             <div class="d-flex">
                 <div class="toast-body" id="formToastBody">
-                    Success!
+                    Changes saved.
                 </div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
@@ -832,45 +633,119 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="script.js"></script>
+    <script src="{{ asset('theme/script.js') }}"></script>
     {{--  --}}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        $('#profileForm').submit(function(e) {
+        function showSavedToast(msg) {
+            var text = msg || 'Changes have been saved.';
+            $('#formToastBody').text(text);
+            var el = document.getElementById('formToast');
+            if (el) {
+                new bootstrap.Toast(el).show();
+            }
+        }
+
+        function applyProfileUser(user) {
+            if (!user) return;
+            if (user.name) $('.js-dashboard-user-name').text(user.name);
+            if (user.name !== undefined) $('#profileForm input[name="name"]').val(user.name);
+            if (user.email !== undefined) $('#profileForm input[name="email"]').val(user.email);
+            if (user.phone !== undefined) $('#profileForm input[name="phone"]').val(user.phone);
+            if (user.company !== undefined) $('#profileForm input[name="company"]').val(user.company);
+            if (user.street !== undefined) $('#profileForm input[name="street"]').val(user.street);
+            if (user.city !== undefined) $('#profileForm input[name="city"]').val(user.city);
+            if (user.state !== undefined) $('#profileForm input[name="state"]').val(user.state);
+            if (user.zip !== undefined) $('#profileForm input[name="zip"]').val(user.zip);
+        }
+
+        $('#profileForm').on('submit', function(e) {
             e.preventDefault();
 
-            let form = $(this);
-            let actionUrl = form.attr('action');
-            let formData = form.serialize();
-            let submitBtn = $('#submitBtn');
+            var form = $(this);
+            var actionUrl = form.attr('action');
+            var submitBtn = $('#submitBtn');
 
-            submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Saving changes...');
+            submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Saving...');
 
             $.ajax({
                 url: actionUrl,
                 type: 'POST',
-                data: formData,
+                data: form.serialize(),
+                dataType: 'json',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
                 success: function(response) {
+                    var text = (response && response.message) ? response.message : 'Your profile has been saved. All changes are stored in the database.';
                     $('#formResponse').html(
-                        `<div class="alert alert-success">Profile updated successfully.</div>`
+                        '<div class="alert alert-success mb-0"><i class="fas fa-check-circle me-1"></i>' + $('<div>').text(text).html() + '</div>'
                     );
-
-                    // ✅ Show toast
-                    $('#formToastBody').text('Profile updated successfully.');
-                    let toast = new bootstrap.Toast(document.getElementById('formToast'));
-                    toast.show();
+                    if (response && response.user) {
+                        applyProfileUser(response.user);
+                    }
+                    showSavedToast(text);
                 },
                 error: function(xhr) {
-                    let errors = xhr.responseJSON.errors;
-                    let message = '<div class="alert alert-danger"><ul>';
-                    $.each(errors, function(key, val) {
-                        message += `<li>${val}</li>`;
+                    var j = xhr.responseJSON;
+                    if (j && j.message && !j.errors) {
+                        $('#formResponse').html(
+                            '<div class="alert alert-warning mb-0">' + $('<div>').text(j.message).html() + '</div>'
+                        );
+                        return;
+                    }
+                    if (!j || !j.errors) {
+                        $('#formResponse').html(
+                            '<div class="alert alert-danger mb-0">Could not save. Please check your connection and try again.</div>'
+                        );
+                        return;
+                    }
+                    var message = '<div class="alert alert-danger mb-0"><ul class="mb-0 ps-3">';
+                    $.each(j.errors, function(key, val) {
+                        if (Array.isArray(val)) {
+                            val.forEach(function(v) { message += '<li>' + $('<div>').text(v).html() + '</li>'; });
+                        } else {
+                            message += '<li>' + $('<div>').text(val).html() + '</li>';
+                        }
                     });
                     message += '</ul></div>';
                     $('#formResponse').html(message);
                 },
                 complete: function() {
-                    submitBtn.prop('disabled', false).html('Save Changes');
+                    submitBtn.prop('disabled', false).html('Save changes');
+                }
+            });
+        });
+
+        $('#notificationPreferencesForm').on('submit', function(e) {
+            e.preventDefault();
+            var $btn = $('#notificationSaveBtn');
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Saving...');
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                success: function(response) {
+                    var text = (response && response.message) ? response.message : 'Your notification preferences have been saved.';
+                    $('#notificationFormResponse').html(
+                        '<div class="alert alert-success mb-0"><i class="fas fa-check-circle me-1"></i>' + $('<div>').text(text).html() + '</div>'
+                    );
+                    showSavedToast(text);
+                },
+                error: function(xhr) {
+                    var j = xhr.responseJSON;
+                    if (j && j.message) {
+                        $('#notificationFormResponse').html(
+                            '<div class="alert alert-warning mb-0">' + $('<div>').text(j.message).html() + '</div>'
+                        );
+                    } else {
+                        $('#notificationFormResponse').html(
+                            '<div class="alert alert-danger mb-0">Could not save preferences. Try again.</div>'
+                        );
+                    }
+                },
+                complete: function() {
+                    $btn.prop('disabled', false).html('Save notification preferences');
                 }
             });
         });

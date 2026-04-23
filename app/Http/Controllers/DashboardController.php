@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\SmsService;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
@@ -24,14 +25,120 @@ class DashboardController extends Controller
         return view('dashboard.view', compact('transaction'));
     }
 
+    /**
+     * Dedicated create-escrow page (avoids the homepage hero tab UX on /dashboard).
+     */
+    public function createTransaction(): \Illuminate\View\View
+    {
+        return view('dashboard.create-transaction');
+    }
+
     public function index(): \Illuminate\View\View
     {
-        $transactions = Transaction::where('sender_mobile', Auth::user()->phone)->paginate(10);
-        $AllCompletedTransactionsCount = Transaction::where('sender_mobile', Auth::user()->phone)->where('status', '=', 'Completed')->count();
-        $AllPendingTransactionsCount = Transaction::where('sender_mobile', Auth::user()->phone)->where('status', '!=', 'Completed')->count();
-        //Sum of transaction_amount for all pending transactions
-        $AllPendingTransactionsAmount = Transaction::where('sender_mobile', Auth::user()->phone)->where('status', '!=', 'Completed')->sum('transaction_amount');
-        return view('dashboard.index', compact('transactions', 'AllCompletedTransactionsCount', 'AllPendingTransactionsCount', 'AllPendingTransactionsAmount'));
+        $variants = $this->kenyaPhoneVariantsForUser(Auth::user());
+        if ($variants === []) {
+            $transactions = Transaction::query()->whereRaw('1=0')->paginate(10);
+            $AllCompletedTransactionsCount = 0;
+            $AllPendingTransactionsCount = 0;
+            $AllPendingTransactionsAmount = 0;
+            $recentActivities = collect();
+        } else {
+            $senderScope = Transaction::query()->whereIn('sender_mobile', $variants);
+            $transactions = (clone $senderScope)->orderByDesc('id')->paginate(10);
+            $AllCompletedTransactionsCount = (clone $senderScope)->where('status', 'Completed')->count();
+            $AllPendingTransactionsCount = (clone $senderScope)->where('status', '!=', 'Completed')->count();
+            $AllPendingTransactionsAmount = (float) (clone $senderScope)->where('status', '!=', 'Completed')->sum('transaction_amount');
+            $recentActivities = $this->buildRecentActivityFromTransactions(
+                Transaction::query()
+                    ->where(function ($q) use ($variants) {
+                        $q->whereIn('sender_mobile', $variants)
+                            ->orWhereIn('receiver_mobile', $variants);
+                    })
+                    ->orderByDesc('updated_at')
+                    ->limit(8)
+                    ->get()
+            );
+        }
+
+        return view('dashboard.index', compact(
+            'transactions',
+            'AllCompletedTransactionsCount',
+            'AllPendingTransactionsCount',
+            'AllPendingTransactionsAmount',
+            'recentActivities'
+        ));
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function kenyaPhoneVariantsForUser(?User $user): array
+    {
+        if (! $user || $user->phone === null || $user->phone === '') {
+            return [];
+        }
+
+        $normalized = SmsService::normalizeKenyaTo254((string) $user->phone);
+        if (! preg_match('/^254\d{9}$/', $normalized)) {
+            return array_values(array_unique(array_filter([trim((string) $user->phone)])));
+        }
+
+        return array_values(array_unique([
+            $normalized,
+            '0' . substr($normalized, 3),
+            substr($normalized, 3),
+        ]));
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Transaction>  $rows
+     * @return \Illuminate\Support\Collection<int, array{title: string, at: \Carbon\Carbon|null, label: string, row_class: string, dot_class: string, badge_class: string}>
+     */
+    protected function buildRecentActivityFromTransactions($rows)
+    {
+        return $rows->map(function (Transaction $t) {
+            $status = (string) ($t->status ?? '');
+            $label = 'Updated';
+            $rowClass = 'bg-primary bg-opacity-10';
+            $dotClass = 'bg-primary';
+            $badgeClass = 'bg-primary';
+
+            if (strcasecmp($status, 'Completed') === 0) {
+                $label = 'Completed';
+                $rowClass = 'bg-success bg-opacity-10';
+                $dotClass = 'bg-success';
+                $badgeClass = 'bg-success';
+            } elseif (strcasecmp($status, 'pending') === 0
+                || strcasecmp($status, 'stk_initiated') === 0) {
+                $label = 'Pending';
+                $rowClass = 'bg-warning bg-opacity-10';
+                $dotClass = 'bg-warning';
+                $badgeClass = 'bg-warning text-dark';
+            } elseif (stripos($status, 'funded') !== false || strcasecmp($status, 'Escrow Funded') === 0) {
+                $label = 'Funded';
+                $rowClass = 'bg-info bg-opacity-10';
+                $dotClass = 'bg-info';
+                $badgeClass = 'bg-info text-dark';
+            } elseif (strcasecmp($status, 'cancelled') === 0 || strcasecmp($status, 'canceled') === 0) {
+                $label = 'Cancelled';
+                $rowClass = 'bg-danger bg-opacity-10';
+                $dotClass = 'bg-danger';
+                $badgeClass = 'bg-danger';
+            }
+
+            $tid = (string) ($t->transaction_id ?? $t->id);
+            $type = (string) ($t->transaction_type ?? 'escrow');
+            $title = "Transaction {$tid} ({$type}) — {$status}";
+
+            return [
+                'title' => $title,
+                'at' => $t->updated_at ?? $t->created_at,
+                'label' => $label,
+                'row_class' => $rowClass,
+                'dot_class' => $dotClass,
+                'badge_class' => $badgeClass,
+            ];
+        });
     }
 
     public function approveTransaction($id)
@@ -42,9 +149,32 @@ class DashboardController extends Controller
     }
     public function update(Request $request): JsonResponse
     {
-        $request->validate([
+        $user = User::query()->findOrFail(Auth::id());
+
+        if ($request->input('update_section') === 'notifications') {
+            if (! Schema::hasColumn('users', 'notify_email')) {
+                return response()->json([
+                    'message' => 'Notification preferences are not available yet. Run database migrations.',
+                ], 422);
+            }
+            $request->validate([
+                'notify_email' => 'boolean',
+                'notify_sms' => 'boolean',
+            ]);
+            $user->notify_email = $request->boolean('notify_email');
+            $user->notify_sms = $request->boolean('notify_sms');
+            $user->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Your notification preferences have been saved.',
+                'user' => $this->userProfilePayload($user->fresh()),
+            ]);
+        }
+
+        $validated = $request->validate([
             'name'     => 'required|string|max:255',
-            'email'    => 'required|email|max:255|unique:users,email,' . Auth::id(),
+            'email'    => 'required|email|max:255|unique:users,email,' . $user->id,
             'phone'    => 'nullable|string|max:20',
             'company'  => 'nullable|string|max:255',
             'street'   => 'nullable|string|max:255',
@@ -53,13 +183,46 @@ class DashboardController extends Controller
             'zip'      => 'nullable|string|max:20',
         ]);
 
-        $user = Auth::user();
+        if (! empty($validated['phone'])) {
+            $normalized = SmsService::normalizeKenyaTo254($validated['phone']);
+            if (preg_match('/^254\d{9}$/', $normalized)) {
+                $validated['phone'] = $normalized;
+            }
+        } else {
+            $validated['phone'] = null;
+        }
 
-        $user->update($request->only([
-            'name', 'email', 'phone', 'company', 'street', 'city', 'state', 'zip'
-        ]));
+        $user->update($validated);
 
-        return response()->json(['message' => 'Profile updated successfully']);
+        $user = $user->fresh();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Your profile has been saved. All changes are stored on your account.',
+            'user' => $this->userProfilePayload($user),
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function userProfilePayload(User $user): array
+    {
+        $hasNotify = Schema::hasColumn('users', 'notify_email')
+            && Schema::hasColumn('users', 'notify_sms');
+
+        return [
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'company' => $user->company,
+            'street' => $user->street,
+            'city' => $user->city,
+            'state' => $user->state,
+            'zip' => $user->zip,
+            'notify_email' => $hasNotify ? (bool) $user->notify_email : true,
+            'notify_sms' => $hasNotify ? (bool) $user->notify_sms : false,
+        ];
     }
 
     

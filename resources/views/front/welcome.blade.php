@@ -201,8 +201,8 @@ function transactionFormData() {
 
 <div x-data="transactionFormData()">
 
-       <!-- Hero Section -->
-<section id="home" class="relative min-h-[85vh] flex items-center bg-gradient-to-br from-green-50 via-white to-emerald-50 overflow-hidden pt-8">
+       <!-- Hero: mobile shows form only; headline and CTAs from lg breakpoint up -->
+<section id="home" class="relative min-h-0 sm:min-h-0 lg:min-h-[85vh] flex items-center bg-gradient-to-br from-green-50 via-white to-emerald-50 overflow-hidden pt-4 pb-6 lg:pt-8 lg:pb-12">
     <!-- Animated Background Elements -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div class="absolute -top-40 -left-40 w-96 h-96 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
@@ -210,10 +210,10 @@ function transactionFormData() {
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
     </div>
 
-    <div class="relative max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 w-full">
-        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <!-- Hero Content -->
-            <div class="text-center lg:text-left space-y-8" 
+    <div class="relative max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-12 w-full">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-16 items-center">
+            <!-- Hero Content (hidden on small screens; form only on mobile) -->
+            <div class="hidden lg:block text-center lg:text-left space-y-8" 
                  x-data="{ inView: true }"
                  x-intersect="inView = true">
                 <div x-show="inView" 
@@ -290,7 +290,7 @@ function transactionFormData() {
             </div>
             
             <!-- Hero Form -->
-            <div id="home" class="w-full"
+            <div class="w-full"
                  x-data="{ inView: true }"
                  x-intersect="inView = true">
                 <div x-show="inView"

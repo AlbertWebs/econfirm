@@ -259,40 +259,42 @@
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Animate custom transaction type group
             const transactionType = document.getElementById('transaction-type');
             const customTransactionTypeGroup = document.getElementById('custom-transaction-type-group');
-            function updateTransactionType() {
-                if (transactionType.value === 'other') {
-                    customTransactionTypeGroup.style.display = '';
-                    customTransactionTypeGroup.style.opacity = 0;
-                    customTransactionTypeGroup.style.transition = 'opacity 0.4s cubic-bezier(0.4,0,0.2,1)';
-                    setTimeout(() => { customTransactionTypeGroup.style.opacity = 1; }, 10);
-                } else {
-                    customTransactionTypeGroup.style.opacity = 0;
-                    customTransactionTypeGroup.style.transition = 'opacity 0.3s cubic-bezier(0.4,0,0.2,1)';
-                    setTimeout(() => { customTransactionTypeGroup.style.display = 'none'; }, 300);
+            if (transactionType && customTransactionTypeGroup) {
+                function updateTransactionType() {
+                    if (transactionType.value === 'other') {
+                        customTransactionTypeGroup.style.display = '';
+                        customTransactionTypeGroup.style.opacity = 0;
+                        customTransactionTypeGroup.style.transition = 'opacity 0.4s cubic-bezier(0.4,0,0.2,1)';
+                        setTimeout(() => { customTransactionTypeGroup.style.opacity = 1; }, 10);
+                    } else {
+                        customTransactionTypeGroup.style.opacity = 0;
+                        customTransactionTypeGroup.style.transition = 'opacity 0.3s cubic-bezier(0.4,0,0.2,1)';
+                        setTimeout(() => { customTransactionTypeGroup.style.display = 'none'; }, 300);
+                    }
                 }
+                transactionType.addEventListener('change', updateTransactionType);
+                updateTransactionType();
             }
-            transactionType.addEventListener('change', updateTransactionType);
-            updateTransactionType();
 
-            // Animate paybill/till group
             const paymentMethod = document.getElementById('payment-method');
             const paybillTillGroup = document.getElementById('paybill-till-group');
-            function updatePaybillTill() {
-                if (paymentMethod.value === 'paybill') {
-                    paybillTillGroup.style.display = '';
-                    paybillTillGroup.style.opacity = 0;
-                    paybillTillGroup.style.transition = 'opacity 0.4s cubic-bezier(0.4,0,0.2,1)';
-                    setTimeout(() => { paybillTillGroup.style.opacity = 1; }, 10);
-                } else {
-                    paybillTillGroup.style.opacity = 0;
-                    paybillTillGroup.style.transition = 'opacity 0.3s cubic-bezier(0.4,0,0.2,1)';
-                    setTimeout(() => { paybillTillGroup.style.display = 'none'; }, 300);
+            if (paymentMethod && paybillTillGroup) {
+                function updatePaybillTill() {
+                    if (paymentMethod.value === 'paybill') {
+                        paybillTillGroup.style.display = '';
+                        paybillTillGroup.style.opacity = 0;
+                        paybillTillGroup.style.transition = 'opacity 0.4s cubic-bezier(0.4,0,0.2,1)';
+                        setTimeout(() => { paybillTillGroup.style.opacity = 1; }, 10);
+                    } else {
+                        paybillTillGroup.style.opacity = 0;
+                        paybillTillGroup.style.transition = 'opacity 0.3s cubic-bezier(0.4,0,0.2,1)';
+                        setTimeout(() => { paybillTillGroup.style.display = 'none'; }, 300);
+                    }
                 }
+                paymentMethod.addEventListener('change', updatePaybillTill);
+                updatePaybillTill();
             }
-            paymentMethod.addEventListener('change', updatePaybillTill);
-            updatePaybillTill();
         });
     </script>

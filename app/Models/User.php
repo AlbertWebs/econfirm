@@ -32,6 +32,8 @@ class User extends Authenticatable
         'role',
         'type',
         'api_key',
+        'notify_email',
+        'notify_sms',
     ];
 
     /**
@@ -54,6 +56,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'notify_email' => 'boolean',
+            'notify_sms' => 'boolean',
         ];
     }
 
