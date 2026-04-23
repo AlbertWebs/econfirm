@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <link href="{{ asset('theme/dashboard.css') }}?v=2" rel="stylesheet">
+    <link href="{{ asset('theme/dashboard.css') }}?v=3" rel="stylesheet">
     <link rel="icon" type="image/png" href="{{ asset('uploads/favicon.png') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#0f6b3a">
@@ -18,14 +18,19 @@
 <body class="db-portal">
     <header class="db-header" role="banner">
         <div class="db-header__inner">
-            <a href="{{ route('home') }}" class="db-brand" aria-label="e-confirm home">
-                <span class="db-brand__mark" aria-hidden="true">
-                    <i class="fas fa-shield-alt"></i>
-                </span>
-                <div class="db-brand__text">
-                    <h1>e-confirm</h1>
-                    <span>Customer portal</span>
-                </div>
+            <a href="{{ route('home') }}" class="db-brand" aria-label="e-confirm — home">
+                <img src="{{ asset('uploads/favicon.png') }}"
+                     class="d-md-none db-brand__icon-img"
+                     width="40"
+                     height="40"
+                     alt=""
+                     fetchpriority="high"
+                     decoding="async">
+                <img src="{{ asset('uploads/logo-hoz.png') }}"
+                     class="d-none d-md-block db-brand__logo-full"
+                     alt="e-confirm"
+                     decoding="async">
+                <span class="visually-hidden">e-confirm — customer portal</span>
             </a>
             <div class="db-header__actions">
                 <div class="db-user" title="{{ Auth::user()->name }}">
@@ -56,7 +61,7 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link" href="{{ route('home') }}#home" id="create-transaction-link">
+                    <a class="nav-link" href="{{ route('user.dashboard.create') }}" id="create-transaction-link">
                         <i class="fas fa-plus me-1 d-none d-sm-inline"></i>Create
                     </a>
                 </li>
@@ -165,7 +170,7 @@
                                 <span class="badge rounded-pill {{ $activity['badge_class'] }} px-2 py-1">{{ $activity['label'] }}</span>
                             </div>
                         @empty
-                            <p class="text-muted mb-0 text-center py-3">No recent activity yet. <a href="{{ route('home') }}#home" class="text-decoration-none fw-semibold" style="color: var(--bs-primary);">Start a transaction</a> to see updates here.</p>
+                            <p class="text-muted mb-0 text-center py-3">No recent activity yet. <a href="{{ route('user.dashboard.create') }}" class="text-decoration-none fw-semibold" style="color: var(--bs-primary);">Start a transaction</a> to see updates here.</p>
                         @endforelse
                     </div>
                 </div>
