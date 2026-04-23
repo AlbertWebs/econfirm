@@ -39,7 +39,7 @@
 
     <!-- Header -->
     <header class="bg-white border-bottom shadow-sm mb-4">
-        <div class="container-fluid">
+        <div class="container">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 py-3">
                 <div class="d-flex align-items-center">
                     <div class="me-3">
