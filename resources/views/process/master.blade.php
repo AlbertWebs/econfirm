@@ -40,13 +40,15 @@
     <!-- Header -->
     <header class="bg-white border-bottom shadow-sm mb-4">
         <div class="container">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 py-3">
+            <div class="d-flex justify-content-between align-items-center gap-2 py-3">
                 <div class="d-flex align-items-center">
                     <div class="me-3">
-                        <img src="{{ asset('uploads/favicon.png') }}" alt="eConfirm" class="rounded" style="width: 32px; height: 32px; object-fit: contain;">
+                        <a href="{{ route('home') }}" aria-label="Go to homepage" class="d-inline-flex">
+                            <img src="{{ asset('uploads/favicon.png') }}" alt="eConfirm" class="rounded" style="width: 32px; height: 32px; object-fit: contain;">
+                        </a>
                     </div>
                 </div>
-                <div class="d-flex flex-wrap align-items-center gap-2 w-100 w-md-auto justify-content-start justify-content-md-end">
+                <div class="d-flex flex-nowrap align-items-center gap-2 ms-auto justify-content-end">
                     @auth
                         <a href="{{ route('user.dashboard') }}" class="btn btn-outline-primary btn-sm position-relative">
                             <i class="fas fa-dashboard me-1"></i>

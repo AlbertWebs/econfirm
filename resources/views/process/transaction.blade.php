@@ -37,7 +37,10 @@
 @endpush
 
 @section('header-actions')
-    <button class="btn btn-outline-secondary btn-sm me-3 position-relative"> 
+    <button type="button"
+            class="btn btn-outline-secondary btn-sm me-3 position-relative"
+            data-bs-toggle="modal"
+            data-bs-target="#liveChatModal"> 
         <i class="fas fa-gavel me-1"></i>
         Raise Dispute
     </button>
@@ -299,9 +302,35 @@
 
     {{-- Raise Dispute Button with Glow Effect --}}
     <div class="raise-dispute-glow position-fixed bottom-0 end-0 m-3 m-md-4">
-        <button class="btn btn-danger">
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#liveChatModal">
             <i class="fas fa-exclamation-triangle me-1"></i> Raise Dispute
         </button>
+    </div>
+
+    {{-- Live Chat / Dispute Popup --}}
+    <div class="modal fade" id="liveChatModal" tabindex="-1" aria-labelledby="liveChatModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="liveChatModalLabel"><i class="fas fa-comments me-2"></i>Live Chat Support</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2 fw-semibold">Need help with this escrow transaction?</p>
+                    <p class="text-muted small mb-3">
+                        Start a live chat with support to raise a dispute, share evidence, or get immediate guidance.
+                    </p>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-danger" onclick="openLiveChat()">
+                            <i class="fas fa-headset me-1"></i> Start Live Chat
+                        </button>
+                        <a href="{{ route('support') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-life-ring me-1"></i> Open Support Page
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     {{--  --}}
@@ -383,6 +412,21 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        function openLiveChat() {
+            const modalEl = document.getElementById('liveChatModal');
+            const modalInstance = modalEl ? bootstrap.Modal.getOrCreateInstance(modalEl) : null;
+            if (modalInstance) modalInstance.hide();
+
+            // If Tawk chat is available, open it directly.
+            if (window.Tawk_API && typeof window.Tawk_API.maximize === 'function') {
+                window.Tawk_API.maximize();
+                return;
+            }
+
+            // Fallback to support page if live chat widget is unavailable on this page.
+            window.location.href = "{{ route('support') }}";
+        }
+
         $(document).ready(function () {
             $('#customLoginForm').on('submit', function (e) {
                 e.preventDefault();
