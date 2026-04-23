@@ -523,11 +523,33 @@ class HomeController extends Controller
         }
 
         if ($stk->status !== 'Success') {
-            return response()->json([
-                'success' => true,
-                'status' => 'Pending',
-                'message' => 'Awaiting M-Pesa confirmation (after you enter your PIN, this usually takes a few seconds).',
-            ]);
+            // Callback can be delayed/missed in local dev; fallback to Daraja STK query.
+            $query = (new MpesaService())->stkPushQuery($id);
+
+            if (($query['status'] ?? null) === 'Success') {
+                $stk->status = 'Success';
+                $stk->result_desc = $query['message'] ?? $stk->result_desc;
+                if (isset($query['data']) && is_array($query['data'])) {
+                    $stk->callback_metadata = $query['data'];
+                }
+                $stk->save();
+            } elseif (($query['status'] ?? null) === 'Failed') {
+                $stk->status = 'Failed';
+                $stk->result_desc = $query['message'] ?? $stk->result_desc;
+                $stk->save();
+
+                return response()->json([
+                    'success' => false,
+                    'status' => 'Failed',
+                    'message' => $query['message'] ?? 'Payment failed or was cancelled.',
+                ]);
+            } else {
+                return response()->json([
+                    'success' => true,
+                    'status' => 'Pending',
+                    'message' => 'Awaiting M-Pesa confirmation (after you enter your PIN, this usually takes a few seconds).',
+                ]);
+            }
         }
 
         $transaction = Transaction::where('checkout_request_id', $id)->first();

@@ -181,28 +181,14 @@ class SmsService
     }
 
     /**
-     * SMS when a user starts an escrow and M-Pesa STK prompt was sent (sender + receiver).
-     * Uses SMS_API_URL, SMS_API_TOKEN, SMS_SENDER_ID from .env via config/services.php.
+     * SMS when escrow STK is initiated.
+     * Intentionally disabled: both parties are notified only after escrow is funded.
      */
     public function notifyEscrowStkInitiated(Transaction $transaction): void
     {
-        if (empty($this->apiToken) || empty($this->senderId)) {
-            \Log::warning('Escrow STK SMS skipped: SMS not configured in .env');
-
-            return;
-        }
-
-        $ref = $transaction->transaction_id;
-        $principal = (float) $transaction->transaction_amount;
-        $fee = (float) ($transaction->transaction_fee ?? 0);
-        $total = $principal + $fee;
-        $amt = number_format($total, 2);
-
-        $senderMsg = "eConfirm: Escrow {$ref} — pay KES {$amt} total (principal + fee) on your phone. Enter your M-Pesa PIN when prompted.";
-        $receiverMsg = "eConfirm: Escrow {$ref} for KES {$amt} total lists you as receiver. The sender is completing M-Pesa payment.";
-
-        $this->send($transaction->sender_mobile, $senderMsg, $ref.'-stk-sender');
-        $this->send($transaction->receiver_mobile, $receiverMsg, $ref.'-stk-recv');
+        \Log::info('Escrow STK initiation SMS suppressed by policy', [
+            'transaction_id' => $transaction->transaction_id,
+        ]);
     }
 
     /**

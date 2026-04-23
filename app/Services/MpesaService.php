@@ -8,6 +8,21 @@ use App\Models\MpesaStkPush;
 
 class MpesaService
 {
+    protected function stkQueryEndpoint(): string
+    {
+        $configured = trim((string) config('mpesa.stk_query_url', ''));
+        if ($configured !== '') {
+            return $configured;
+        }
+
+        $stkPushUrl = (string) config('mpesa.stk_url', 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest');
+        if (str_contains($stkPushUrl, '/mpesa/stkpush/v1/processrequest')) {
+            return str_replace('/mpesa/stkpush/v1/processrequest', '/mpesa/stkpushquery/v1/query', $stkPushUrl);
+        }
+
+        return 'https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query';
+    }
+
     /**
      * Guzzle SSL options: fixes cURL error 60 on Windows when php.ini has no CA bundle.
      */
@@ -340,6 +355,83 @@ class MpesaService
         ]);
         $response = $this->mpesaHttp()->withToken($token)->acceptJson()->post($endpoint, $payload);
         return $response->json();
+    }
+
+    /**
+     * Query STK push status by CheckoutRequestID.
+     */
+    public function stkPushQuery(string $checkoutRequestId): array
+    {
+        $timestamp = now()->format('YmdHis');
+        $password = base64_encode(config('mpesa.shortcode') . config('mpesa.passkey') . $timestamp);
+        $endpoint = $this->stkQueryEndpoint();
+        $token = $this->getAccessToken();
+
+        if ($token === '') {
+            return [
+                'success' => false,
+                'status' => 'Pending',
+                'message' => 'Unable to query M-Pesa status (auth failed).',
+                'data' => null,
+            ];
+        }
+
+        $payload = [
+            'BusinessShortCode' => config('mpesa.shortcode'),
+            'Password' => $password,
+            'Timestamp' => $timestamp,
+            'CheckoutRequestID' => $checkoutRequestId,
+        ];
+
+        try {
+            $response = $this->mpesaHttp()->timeout(45)
+                ->withToken($token)
+                ->acceptJson()
+                ->post($endpoint, $payload);
+        } catch (\Throwable $e) {
+            \Log::error('M-Pesa STK Query HTTP exception', [
+                'checkout_request_id' => $checkoutRequestId,
+                'message' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'status' => 'Pending',
+                'message' => 'Still waiting for M-Pesa callback.',
+                'data' => null,
+            ];
+        }
+
+        $body = $response->json();
+        $resultCode = (int) (($body['ResultCode'] ?? 1));
+        $resultDesc = (string) ($body['ResultDesc'] ?? 'Awaiting M-Pesa confirmation.');
+
+        // Daraja query accepted and transaction completed successfully.
+        if ($response->successful() && $resultCode === 0) {
+            return [
+                'success' => true,
+                'status' => 'Success',
+                'message' => $resultDesc,
+                'data' => is_array($body) ? $body : null,
+            ];
+        }
+
+        // Common non-final/pending outcomes while callback is delayed.
+        if (in_array($resultCode, [1, 1037], true)) {
+            return [
+                'success' => false,
+                'status' => 'Pending',
+                'message' => $resultDesc,
+                'data' => is_array($body) ? $body : null,
+            ];
+        }
+
+        return [
+            'success' => false,
+            'status' => 'Failed',
+            'message' => $resultDesc,
+            'data' => is_array($body) ? $body : null,
+        ];
     }
 
     /**
