@@ -171,8 +171,17 @@ function transactionFormData() {
                     } else if (st === 'failed') {
                         clearInterval(poll);
                         self.mpesaResponse = { type: 'error', message: data.message || 'Payment failed. Please try again.' };
-                    } else if (st === 'pending' && attempts % 3 === 0) {
-                        self.mpesaResponse = { type: 'success', message: 'Waiting for M-Pesa… (PIN entered? This can take up to a minute.)' };
+                    } else if (st === 'unknown' || (data.success === false && st === '')) {
+                        clearInterval(poll);
+                        self.mpesaResponse = { type: 'error', message: data.message || 'Payment session not found. Please retry the transaction.' };
+                    } else if (st === 'pending') {
+                        // Always show backend message (query/callback diagnostics) instead of a hardcoded wait text.
+                        if (attempts % 2 === 0) {
+                            self.mpesaResponse = {
+                                type: 'success',
+                                message: data.message || 'Waiting for M-Pesa… (PIN entered? This can take up to a minute.)'
+                            };
+                        }
                     } else if (attempts >= maxAttempts) {
                         clearInterval(poll);
                         self.mpesaResponse = { type: 'warning', message: 'No confirmation yet. Check SMS or search your transaction ID on this site.' };
