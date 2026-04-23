@@ -358,6 +358,40 @@ class MpesaService
     }
 
     /**
+     * ResultDesc for STK *query* can say "The transaction is still under processing" with ResultCodes
+     * outside {0,1,1037} — the API then maps to a hard "Failure" even though the payment is in flight.
+     * Use a liberal text check (not only regex) so odd whitespace/encoding still match.
+     */
+    public static function stkQueryResultDescLooksInProgress(string $raw): bool
+    {
+        $d = trim(preg_replace('/\s+/u', ' ', (string) $raw));
+        if ($d === '') {
+            return false;
+        }
+        $lower = mb_strtolower($d, 'UTF-8');
+        if (str_contains($lower, 'invalid') && str_contains($lower, 'credentials')) {
+            return false;
+        }
+        if (str_contains($lower, 'cancel') && (str_contains($lower, 'user') || str_contains($lower, 'by'))) {
+            return false;
+        }
+        if (str_contains($lower, 'insufficient') || str_contains($lower, 'rejected') || str_contains($lower, 'declined')) {
+            return false;
+        }
+        if (str_contains($lower, 'under processing') || str_contains($lower, 'being processed') || str_contains($lower, 'still under processing')) {
+            return true;
+        }
+        if (str_contains($lower, 'the transaction is still') && str_contains($lower, 'process')) {
+            return true;
+        }
+        if (str_contains($lower, 'request') && str_contains($lower, 'being processed')) {
+            return true;
+        }
+
+        return (bool) preg_match('/\b(in\s+progress|not\s+completed\s+yet)\b/iu', $d);
+    }
+
+    /**
      * M-Pesa STK Query often returns raw ResultDesc like "The service request is... still under processing"
      * when polled immediately after STK. Map those to a clearer, calmer line for the UI.
      */
@@ -367,11 +401,44 @@ class MpesaService
         if ($d === '') {
             return 'Awaiting M-Pesa confirmation (after you enter your PIN, this usually takes a few seconds).';
         }
-        if (preg_match('/under\s+processing|being\s+processed|still\s+processing|transaction.*process/i', $d)) {
+        if (self::stkQueryResultDescLooksInProgress($d)) {
             return 'M-Pesa is still handling this request. If you have not yet approved, look for the payment prompt on your phone and enter your PIN.';
         }
 
         return $d;
+    }
+
+    /**
+     * @return array{0: int, 1: string}
+     */
+    protected static function parseStkPushQueryResultPayload(?array $body): array
+    {
+        if (! is_array($body) || $body === []) {
+            return [1, ''];
+        }
+        $code = $body['ResultCode'] ?? null;
+        $desc = $body['ResultDesc'] ?? null;
+        if (isset($body['Result']) && is_array($body['Result'])) {
+            if ($code === null) {
+                $code = $body['Result']['ResultCode'] ?? $code;
+            }
+            if ($desc === null || $desc === '') {
+                $desc = $body['Result']['ResultDesc'] ?? $desc;
+            }
+        }
+        if (isset($body['Body']) && is_array($body['Body'])) {
+            if ($code === null) {
+                $code = $body['Body']['ResultCode'] ?? $code;
+            }
+            if ($desc === null || $desc === '') {
+                $desc = $body['Body']['ResultDesc'] ?? $desc;
+            }
+        }
+
+        return [
+            (int) ($code ?? 1),
+            (string) ($desc !== null && $desc !== '' ? $desc : 'Awaiting M-Pesa confirmation.'),
+        ];
     }
 
     /**
@@ -420,8 +487,10 @@ class MpesaService
         }
 
         $body = $response->json();
-        $resultCode = (int) (($body['ResultCode'] ?? 1));
-        $resultDesc = (string) ($body['ResultDesc'] ?? 'Awaiting M-Pesa confirmation.');
+        if (! is_array($body)) {
+            $body = [];
+        }
+        [$resultCode, $resultDesc] = self::parseStkPushQueryResultPayload($body);
 
         // Daraja query accepted and transaction completed successfully.
         if ($response->successful() && $resultCode === 0) {
@@ -435,6 +504,16 @@ class MpesaService
 
         // Common non-final/pending outcomes while callback is delayed.
         if (in_array($resultCode, [1, 1037], true)) {
+            return [
+                'success' => false,
+                'status' => 'Pending',
+                'message' => self::friendlyStkQueryPendingMessage($resultDesc),
+                'data' => is_array($body) ? $body : null,
+            ];
+        }
+
+        // Non-standard ResultCode but plain English still says in-flight (do not map to a hard failure).
+        if (self::stkQueryResultDescLooksInProgress($resultDesc)) {
             return [
                 'success' => false,
                 'status' => 'Pending',

@@ -637,8 +637,8 @@ class HomeController extends Controller
         if ($stk->status !== 'Success') {
             // Querying STK too soon after the push often returns ResultDesc "still under processing"
             // and scares users who have not seen the phone prompt yet. Defer the first real query briefly.
-            $minAgeBeforeStkQuerySeconds = 5;
-            if ($stk->created_at && $stk->created_at->diffInSeconds(now()) < $minAgeBeforeStkQuerySeconds) {
+            $minAgeBeforeStkQuerySeconds = 8;
+            if ($stk->created_at && abs((int) $stk->created_at->diffInSeconds(now())) < $minAgeBeforeStkQuerySeconds) {
                 return response()->json([
                     'success' => true,
                     'status' => 'Pending',
@@ -654,14 +654,22 @@ class HomeController extends Controller
                 $stk->save();
                 $allowFundWithoutCallbackItems = true;
             } elseif (($query['status'] ?? null) === 'Failed') {
+                $failMessage = (string) ($query['message'] ?? '');
+                if (MpesaService::stkQueryResultDescLooksInProgress($failMessage)) {
+                    return response()->json([
+                        'success' => true,
+                        'status' => 'Pending',
+                        'message' => MpesaService::friendlyStkQueryPendingMessage($failMessage),
+                    ]);
+                }
                 $stk->status = 'Failed';
-                $stk->result_desc = $query['message'] ?? $stk->result_desc;
+                $stk->result_desc = $failMessage !== '' ? $failMessage : $stk->result_desc;
                 $stk->save();
 
                 return response()->json([
                     'success' => false,
                     'status' => 'Failed',
-                    'message' => $query['message'] ?? 'Payment was declined or cancelled.',
+                    'message' => $failMessage !== '' ? $failMessage : 'Payment was declined or cancelled.',
                 ]);
             } else {
                 $pendingText = $query['message'] ?? 'Awaiting M-Pesa confirmation (after you enter your PIN, this usually takes a few seconds).';
