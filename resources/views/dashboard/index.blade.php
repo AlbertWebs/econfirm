@@ -3,136 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureEscrow - Customer Portal</title>
+    <title>Customer portal — e-confirm</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="{{ asset('theme/dashboard.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link href="{{ asset('theme/dashboard.css') }}?v=2" rel="stylesheet">
     <link rel="icon" type="image/png" href="{{ asset('uploads/favicon.png') }}">
-     <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <!-- Font Awesome Free CDN -->
-   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#0f6b3a">
 </head>
 
-<body class="bg-light">
-    <!-- Header -->
-    <header class="bg-white border-bottom shadow-sm">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center py-3">
-                <div class="d-flex align-items-center">
-                    <div class="p-2 bg-primary rounded me-3">
-                        <i class="fas fa-shield-alt text-white"></i>
-                    </div>
-                    <div>
-                        <h5 class="mb-0 fw-bold">e-confirm</h5>
-                        <small class="text-muted">Customer Portal</small>
-                    </div>
+<body class="db-portal">
+    <header class="db-header" role="banner">
+        <div class="db-header__inner">
+            <a href="{{ route('home') }}" class="db-brand" aria-label="e-confirm home">
+                <span class="db-brand__mark" aria-hidden="true">
+                    <i class="fas fa-shield-alt"></i>
+                </span>
+                <div class="db-brand__text">
+                    <h1>e-confirm</h1>
+                    <span>Customer portal</span>
                 </div>
-                
-                <div class="d-flex align-items-center">
-                    {{-- <button class="btn btn-outline-secondary btn-sm me-3">
-                        <i class="fas fa-bell me-1"></i>
-                        Notifications
-                    </button> --}}
-                    <div class="d-flex align-items-center me-3">
-                       
-                        <span class="fw-medium js-dashboard-user-name">{{ Auth::user()->name }}</span>
-                    </div>
-                    <button onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="btn btn-outline-secondary btn-sm">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </button>
-                    {{--  --}}
-                  
-                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                        @csrf
-                    </form>
-                    {{--  --}}
+            </a>
+            <div class="db-header__actions">
+                <div class="db-user" title="{{ Auth::user()->name }}">
+                    <span class="db-user__avatar" aria-hidden="true">{{ strtoupper(\Illuminate\Support\Str::substr(Auth::user()->name ?? 'U', 0, 1)) }}</span>
+                    <span class="js-dashboard-user-name">{{ Auth::user()->name }}</span>
                 </div>
+                <button type="button" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="db-btn-logout" title="Log out" aria-label="Log out">
+                    <i class="fas fa-arrow-right-from-bracket"></i>
+                </button>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                    @csrf
+                </form>
             </div>
         </div>
     </header>
 
     <div class="container py-4">
-        <!-- Navigation Tabs -->
-        <ul class="nav nav-tabs mb-4" id="portalTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab">
-                    Dashboard
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="transactions-tab" data-bs-toggle="tab" data-bs-target="#transactions" type="button" role="tab">
-                    Transactions
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" href="{{ route('user.dashboard.create') }}" id="create-transaction-link">
-                    Create Transaction
-                </a>
-            </li>
-            {{-- <li class="nav-item" role="presentation">
-                <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab">
-                    Documents
-                </button>
-            </li> --}}
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab">
-                    Profile
-                </button>
-            </li>
-        </ul>
+        <nav class="db-nav-wrap" aria-label="Portal sections">
+            <ul class="nav nav-pills flex-nowrap db-nav" id="portalTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-selected="true">
+                        <i class="fas fa-clipboard-list me-1 d-none d-sm-inline"></i>Dashboard
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="transactions-tab" data-bs-toggle="tab" data-bs-target="#transactions" type="button" role="tab" aria-selected="false">
+                        <i class="fas fa-receipt me-1 d-none d-sm-inline"></i>Transactions
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" href="{{ route('home') }}#home" id="create-transaction-link">
+                        <i class="fas fa-plus me-1 d-none d-sm-inline"></i>Create
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-selected="false">
+                        <i class="fas fa-user me-1 d-none d-sm-inline"></i>Profile
+                    </button>
+                </li>
+            </ul>
+        </nav>
 
         <div class="tab-content" id="portalTabsContent">
             <!-- Dashboard Tab -->
             <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
-                <!-- Welcome Section -->
-                <div class="card bg-primary text-white mb-4">
+                <div class="card db-hero text-white mb-4">
                     <div class="card-body">
-                        <h2 class="card-title">Welcome back, {{Auth::User()->name}}!</h2>
-                        <p class="card-text text-white-50">Manage your escrow transactions securely and efficiently.</p>
+                        <p class="db-hero__eyebrow">
+                            <i class="fas fa-gem" style="color: #e8c76a" aria-hidden="true"></i> Escrow overview
+                        </p>
+                        <h2 class="db-hero__title">Welcome back, {{ Auth::user()->name }}</h2>
+                        <p class="db-hero__sub">Track active deals, see value in escrow, and act on the latest events — all in one secure place.</p>
                     </div>
                 </div>
 
-                <!-- Stats Grid -->
-                <div class="row g-4 mb-4">
+                <div class="row g-3 g-lg-4 mb-4">
                     <div class="col-md-4">
-                        <div class="card h-100">
+                        <div class="card h-100 db-stat">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
-                                        <h6 class="card-title text-muted">Active Transactions</h6>
-                                        <h2 class="fw-bold">{{$AllPendingTransactionsCount}}</h2>
-                                        <small class="text-muted">Currently in progress</small>
+                                        <div class="db-stat__label">Active</div>
+                                        <p class="db-stat__value mb-0">{{ $AllPendingTransactionsCount }}</p>
+                                        <p class="db-stat__hint mb-0">In progress</p>
                                     </div>
-                                    <i class="fas fa-clock text-muted"></i>
+                                    <div class="db-stat__icon" aria-hidden="true">
+                                        <i class="fas fa-hourglass-half"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="card h-100">
+                        <div class="card h-100 db-stat">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
-                                        <h6 class="card-title text-muted">Completed</h6>
-                                        <h2 class="fw-bold">{{$AllCompletedTransactionsCount}}</h2>
-                                        <small class="text-muted">Successfully closed</small>
+                                        <div class="db-stat__label">Completed</div>
+                                        <p class="db-stat__value mb-0">{{ $AllCompletedTransactionsCount }}</p>
+                                        <p class="db-stat__hint mb-0">Settled &amp; closed</p>
                                     </div>
-                                    <i class="fas fa-shield-alt text-muted"></i>
+                                    <div class="db-stat__icon" aria-hidden="true">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="card h-100">
+                        <div class="card h-100 db-stat">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
-                                        <h6 class="card-title text-muted">Total Value</h6>
-                                        <h2 class="fw-bold">kes {{$AllPendingTransactionsAmount}}</h2>
-                                        <small class="text-muted">In escrow transactions</small>
+                                        <div class="db-stat__label">Escrow value</div>
+                                        <p class="db-stat__value mb-0">KES {{ $AllPendingTransactionsAmount }}</p>
+                                        <p class="db-stat__hint mb-0">Among active</p>
                                     </div>
-                                    <i class="fas fa-dollar-sign text-muted"></i>
+                                    <div class="db-stat__icon" aria-hidden="true">
+                                        <i class="fas fa-coins"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -153,27 +146,26 @@
                     </div> --}}
                 </div>
 
-                <!-- Recent Activity (from your transactions) -->
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Recent Activity</h5>
+                <div class="card db-card">
+                    <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <h5 class="card-title mb-0"><i class="fas fa-bolt text-primary me-2"></i>Recent activity</h5>
                     </div>
                     <div class="card-body">
                         @forelse(($recentActivities ?? collect()) as $activity)
-                            <div class="d-flex align-items-center p-3 rounded mb-3 {{ $activity['row_class'] }}">
-                                <div class="{{ $activity['dot_class'] }} rounded-circle me-3" style="width: 8px; height: 8px;"></div>
+                            <div class="db-activity-row {{ $activity['row_class'] }}">
+                                <div class="{{ $activity['dot_class'] }} rounded-circle me-3 flex-shrink-0" style="width: 10px; height: 10px; box-shadow: 0 0 0 3px rgba(15, 107, 58, 0.12);"></div>
                                 <div class="flex-grow-1 min-w-0">
-                                    <div class="fw-medium text-break">{{ $activity['title'] }}</div>
+                                    <div class="fw-semibold text-break">{{ $activity['title'] }}</div>
                                     <small class="text-muted">
                                         @if(!empty($activity['at']))
                                             {{ $activity['at']->diffForHumans() }}
                                         @endif
                                     </small>
                                 </div>
-                                <span class="badge {{ $activity['badge_class'] }}">{{ $activity['label'] }}</span>
+                                <span class="badge rounded-pill {{ $activity['badge_class'] }} px-2 py-1">{{ $activity['label'] }}</span>
                             </div>
                         @empty
-                            <p class="text-muted mb-0">No recent activity yet. Create a transaction to see updates here.</p>
+                            <p class="text-muted mb-0 text-center py-3">No recent activity yet. <a href="{{ route('home') }}#home" class="text-decoration-none fw-semibold" style="color: var(--bs-primary);">Start a transaction</a> to see updates here.</p>
                         @endforelse
                     </div>
                 </div>
@@ -181,12 +173,13 @@
 
             <!-- Transactions Tab -->
             <div class="tab-pane fade" id="transactions" role="tabpanel">
-                <div class="card">
-                    <div class="card-header">
+                <div class="card db-card">
+                    <div class="card-header pb-2">
                         <h5 class="card-title mb-0">
-                            <i class="fas fa-dollar-sign me-2"></i>
-                            Transaction Management
+                            <i class="fas fa-receipt me-2 text-primary"></i>
+                            Your transactions
                         </h5>
+                        <p class="text-muted small mb-0 mt-1">Search, filter, and open any escrow you are part of.</p>
                     </div>
                     <div class="card-body">
                         <!-- Filters -->
@@ -209,8 +202,7 @@
                         </div>
 
                         @foreach ($transactions as $transaction)
-                        <!-- Transactions List -->
-                        <div class="transaction-item border rounded p-4 mb-3">
+                        <div class="transaction-item db-tx border-0 p-4 mb-3">
                             <div class="row align-items-center">
                                 <div class="col-lg-8">
                                     <div class="d-flex align-items-center mb-2">
@@ -397,12 +389,13 @@
 
             <!-- Profile Tab -->
             <div class="tab-pane fade" id="profile" role="tabpanel">
-                <div class="card">
-                    <div class="card-header">
+                <div class="card db-card">
+                    <div class="card-header pb-2">
                         <h5 class="card-title mb-0">
-                            <i class="fas fa-user me-2"></i>
-                            Profile Settings
+                            <i class="fas fa-id-badge me-2 text-primary"></i>
+                            Account &amp; profile
                         </h5>
+                        <p class="text-muted small mb-0 mt-1">Update your details, password, and how we contact you.</p>
                     </div>
                     <div class="card-body">
                         <ul class="nav nav-pills mb-4">
