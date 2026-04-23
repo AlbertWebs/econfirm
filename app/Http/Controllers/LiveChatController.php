@@ -8,6 +8,7 @@ use App\Services\SmsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
 class LiveChatController extends Controller
 {
@@ -80,6 +81,10 @@ class LiveChatController extends Controller
             'success' => true,
             'is_admin' => $isAdmin,
             'messages' => $messages,
+            'typing' => [
+                'admin' => $this->isTyping($chat->id, 'admin'),
+                'user' => $this->isTyping($chat->id, 'user'),
+            ],
         ]);
     }
 
@@ -95,6 +100,7 @@ class LiveChatController extends Controller
             'sender_type' => $isAdmin ? 'admin' : 'user',
             'message' => trim($validated['message']),
         ]);
+        $this->setTypingState($chat->id, $isAdmin ? 'admin' : 'user', false);
 
         return response()->json([
             'success' => true,
@@ -104,6 +110,26 @@ class LiveChatController extends Controller
                 'sender_type' => $msg->sender_type,
                 'message' => $msg->message,
                 'created_at' => optional($msg->created_at)->toISOString(),
+            ],
+        ]);
+    }
+
+    public function typing(Request $request, string $token): JsonResponse
+    {
+        $validated = $request->validate([
+            'is_typing' => ['nullable', 'boolean'],
+        ]);
+
+        [$chat, $isAdmin] = $this->resolveChatByToken($token);
+        $role = $isAdmin ? 'admin' : 'user';
+        $isTyping = (bool) ($validated['is_typing'] ?? true);
+        $this->setTypingState($chat->id, $role, $isTyping);
+
+        return response()->json([
+            'success' => true,
+            'typing' => [
+                'admin' => $this->isTyping($chat->id, 'admin'),
+                'user' => $this->isTyping($chat->id, 'user'),
             ],
         ]);
     }
@@ -139,6 +165,27 @@ class LiveChatController extends Controller
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    protected function typingCacheKey(int $chatId, string $role): string
+    {
+        return "livechat:typing:{$chatId}:{$role}";
+    }
+
+    protected function setTypingState(int $chatId, string $role, bool $active): void
+    {
+        $key = $this->typingCacheKey($chatId, $role);
+        if (! $active) {
+            Cache::forget($key);
+            return;
+        }
+
+        Cache::put($key, now()->timestamp, now()->addSeconds(7));
+    }
+
+    protected function isTyping(int $chatId, string $role): bool
+    {
+        return Cache::has($this->typingCacheKey($chatId, $role));
     }
 }
 

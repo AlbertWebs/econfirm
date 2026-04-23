@@ -104,6 +104,8 @@
     const shell = document.querySelector('.chat-shell');
     if (!shell) return;
     const token = shell.dataset.chatToken;
+    const role = shell.dataset.chatRole || 'user';
+    const otherRole = role === 'admin' ? 'user' : 'admin';
     const win = document.getElementById('chatWindow');
     const form = document.getElementById('chatForm');
     const input = document.getElementById('chatMessage');
@@ -111,8 +113,11 @@
     const statusEl = document.getElementById('chatStatus');
     let lastId = 0;
     const renderedIds = new Set();
-    let typingTimer = null;
     let pendingEl = null;
+    let typingHideTimer = null;
+    let pollTimer = null;
+    let typingDebounceTimer = null;
+    let pageHidden = false;
 
     function scrollToBottom() { win.scrollTop = win.scrollHeight; }
     function escapeHtml(s) {
@@ -144,17 +149,19 @@
         statusEl.textContent = text;
     }
 
-    function setTypingIndicator(active) {
+    function showRemoteTyping(active) {
         if (active) {
-            showStatus('Typing...');
-            if (typingTimer) clearTimeout(typingTimer);
-            typingTimer = setTimeout(() => showStatus(''), 900);
+            showStatus(`${otherRole === 'admin' ? 'Admin' : 'User'} is typing...`);
+            if (typingHideTimer) clearTimeout(typingHideTimer);
+            typingHideTimer = setTimeout(() => showStatus(''), 1800);
+            return;
         }
+        if (!pendingEl) showStatus('');
     }
 
     function addPendingBubble(text) {
         const div = document.createElement('div');
-        div.className = 'chat-bubble user pending';
+        div.className = `chat-bubble ${role} pending`;
         div.setAttribute('data-pending', '1');
         div.innerHTML = `${escapeHtml(text)}<div class="small text-muted mt-1">Sending...</div>`;
         win.appendChild(div);
@@ -185,12 +192,40 @@
                 data.messages.forEach(appendMessage);
                 scrollToBottom();
             }
+            if (data && data.typing && typeof data.typing[otherRole] !== 'undefined') {
+                showRemoteTyping(Boolean(data.typing[otherRole]));
+            }
         } catch (_) {
             showStatus('Connection issue. Retrying…');
         }
     }
 
-    input.addEventListener('input', () => setTypingIndicator(input.value.trim().length > 0));
+    async function sendTyping(isTyping) {
+        try {
+            await fetch(`/livechat/${encodeURIComponent(token)}/typing`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ is_typing: !!isTyping })
+            });
+        } catch (_) {
+            // silent; polling keeps chat alive
+        }
+    }
+
+    function queueTypingPing() {
+        if (typingDebounceTimer) clearTimeout(typingDebounceTimer);
+        typingDebounceTimer = setTimeout(() => sendTyping(input.value.trim().length > 0), 150);
+    }
+
+    input.addEventListener('input', queueTypingPing);
+    input.addEventListener('focus', () => {
+        if (input.value.trim().length > 0) sendTyping(true);
+    });
+    input.addEventListener('blur', () => sendTyping(false));
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -198,6 +233,7 @@
         if (!message) return;
         btn.disabled = true;
         showStatus('Sending…');
+        sendTyping(false);
         addPendingBubble(message);
         try {
             const res = await fetch(`/livechat/${encodeURIComponent(token)}/send`, {
@@ -220,7 +256,7 @@
                     await poll();
                 }
                 showStatus('Sent');
-                setTimeout(() => showStatus(''), 1200);
+                setTimeout(() => showStatus(''), 700);
             } else {
                 clearPendingBubble();
                 showStatus((data && data.message) ? data.message : 'Could not send message.');
@@ -234,7 +270,23 @@
         }
     });
 
-    setInterval(poll, 3000);
+    function startPolling() {
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(poll, pageHidden ? 2500 : 900);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        pageHidden = document.hidden;
+        startPolling();
+        if (!pageHidden) poll();
+    });
+
+    window.addEventListener('beforeunload', () => {
+        sendTyping(false);
+    });
+
+    poll();
+    startPolling();
 })();
 </script>
 @endsection

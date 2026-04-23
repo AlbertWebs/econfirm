@@ -54,6 +54,7 @@ Route::get('/livechat/admin/{token}', [LiveChatController::class, 'showAdmin'])-
 Route::get('/livechat/{token}', [LiveChatController::class, 'showUser'])->name('livechat.user');
 Route::get('/livechat/{token}/messages', [LiveChatController::class, 'messages'])->name('livechat.messages');
 Route::post('/livechat/{token}/send', [LiveChatController::class, 'send'])->name('livechat.send');
+Route::post('/livechat/{token}/typing', [LiveChatController::class, 'typing'])->name('livechat.typing');
 
 // Test SMS route - Send SMS to +254723014032
 Route::get('/test-sms', [HomeController::class, 'testSms'])->name('test.sms');

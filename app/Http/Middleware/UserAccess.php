@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
   
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class UserAccess
@@ -15,33 +16,42 @@ class UserAccess
      */
     public function handle(Request $request, Closure $next, $userType): Response
     {
-       $user = auth()->user();
+        $user = auth()->user();
 
-    //    dd($user->type);
-
-        if (request()->routeIs('admin.dashboard') && $user->type == '1') {
-            return $next($request); // don't redirect if already here
+        if (! $user) {
+            return redirect()->route('login');
         }
 
-        if (request()->routeIs('user.dashboard') && $user->type == '0') {
+        // Normalize user type and allow access when it matches route middleware parameter.
+        $typeMap = [
+            'admin' => '1',
+            'user' => '0',
+            'api' => '2',
+        ];
+
+        $requiredType = $typeMap[(string) $userType] ?? null;
+        $currentType = (string) $user->type;
+
+        if ($requiredType !== null && $currentType === $requiredType) {
             return $next($request);
         }
 
-        if (request()->routeIs('api.dashboard') && $user->type == '2') {
-            return $next($request);
-        }
-
-
-        // Redirect if not already at the destination
-        if ($user->type == '1') {
+        // Redirect authenticated users to the dashboard that matches their role.
+        if ($currentType === '1') {
             return redirect()->route('admin.dashboard');
-        } elseif ($user->type == '0') {
+        } elseif ($currentType === '0') {
             return redirect()->route('user.dashboard');
-        }elseif ($user->type == '2') {
-            return redirect()->route('api.dashboard');
+        } elseif ($currentType === '2' && \Illuminate\Support\Facades\Route::has('api.home')) {
+            return redirect()->route('api.home');
         }
 
-        return redirect('/dashboard');
+        // Unknown type: force a clean login instead of redirecting to /dashboard (loop risk).
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')
+            ->with('error', 'Your account role is not configured. Please contact support.');
     }
 
 }
