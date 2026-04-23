@@ -45,17 +45,6 @@
                     <div class="me-3">
                         <img src="{{ asset('uploads/favicon.png') }}" alt="eConfirm" class="rounded" style="width: 32px; height: 32px; object-fit: contain;">
                     </div>
-                    <div>
-                        <h5 class="mb-0 fw-bold">e-confirm</h5>
-                        <small class="text-muted">
-                            @if(Auth::check())
-                                Welcome {{ Auth::user()->name ?? 'N/A' }}
-                            @else
-                            Customer Portal
-                            @endif
-                            
-                        </small>
-                    </div>
                 </div>
                 <div class="d-flex flex-wrap align-items-center gap-2 w-100 w-md-auto justify-content-start justify-content-md-end">
                     @auth

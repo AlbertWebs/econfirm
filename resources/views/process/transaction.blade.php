@@ -167,13 +167,13 @@
                 </div>
                 <small class="text-muted">{{ $progress }}% complete</small>
             </div>
-            <div class="d-flex flex-wrap gap-2 tx-action-buttons">
-                <a href="{{ route('home') }}" class="btn btn-outline-secondary w-100 w-sm-auto"><i class="fas fa-arrow-left me-1"></i> Back</a>
+            <div class="d-flex flex-nowrap gap-2 tx-action-buttons overflow-auto pb-1">
+                <a href="{{ route('home') }}" class="btn btn-outline-secondary flex-shrink-0"><i class="fas fa-arrow-left me-1"></i> Back</a>
                 @if($transaction->status === 'pending' || $transaction->status === 'Escrow Funded')
-                    <a href="{{ route('approve.transaction', $transaction->transaction_id) }}" class="btn btn-success w-100 w-sm-auto"><i class="fas fa-check me-1"></i> Approve</a>
-                    <button class="btn btn-danger w-100 w-sm-auto"><i class="fas fa-times me-1"></i> Cancel</button>
+                    <a href="{{ route('approve.transaction', $transaction->transaction_id) }}" class="btn btn-success flex-shrink-0"><i class="fas fa-check me-1"></i> Approve</a>
+                    <button class="btn btn-danger flex-shrink-0"><i class="fas fa-times me-1"></i> Cancel</button>
                 @endif
-                <a href="{{ route('e-contract.print', $transaction->id) }}" class="btn btn-outline-primary w-100 w-sm-auto"><i class="fas fa-download me-1"></i> Export Contract</a>
+                <a href="{{ route('e-contract.print', $transaction->id) }}" class="btn btn-outline-primary flex-shrink-0"><i class="fas fa-download me-1"></i> Export Contract</a>
             </div>
         </div>
     </div>
