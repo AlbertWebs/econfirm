@@ -465,10 +465,10 @@
     <div x-data="pwaInstall"
          x-show="showInstallPrompt"
          x-cloak
-         x-transition.opacity.duration.300ms
+         x-transition.opacity.duration.900ms
          class="fixed inset-0 z-[70] pointer-events-none flex items-end justify-end p-2.5 pb-20 sm:p-4 sm:pb-20 lg:pb-6"
          role="presentation">
-        <div class="pointer-events-auto w-[min(17.5rem,calc(100vw-1.25rem))] sm:w-[min(22rem,calc(100vw-2rem))] lg:max-w-sm bg-white rounded-lg sm:rounded-xl shadow-lg sm:shadow-2xl border border-green-200 sm:border-2 p-3 sm:p-5 lg:p-6 relative origin-bottom-right scale-[0.96] sm:scale-100"
+        <div class="pointer-events-auto w-[min(15.8rem,calc(100vw-1.25rem))] sm:w-[min(19rem,calc(100vw-2rem))] lg:max-w-[20rem] bg-white rounded-lg sm:rounded-xl shadow-lg sm:shadow-2xl border border-green-200 sm:border-2 p-2.5 sm:p-4 lg:p-5 relative origin-bottom-right scale-[0.94] sm:scale-[0.97] lg:scale-100"
              role="dialog"
              aria-modal="false"
              aria-labelledby="pwa-install-title"
@@ -481,16 +481,16 @@
             </button>
             <div class="flex items-start gap-2.5 sm:gap-4 pr-7 sm:pr-8">
                 <div class="flex-shrink-0">
-                    <img src="{{ asset('uploads/favicon.png') }}" alt="" class="w-11 h-11 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-md sm:rounded-lg" width="64" height="64" loading="lazy" decoding="async">
+                    <img src="{{ asset('uploads/favicon.png') }}" alt="" class="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-md sm:rounded-lg" width="64" height="64" loading="lazy" decoding="async">
                 </div>
                 <div class="flex-1 min-w-0">
-                    <h3 class="text-sm sm:text-base lg:text-lg font-bold text-gray-900 mb-0.5 sm:mb-1 leading-snug" id="pwa-install-title">Install eConfirm App</h3>
-                    <p class="text-[11px] sm:text-sm text-gray-600 mb-2.5 sm:mb-4 leading-relaxed">Get a better experience with our app. Install for quick access and offline support.</p>
+                    <h3 class="text-[13px] sm:text-sm lg:text-base font-bold text-gray-900 mb-0.5 sm:mb-1 leading-snug" id="pwa-install-title">Install eConfirm App</h3>
+                    <p class="text-[10px] sm:text-xs lg:text-sm text-gray-600 mb-2 sm:mb-3 leading-relaxed">Get a better experience with our app. Install for quick access and offline support.</p>
                     <div class="flex gap-1.5 sm:gap-2">
                         <button type="button"
                                 @click="installApp()"
-                                class="flex-1 px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-green-600 text-white font-medium rounded-md sm:rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-1.5 sm:gap-2">
-                            <i class="fas fa-download text-[10px] sm:text-sm shrink-0" aria-hidden="true"></i>
+                                class="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs lg:text-sm bg-green-600 text-white font-medium rounded-md sm:rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-1.5 sm:gap-2">
+                            <i class="fas fa-download text-[10px] sm:text-xs lg:text-sm shrink-0" aria-hidden="true"></i>
                             Install Now
                         </button>
                     </div>

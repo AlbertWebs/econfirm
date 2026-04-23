@@ -10,6 +10,18 @@ document.addEventListener('alpine:init', () => {
         showInstallPrompt: false,
         deferredPrompt: null,
         isInstalled: false,
+        autoHideTimer: null,
+        revealPrompt() {
+            this.showInstallPrompt = true;
+            if (this.autoHideTimer) {
+                clearTimeout(this.autoHideTimer);
+            }
+            // Auto-hide after 1 minute without marking as dismissed.
+            this.autoHideTimer = setTimeout(() => {
+                this.showInstallPrompt = false;
+                this.autoHideTimer = null;
+            }, 60000);
+        },
         init() {
             const isStandalone =
                 window.matchMedia('(display-mode: standalone)').matches ||
@@ -30,7 +42,7 @@ document.addEventListener('alpine:init', () => {
                     !this.isInstalled &&
                     sessionStorage.getItem('pwa-prompt-dismissed') !== 'true'
                 ) {
-                    this.showInstallPrompt = true;
+                    this.revealPrompt();
                 }
             };
 
@@ -44,6 +56,10 @@ document.addEventListener('alpine:init', () => {
                 this.isInstalled = true;
                 this.showInstallPrompt = false;
                 this.deferredPrompt = null;
+                if (this.autoHideTimer) {
+                    clearTimeout(this.autoHideTimer);
+                    this.autoHideTimer = null;
+                }
             });
 
             setTimeout(() => {
@@ -51,7 +67,7 @@ document.addEventListener('alpine:init', () => {
                     !this.isInstalled &&
                     sessionStorage.getItem('pwa-prompt-dismissed') !== 'true'
                 ) {
-                    this.showInstallPrompt = true;
+                    this.revealPrompt();
                 }
             }, 3000);
         },
@@ -72,9 +88,17 @@ document.addEventListener('alpine:init', () => {
                 );
             }
             this.showInstallPrompt = false;
+            if (this.autoHideTimer) {
+                clearTimeout(this.autoHideTimer);
+                this.autoHideTimer = null;
+            }
         },
         dismissPrompt() {
             this.showInstallPrompt = false;
+            if (this.autoHideTimer) {
+                clearTimeout(this.autoHideTimer);
+                this.autoHideTimer = null;
+            }
             sessionStorage.setItem('pwa-prompt-dismissed', 'true');
         },
     }));
