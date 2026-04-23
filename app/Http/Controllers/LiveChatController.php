@@ -85,7 +85,9 @@ class LiveChatController extends Controller
                 'admin' => $this->isTyping($chat->id, 'admin'),
                 'user' => $this->isTyping($chat->id, 'user'),
             ],
-        ]);
+        ])->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     public function send(Request $request, string $token): JsonResponse
@@ -111,7 +113,9 @@ class LiveChatController extends Controller
                 'message' => $msg->message,
                 'created_at' => optional($msg->created_at)->toISOString(),
             ],
-        ]);
+        ])->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     public function typing(Request $request, string $token): JsonResponse
@@ -131,7 +135,9 @@ class LiveChatController extends Controller
                 'admin' => $this->isTyping($chat->id, 'admin'),
                 'user' => $this->isTyping($chat->id, 'user'),
             ],
-        ]);
+        ])->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     protected function resolveChatByToken(string $token): array

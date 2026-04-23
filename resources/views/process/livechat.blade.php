@@ -116,6 +116,7 @@
     let pendingEl = null;
     let typingHideTimer = null;
     let pollTimer = null;
+    let pollInFlight = false;
     let typingDebounceTimer = null;
     let pageHidden = false;
 
@@ -183,9 +184,13 @@
     scrollToBottom();
 
     async function poll() {
+        if (pollInFlight) return;
+        pollInFlight = true;
         try {
-            const res = await fetch(`/livechat/${encodeURIComponent(token)}/messages?since_id=${lastId}`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            const url = `/livechat/${encodeURIComponent(token)}/messages?since_id=${lastId}&_=${Date.now()}`;
+            const res = await fetch(url, {
+                cache: 'no-store',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Cache-Control': 'no-cache' }
             });
             const data = await res.json();
             if (data && data.success && Array.isArray(data.messages) && data.messages.length) {
@@ -197,6 +202,8 @@
             }
         } catch (_) {
             showStatus('Connection issue. Retrying…');
+        } finally {
+            pollInFlight = false;
         }
     }
 
@@ -204,10 +211,12 @@
         try {
             await fetch(`/livechat/${encodeURIComponent(token)}/typing`, {
                 method: 'POST',
+                cache: 'no-store',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Cache-Control': 'no-cache'
                 },
                 body: JSON.stringify({ is_typing: !!isTyping })
             });
@@ -238,10 +247,12 @@
         try {
             const res = await fetch(`/livechat/${encodeURIComponent(token)}/send`, {
                 method: 'POST',
+                cache: 'no-store',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Cache-Control': 'no-cache'
                 },
                 body: JSON.stringify({ message })
             });
@@ -257,6 +268,7 @@
                 }
                 showStatus('Sent');
                 setTimeout(() => showStatus(''), 700);
+                poll();
             } else {
                 clearPendingBubble();
                 showStatus((data && data.message) ? data.message : 'Could not send message.');
@@ -272,7 +284,7 @@
 
     function startPolling() {
         if (pollTimer) clearInterval(pollTimer);
-        pollTimer = setInterval(poll, pageHidden ? 2500 : 900);
+        pollTimer = setInterval(poll, pageHidden ? 1800 : 450);
     }
 
     document.addEventListener('visibilitychange', () => {
