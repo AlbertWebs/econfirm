@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Instrument+Sans:wght@500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <link href="{{ asset('theme/dashboard.css') }}?v=9" rel="stylesheet">
+    <link href="{{ asset('theme/dashboard.css') }}?v=11" rel="stylesheet">
     <link rel="icon" type="image/png" href="{{ asset('uploads/favicon.png') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#0f6b3a">
@@ -94,6 +94,10 @@
                     <a href="{{ route('user.dashboard') }}" class="db-dev-sidebar__footer-link"><i class="fas fa-arrow-up-right-from-square me-2" aria-hidden="true"></i>Customer portal</a>
                 @endif
                 <a href="{{ route('home') }}" class="db-dev-sidebar__footer-link"><i class="fas fa-house me-2" aria-hidden="true"></i>Site home</a>
+                <button type="submit" form="logout-form" class="db-dev-sidebar__footer-logout">
+                    <span class="db-dev-sidebar__footer-logout-icon" aria-hidden="true"><i class="fas fa-arrow-right-from-bracket"></i></span>
+                    <span>Log out</span>
+                </button>
             </div>
         </aside>
 
@@ -111,17 +115,50 @@
                     </div>
                 </div>
                 <div class="db-dev-topbar__actions">
-                    <a href="{{ route('api-documentation') }}" class="btn btn-sm btn-outline-secondary d-none d-sm-inline-flex align-items-center gap-1 rounded-3 fw-semibold">API docs</a>
-                    @if (Route::has('user.dashboard'))
-                        <a href="{{ route('user.dashboard') }}" class="btn btn-sm btn-outline-primary d-none d-sm-inline-flex align-items-center gap-1 rounded-3 fw-semibold">Portal</a>
-                    @endif
-                    <div class="db-user d-none d-sm-flex" title="{{ Auth::user()->name }}">
-                        <span class="db-user__avatar" aria-hidden="true">{{ strtoupper(\Illuminate\Support\Str::substr(Auth::user()->name ?? 'U', 0, 1)) }}</span>
-                        <span class="js-dashboard-user-name text-truncate" style="max-width:8rem;">{{ Auth::user()->name }}</span>
+                    <div class="dropdown db-dev-user-dropdown">
+                        <button type="button"
+                                class="btn db-dev-user-dropdown-toggle dropdown-toggle d-flex align-items-center gap-2"
+                                id="db-dev-user-menu-toggle"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                aria-haspopup="true"
+                                aria-label="Account menu">
+                            <span class="db-user__avatar" aria-hidden="true">{{ strtoupper(\Illuminate\Support\Str::substr(Auth::user()->name ?? 'U', 0, 1)) }}</span>
+                            <span class="js-dashboard-user-name text-truncate d-none d-sm-inline text-start" style="max-width: 9rem;">{{ Auth::user()->name }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2" style="min-width: 12.5rem;" aria-labelledby="db-dev-user-menu-toggle">
+                            <li class="px-3 pb-2 mb-1 border-bottom border-light-subtle">
+                                <div class="small text-muted text-uppercase fw-semibold" style="letter-spacing: 0.04em;">Signed in</div>
+                                <div class="fw-semibold text-truncate" title="{{ Auth::user()->name }}">{{ Auth::user()->name }}</div>
+                                @if (Auth::user()->email)
+                                    <div class="small text-muted text-truncate">{{ Auth::user()->email }}</div>
+                                @endif
+                            </li>
+                            <li>
+                                <a class="dropdown-item rounded-2 mx-1" href="{{ route('api-documentation') }}">
+                                    <i class="fas fa-book fa-fw me-2 text-secondary" aria-hidden="true"></i>Public API docs
+                                </a>
+                            </li>
+                            @if (Route::has('user.dashboard'))
+                                <li>
+                                    <a class="dropdown-item rounded-2 mx-1" href="{{ route('user.dashboard') }}">
+                                        <i class="fas fa-gauge-high fa-fw me-2 text-secondary" aria-hidden="true"></i>Customer portal
+                                    </a>
+                                </li>
+                            @endif
+                            <li>
+                                <a class="dropdown-item rounded-2 mx-1" href="{{ route('home') }}">
+                                    <i class="fas fa-house fa-fw me-2 text-secondary" aria-hidden="true"></i>Site home
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider my-2"></li>
+                            <li>
+                                <button type="submit" form="logout-form" class="dropdown-item rounded-2 mx-1 text-danger">
+                                    <i class="fas fa-arrow-right-from-bracket fa-fw me-2" aria-hidden="true"></i>Log out
+                                </button>
+                            </li>
+                        </ul>
                     </div>
-                    <button type="button" class="db-btn-logout" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" title="Log out" aria-label="Log out">
-                        <i class="fas fa-arrow-right-from-bracket"></i>
-                    </button>
                     <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
                 </div>
             </header>
