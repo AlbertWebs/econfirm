@@ -171,6 +171,7 @@ Route::middleware(['auth', 'user-access:user'])->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/developer', [DeveloperController::class, 'index'])->name('api.home');
     Route::post('/developer/api-key', [DeveloperController::class, 'generateOrRegenerateKey'])->name('api.key.regenerate');
+    Route::get('/developer/postman-collection', [DeveloperController::class, 'downloadPostmanCollection'])->name('developer.postman.collection');
 });
 /*------------------------------------------
 --------------------------------------------

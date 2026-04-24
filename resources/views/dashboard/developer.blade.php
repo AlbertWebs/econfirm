@@ -51,6 +51,10 @@
             </div>
         @endif
 
+        @if (session('error'))
+            <div class="alert alert-danger border-0 shadow-sm" role="alert">{{ session('error') }}</div>
+        @endif
+
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
                 <h2 class="h6 fw-bold text-uppercase text-muted mb-3">Endpoints</h2>
@@ -79,13 +83,123 @@
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
-                <h2 class="h6 fw-bold text-uppercase text-muted mb-2">Example (curl)</h2>
-@php
-    $bearer = session('new_api_key') ?? 'YOUR_API_KEY';
-    $sampleCurl = "# Health check (no key)\ncurl -sS \"{{ $apiRootUrl }}/ping\"\n\n# Authenticated (replace txn id after creating a transaction)\ncurl -sS -X GET \"{{ $apiV1Url }}/transactions/txn_xxxxxxxx\" \\\n  -H \"Authorization: Bearer {$bearer}\"";
-@endphp
-                <pre class="bg-light p-3 rounded small mb-0 overflow-auto" id="curl-sample">{{ $sampleCurl }}</pre>
-                <button type="button" class="btn btn-outline-dark btn-sm mt-2" data-copy-target="#curl-sample">Copy curl</button>
+                <h2 class="h6 fw-bold text-uppercase text-muted mb-2">Example requests (6 languages)</h2>
+                <p class="small text-muted mb-3">Ping, create escrow, fetch status, and release use your key and a real <code class="small">transaction_id</code> where shown.</p>
+                @php
+                    $codeTabs = [
+                        'curl' => 'cURL',
+                        'javascript' => 'JavaScript',
+                        'php' => 'PHP',
+                        'python' => 'Python',
+                        'ruby' => 'Ruby',
+                        'go' => 'Go',
+                    ];
+                @endphp
+                <ul class="nav nav-tabs small mb-2" id="dev-code-tabs" role="tablist">
+                    @foreach ($codeTabs as $key => $label)
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link py-2 px-3 @if ($loop->first) active @endif" id="tab-{{ $key }}" data-bs-toggle="tab" data-bs-target="#pane-{{ $key }}" type="button" role="tab" aria-controls="pane-{{ $key }}" @if ($loop->first) aria-selected="true" @else aria-selected="false" @endif>{{ $label }}</button>
+                        </li>
+                    @endforeach
+                </ul>
+                <div class="tab-content border border-top-0 rounded-bottom bg-light p-3" id="dev-code-tab-content">
+                    @foreach ($codeTabs as $key => $label)
+                        <div class="tab-pane fade @if ($loop->first) show active @endif" id="pane-{{ $key }}" role="tabpanel" aria-labelledby="tab-{{ $key }}">
+                            <pre class="small mb-2 overflow-auto font-monospace" style="max-height:22rem;white-space:pre-wrap;word-break:break-word;" id="code-sample-{{ $key }}">{{ $codeSamples[$key] ?? '' }}</pre>
+                            <button type="button" class="btn btn-outline-dark btn-sm" data-copy-target="#code-sample-{{ $key }}">Copy</button>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h6 fw-bold text-uppercase text-muted mb-2">Postman</h2>
+                <p class="small text-muted mb-3">Collection v2.1: health check, <code>POST /v1/transactions</code>, get transaction, release. Variables <code class="small">apiRoot</code>, <code class="small">apiKey</code>, <code class="small">transactionId</code>.</p>
+                <a href="{{ route('developer.postman.collection') }}" class="btn btn-success btn-sm rounded-pill px-3">Download Postman collection</a>
+                @unless ($keyPreview)
+                    <p class="small text-muted mt-2 mb-0">Save a key with <strong>Generate key</strong> first; the download uses your stored key (not the one-time flash banner).</p>
+                @endunless
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h6 fw-bold text-uppercase text-muted mb-2">M-Pesa callbacks (inbound)</h2>
+                <p class="small text-muted mb-3">Safaricom posts JSON to these URLs. Your app acknowledges with HTTP <strong>200</strong> and a small JSON body (see below). These are <em>not</em> part of the escrow API key flow.</p>
+                <ul class="list-unstyled small mb-4">
+                    <li class="mb-2"><span class="badge bg-light text-dark border me-2">POST</span> <code class="small">{{ url('/api/mpesa/callback') }}</code> — STK (Lipa na M-Pesa Online)</li>
+                    <li class="mb-2"><span class="badge bg-light text-dark border me-2">POST</span> <code class="small">{{ url('/api/mpesa/b2b/callback') }}</code> — B2B result</li>
+                    <li class="mb-2"><span class="badge bg-light text-dark border me-2">POST</span> <code class="small">{{ url('/api/mpesa/b2c/callback') }}</code> — B2C result</li>
+                    <li class="mb-2"><span class="badge bg-light text-dark border me-2">POST</span> <code class="small">{{ url('/api/mpesa/b2c/timeout') }}</code> — B2C queue timeout (same handler as B2C result)</li>
+                </ul>
+                <h3 class="h6 fw-semibold mb-2">HTTP response (all handlers)</h3>
+                <p class="small text-muted mb-2">After processing (or when the payload shape is unexpected), the server responds with:</p>
+                <pre class="bg-light p-3 rounded small mb-4 font-monospace">HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"ResultCode":0,"ResultDesc":"Success"}</pre>
+                <p class="small text-muted mb-2">For example, the STK handler still returns the same JSON if <code class="small">Body.stkCallback</code> is missing, so Safaricom always gets a clean acknowledgment.</p>
+                <h3 class="h6 fw-semibold mb-2">Sample STK callback body (truncated)</h3>
+                <pre class="bg-light p-3 rounded small mb-4 font-monospace overflow-auto" style="max-height:14rem;">{
+  "Body": {
+    "stkCallback": {
+      "MerchantRequestID": "29115-34620561-1",
+      "CheckoutRequestID": "ws_CO_01012025120000",
+      "ResultCode": 0,
+      "ResultDesc": "The service request is processed successfully.",
+      "CallbackMetadata": {
+        "Item": [
+          { "Name": "Amount", "Value": 100 },
+          { "Name": "MpesaReceiptNumber", "Value": "QGH1234567" },
+          { "Name": "Balance" },
+          { "Name": "TransactionDate", "Value": 20250101120000 },
+          { "Name": "PhoneNumber", "Value": "254712345678" }
+        ]
+      }
+    }
+  }
+}</pre>
+                <h3 class="h6 fw-semibold mb-2">Sample B2B <code class="small">Result</code> (shape)</h3>
+                <pre class="bg-light p-3 rounded small mb-4 font-monospace overflow-auto" style="max-height:12rem;">{
+  "Result": {
+    "ResultType": 0,
+    "ResultCode": 0,
+    "ResultDesc": "The service request is processed successfully.",
+    "OriginatorConversationID": "AG_201...",
+    "ConversationID": "AG_201...",
+    "TransactionID": "L...",
+    "ResultParameters": {
+      "ResultParameter": [
+        { "Key": "TransactionReceipt", "Value": "..." },
+        { "Key": "TransactionCompletedDateTime", "Value": "..." },
+        { "Key": "ReceiverPartyPublicName", "Value": "..." },
+        { "Key": "PartyB", "Value": "2547..." },
+        { "Key": "Amount", "Value": 100 }
+      ]
+    }
+  }
+}</pre>
+                <h3 class="h6 fw-semibold mb-2">Sample B2C <code class="small">Result</code> (shape)</h3>
+                <pre class="bg-light p-3 rounded small mb-0 font-monospace overflow-auto" style="max-height:12rem;">{
+  "Result": {
+    "ResultType": 0,
+    "ResultCode": 0,
+    "ResultDesc": "The service request is processed successfully.",
+    "OriginatorConversationID": "AG_201...",
+    "ConversationID": "AG_201...",
+    "TransactionID": "L...",
+    "ResultParameters": {
+      "ResultParameter": [
+        { "Key": "TransactionReceipt", "Value": "..." },
+        { "Key": "TransactionCompletedDateTime", "Value": "..." },
+        { "Key": "ReceiverPartyPublicName", "Value": "..." },
+        { "Key": "TransactionAmount", "Value": 100 }
+      ]
+    }
+  }
+}</pre>
             </div>
         </div>
 
