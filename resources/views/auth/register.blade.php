@@ -7,16 +7,27 @@
         --reg-green-dark: #155f32;
         --reg-green-soft: rgba(24, 116, 60, 0.08);
         --reg-green-border: rgba(24, 116, 60, 0.2);
+        --auth-fixed-width: 440px;
     }
     .register-page .min-vh-50 {
         min-height: 100vh;
     }
     .register-page .auth-wrap {
-        width: min(100%, 480px);
+        width: var(--auth-fixed-width);
+        max-width: calc(100vw - 2rem);
         margin-inline: auto;
     }
     .register-page .auth-card {
         width: 100%;
+    }
+    .register-page .auth-segment,
+    .register-page #registerTabsContent,
+    .register-page #registerTabsContent .tab-pane {
+        width: 100% !important;
+    }
+    .register-page .auth-segment .nav-item {
+        flex: 1 1 0;
+        min-width: 0;
     }
     .register-page #registerTabsContent {
         width: 100%;
@@ -216,7 +227,6 @@
         to { transform: rotate(360deg); }
     }
     @media (max-height: 860px) {
-        .register-page .auth-wrap { max-width: 430px; }
         .register-page .auth-header {
             padding: 0.9rem 0.9rem;
             font-size: 1rem;
@@ -245,7 +255,7 @@
     }
     @media (max-height: 760px) {
         .register-page .auth-wrap {
-            transform: scale(0.9);
+            transform: scale(0.92);
             transform-origin: top center;
         }
         .register-page .min-vh-50 {

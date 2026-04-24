@@ -7,17 +7,28 @@
         --login-green-dark: #155f32;
         --login-green-soft: rgba(24, 116, 60, 0.08);
         --login-green-border: rgba(24, 116, 60, 0.2);
-        --auth-fixed-width: 420px;
+        --auth-fixed-width: 440px;
     }
     .login-page .min-vh-50 {
         min-height: 100vh;
     }
     .login-page .auth-wrap {
-        width: min(100%, var(--auth-fixed-width));
+        width: var(--auth-fixed-width);
+        max-width: calc(100vw - 2rem);
         margin-inline: auto;
     }
     .login-page .auth-card {
         width: 100%;
+    }
+    .login-page .login-segment,
+    .login-page .login-tab-panels,
+    .login-page #loginTabsContent,
+    .login-page #loginTabsContent .tab-pane {
+        width: 100% !important;
+    }
+    .login-page .login-segment .nav-item {
+        flex: 1 1 0;
+        min-width: 0;
     }
     .login-page .auth-card {
         border: 1px solid var(--login-green-border);
