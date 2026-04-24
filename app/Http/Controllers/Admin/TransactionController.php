@@ -71,19 +71,25 @@ class TransactionController extends Controller
         try {
             DB::transaction(function () use ($transaction, $transactionId) {
                 if (Schema::hasTable('sms_logs')) {
-                    SmsLog::query()->where('correlator', 'like', $transactionId.'%')->delete();
+                    $this->runWithReprepareRetry(
+                        fn () => SmsLog::query()->where('correlator', 'like', $transactionId.'%')->delete()
+                    );
                 }
 
                 // Keep M-Pesa audit records, but detach escrow linkage where present.
                 if (Schema::hasTable('mpesa_b2c') && Schema::hasColumn('mpesa_b2c', 'source_transaction_id')) {
-                    DB::table('mpesa_b2c')
-                        ->where('source_transaction_id', $transactionId)
-                        ->update(['source_transaction_id' => null]);
+                    $this->runWithReprepareRetry(
+                        fn () => DB::table('mpesa_b2c')
+                            ->where('source_transaction_id', $transactionId)
+                            ->update(['source_transaction_id' => null])
+                    );
                 }
                 if (Schema::hasTable('mpesa_b2b') && Schema::hasColumn('mpesa_b2b', 'source_transaction_id')) {
-                    DB::table('mpesa_b2b')
-                        ->where('source_transaction_id', $transactionId)
-                        ->update(['source_transaction_id' => null]);
+                    $this->runWithReprepareRetry(
+                        fn () => DB::table('mpesa_b2b')
+                            ->where('source_transaction_id', $transactionId)
+                            ->update(['source_transaction_id' => null])
+                    );
                 }
 
                 // Explicitly clean up chat/dispute descendants for DBs missing full FK cascades.
@@ -94,19 +100,27 @@ class TransactionController extends Controller
 
                     if ($chatIds->isNotEmpty()) {
                         if (Schema::hasTable('live_chat_messages')) {
-                            DB::table('live_chat_messages')->whereIn('live_chat_id', $chatIds)->delete();
+                            $this->runWithReprepareRetry(
+                                fn () => DB::table('live_chat_messages')->whereIn('live_chat_id', $chatIds)->delete()
+                            );
                         }
                         if (Schema::hasTable('disputes')) {
-                            DB::table('disputes')->whereIn('live_chat_id', $chatIds)->delete();
+                            $this->runWithReprepareRetry(
+                                fn () => DB::table('disputes')->whereIn('live_chat_id', $chatIds)->delete()
+                            );
                         }
                     }
                 }
 
                 if (Schema::hasTable('disputes')) {
-                    DB::table('disputes')->where('transaction_id', $transaction->id)->delete();
+                    $this->runWithReprepareRetry(
+                        fn () => DB::table('disputes')->where('transaction_id', $transaction->id)->delete()
+                    );
                 }
                 if (Schema::hasTable('live_chats')) {
-                    DB::table('live_chats')->where('transaction_id', $transaction->id)->delete();
+                    $this->runWithReprepareRetry(
+                        fn () => DB::table('live_chats')->where('transaction_id', $transaction->id)->delete()
+                    );
                 }
 
                 // Final safety net: clear any remaining FK dependents to transactions.id.
@@ -120,7 +134,7 @@ class TransactionController extends Controller
                     'mpesa_stk_pushes',
                 ]);
 
-                $transaction->delete();
+                $this->runWithReprepareRetry(fn () => $transaction->delete());
             });
         } catch (QueryException $e) {
             $errorInfo = $e->errorInfo ?? [];
@@ -179,6 +193,38 @@ class TransactionController extends Controller
             }
 
             DB::table($table)->where($column, $transactionPk)->delete();
+        }
+    }
+
+    /**
+     * Retry transient MySQL prepared-statement cache failures (1615).
+     */
+    protected function runWithReprepareRetry(callable $callback, int $maxAttempts = 3): mixed
+    {
+        $attempt = 1;
+        beginning:
+        try {
+            return $callback();
+        } catch (QueryException $e) {
+            $errorInfo = $e->errorInfo ?? [];
+            $driverCode = (int) ($errorInfo[1] ?? 0);
+            $message = strtolower((string) ($errorInfo[2] ?? $e->getMessage()));
+            $isReprepare = $driverCode === 1615 || str_contains($message, 'needs to be re-prepared');
+
+            if (! $isReprepare || $attempt >= $maxAttempts) {
+                throw $e;
+            }
+
+            Log::warning('Retrying transient DB re-prepare failure', [
+                'attempt' => $attempt,
+                'max_attempts' => $maxAttempts,
+                'driver_code' => $driverCode,
+                'error' => $e->getMessage(),
+            ]);
+
+            $attempt++;
+            usleep(120000);
+            goto beginning;
         }
     }
 
