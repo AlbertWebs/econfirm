@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\LegalPageController;
 use App\Http\Controllers\Admin\LiveChatController as AdminLiveChatController;
 use App\Http\Controllers\Admin\MpesaTransactionsController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
+use App\Http\Controllers\Admin\ApiAccessController;
 use App\Http\Controllers\Admin\ScamReportController as AdminScamReportController;
 use App\Http\Controllers\Admin\SmsLogController;
 use App\Http\Controllers\Admin\SiteSettingsController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\Auth\PhoneOtpLoginController;
 use App\Http\Controllers\Auth\PhoneOtpRegisterController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DeveloperController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LiveChatController;
 use App\Models\ScamReport;
@@ -144,6 +146,11 @@ Route::middleware(['auth', 'user-access:user'])->group(function () {
     Route::post('/user/update', [DashboardController::class, 'update'])->name('user.update');
     Route::post('/user/update-password', [DashboardController::class, 'updatePassword'])->name('user.update-password');
 });
+
+Route::middleware('auth')->group(function () {
+    Route::get('/developer', [DeveloperController::class, 'index'])->name('api.home');
+    Route::post('/developer/api-key', [DeveloperController::class, 'generateOrRegenerateKey'])->name('api.key.regenerate');
+});
 /*------------------------------------------
 --------------------------------------------
 Admin panel (dedicated `admin` guard)
@@ -170,6 +177,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('mpesa-transactions/b2c/{mpesa_b2c}/reject', [MpesaTransactionsController::class, 'rejectB2c'])->name('mpesa-transactions.b2c.reject');
         Route::post('mpesa-transactions/b2b/{mpesa_b2b}/approve', [MpesaTransactionsController::class, 'approveB2b'])->name('mpesa-transactions.b2b.approve');
         Route::post('mpesa-transactions/b2b/{mpesa_b2b}/reject', [MpesaTransactionsController::class, 'rejectB2b'])->name('mpesa-transactions.b2b.reject');
+        Route::get('api-access', [ApiAccessController::class, 'index'])->name('api-access.index');
+        Route::post('api-access/{user}/regenerate-key', [ApiAccessController::class, 'regenerateKey'])->name('api-access.regenerate');
         Route::resource('users', AdminUserController::class)->only(['index', 'show']);
         Route::get('live-chats', [AdminLiveChatController::class, 'index'])->name('live-chats.index');
         Route::get('live-chats/{liveChat}', [AdminLiveChatController::class, 'show'])->name('live-chats.show');

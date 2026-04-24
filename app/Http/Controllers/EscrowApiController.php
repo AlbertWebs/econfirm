@@ -38,8 +38,11 @@ class EscrowApiController extends Controller
         // Generate unique transaction ID
         $transactionId = 'txn_' . strtoupper(Str::random(12));
 
+        $apiUser = $request->api_user;
+
         // Create transaction
         $transaction = Transaction::create([
+            'api_user_id' => $apiUser->id,
             'transaction_id' => $transactionId,
             'transaction_type' => 'escrow',
             'transaction_amount' => $request->amount,
@@ -77,14 +80,14 @@ class EscrowApiController extends Controller
      */
     public function getTransaction(Request $request, string $transactionId): JsonResponse
     {
-        // Remove 'txn_' prefix if present
-        $id = str_replace('txn_', '', $transactionId);
-        
-        $transaction = Transaction::where('transaction_id', $transactionId)
-            ->orWhere('transaction_id', 'like', '%' . $id . '%')
+        $apiUser = $request->api_user;
+
+        $transaction = Transaction::query()
+            ->where('transaction_id', $transactionId)
+            ->where('api_user_id', $apiUser->id)
             ->first();
 
-        if (!$transaction) {
+        if (! $transaction) {
             return response()->json([
                 'success' => false,
                 'message' => 'Transaction not found',
@@ -138,9 +141,14 @@ class EscrowApiController extends Controller
             ], 400);
         }
 
-        $transaction = Transaction::where('transaction_id', $transactionId)->first();
+        $apiUser = $request->api_user;
 
-        if (!$transaction) {
+        $transaction = Transaction::query()
+            ->where('transaction_id', $transactionId)
+            ->where('api_user_id', $apiUser->id)
+            ->first();
+
+        if (! $transaction) {
             return response()->json([
                 'success' => false,
                 'message' => 'Transaction not found',
@@ -148,7 +156,7 @@ class EscrowApiController extends Controller
         }
 
         // Check if transaction is in a valid state for release
-        if (!in_array($transaction->status, ['funded', 'in_progress', 'pending'])) {
+        if (! in_array($transaction->status, ['funded', 'in_progress', 'pending'], true)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Transaction cannot be released. Current status: ' . $transaction->status,

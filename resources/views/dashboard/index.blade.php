@@ -66,6 +66,11 @@
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <a class="nav-link" href="{{ route('api.home') }}" id="api-dev-link" title="API keys &amp; integration">
+                        <i class="fas fa-code me-1 d-none d-sm-inline"></i>API
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
                     <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-selected="false">
                         <i class="fas fa-user me-1 d-none d-sm-inline"></i>Profile
                     </button>

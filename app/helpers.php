@@ -116,3 +116,28 @@ if (! function_exists('format_funds_protected_stk_kes_for_stat')) {
         return 'KES '.number_format($amount, 0).'+';
     }
 }
+
+if (! function_exists('econfirm_api_v1_url')) {
+    /**
+     * Base URL for Escrow API v1 (no trailing slash), for docs and the developer portal.
+     */
+    function econfirm_api_v1_url(): string
+    {
+        $fromEnv = config('econfirm.api.v1_url');
+        if (is_string($fromEnv) && $fromEnv !== '') {
+            return rtrim($fromEnv, '/');
+        }
+
+        return rtrim((string) config('app.url'), '/').'/api/v1';
+    }
+}
+
+if (! function_exists('econfirm_api_root_url')) {
+    /**
+     * Root URL for the `/api` route group (health check lives at /api/ping).
+     */
+    function econfirm_api_root_url(): string
+    {
+        return rtrim((string) config('app.url'), '/').'/api';
+    }
+}

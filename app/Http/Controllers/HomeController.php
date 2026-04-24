@@ -504,13 +504,13 @@ class HomeController extends Controller
     public function scamWatch()
     {
         $reports = ScamReport::withCount('likes')
-            ->whereIn('status', ['approved', 'pending'])
+            ->publicListed()
             ->orderBy('report_count', 'desc')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
         $categoryCounts = ScamReport::query()
-            ->whereIn('status', ['approved', 'pending'])
+            ->publicListed()
             ->selectRaw('category, COUNT(*) as cnt')
             ->groupBy('category')
             ->pluck('cnt', 'category');
@@ -562,7 +562,7 @@ class HomeController extends Controller
         ]);
 
         $related = ScamReport::withCount('likes')
-            ->visible()
+            ->publicListed()
             ->where('category', $report->category)
             ->where('id', '!=', $report->id)
             ->orderByDesc('report_count')
@@ -639,7 +639,7 @@ class HomeController extends Controller
         $label = ScamReport::CATEGORY_LABELS[$category];
 
         $reports = ScamReport::withCount('likes')
-            ->visible()
+            ->publicListed()
             ->where('category', $category)
             ->orderBy('report_count', 'desc')
             ->orderBy('created_at', 'desc')
@@ -668,7 +668,7 @@ class HomeController extends Controller
         $entries = [];
 
         $categories = ScamReport::query()
-            ->visible()
+            ->publicListed()
             ->select('category')
             ->distinct()
             ->pluck('category');
@@ -686,7 +686,7 @@ class HomeController extends Controller
         }
 
         ScamReport::query()
-            ->visible()
+            ->publicListed()
             ->select(['id', 'website', 'phone', 'reported_email', 'report_type', 'updated_at'])
             ->orderBy('id')
             ->chunk(500, function ($reports) use (&$entries, $lastmod) {
@@ -767,7 +767,7 @@ class HomeController extends Controller
             // Increment report count
             $existingReport->increment('report_count');
         } else {
-            // Await review; public listing still shows pending entries (see ScamReport::scopeVisible).
+            // Await review; public listing shows approved reports only (see ScamReport::scopePublicListed).
             $validated['status'] = 'pending';
             $report = ScamReport::create($validated);
 
@@ -790,7 +790,7 @@ class HomeController extends Controller
 
     public function likeScamReport($id)
     {
-        $report = ScamReport::findOrFail($id);
+        $report = ScamReport::publicListed()->where('id', $id)->firstOrFail();
         $ipAddress = request()->ip();
 
         // Check if user already liked this report
@@ -1335,7 +1335,11 @@ class HomeController extends Controller
 
     public function getAPIDocumentation()
     {
-        return view('front.api-documentation');
+        $apiV1Url = econfirm_api_v1_url();
+        $apiRootUrl = econfirm_api_root_url();
+        $docsPageUrl = url('/api/documentation');
+
+        return view('front.api-documentation', compact('apiV1Url', 'apiRootUrl', 'docsPageUrl'));
     }
 
     public function getEContract()

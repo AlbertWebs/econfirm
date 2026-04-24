@@ -102,17 +102,31 @@ class ScamReport extends Model
         return $slug !== '' ? $slug.'-'.$this->id : 'report-'.$this->id;
     }
 
+    /**
+     * Staff moderation queue: approved + pending (e.g. admin lists, internal stats).
+     */
     public function scopeVisible($query)
     {
         return $query->whereIn('status', ['approved', 'pending']);
     }
 
+    /**
+     * Public Scam Alert listing, footer links, sitemap: verified (approved) only.
+     */
+    public function scopePublicListed($query)
+    {
+        return $query->where('status', 'approved');
+    }
+
     public function resolveRouteBinding($value, $field = null)
     {
-        return static::query()
-            ->visible()
-            ->where($field ?? $this->getRouteKeyName(), $value)
-            ->firstOrFail();
+        $query = static::query()->where($field ?? $this->getRouteKeyName(), $value);
+        $path = (string) request()->path();
+        if ($path === 'admin' || str_starts_with($path, 'admin/')) {
+            return $query->firstOrFail();
+        }
+
+        return $query->publicListed()->firstOrFail();
     }
 
     public function likes()

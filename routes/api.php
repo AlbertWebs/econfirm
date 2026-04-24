@@ -31,7 +31,7 @@ Route::prefix('mobile')->group(function () {
 });
 
 // Escrow API Routes (v1)
-Route::prefix('v1')->middleware('api.auth')->group(function () {
+Route::prefix('v1')->middleware(['api.auth', 'throttle:1000,60'])->group(function () {
     Route::post('/transactions', [EscrowApiController::class, 'createTransaction']);
     Route::get('/transactions/{transaction_id}', [EscrowApiController::class, 'getTransaction']);
     Route::post('/transactions/{transaction_id}/release', [EscrowApiController::class, 'releaseFunds']);

@@ -111,7 +111,7 @@
                 'footer_scam_report_links_v1',
                 now()->addMinutes(10),
                 fn () => \App\Models\ScamReport::query()
-                    ->visible()
+                    ->publicListed()
                     ->orderByDesc('report_count')
                     ->orderByDesc('created_at')
                     ->limit(24)

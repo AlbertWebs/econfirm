@@ -388,10 +388,19 @@
 <strong>Authorization:</strong> Bearer YOUR_API_KEY
               </div>
               
-              <h3>Base URL</h3>
-              <div class="code-block">
-https://api.econfirm.co.ke/v1
+              <h3>Base URL (Escrow v1)</h3>
+              <p class="text-muted small">Uses your site’s <code>APP_URL</code> unless you set <code>ECONFIRM_API_V1_URL</code> in the environment. This page: <a href="{{ $docsPageUrl }}">{{ $docsPageUrl }}</a></p>
+              <div class="code-block">{{ $apiV1Url }}
               </div>
+
+              <h3>Health check</h3>
+              <p>Verify the API is reachable (no key required):</p>
+              <div class="code-block">
+<strong>GET</strong> {{ $apiRootUrl }}/ping
+              </div>
+              
+              <h3>Developer portal</h3>
+              <p>Sign in to <a href="{{ route('login') }}">your account</a> and open the <a href="{{ route('api.home') }}">API developer</a> page to create or rotate your key and copy ready-made URLs.</p>
               
               <h3>Create Escrow Transaction</h3>
               <p>Creates a new escrow transaction between a buyer and seller.</p>

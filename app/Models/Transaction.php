@@ -24,6 +24,7 @@ class Transaction extends Model
     }
 
     protected $fillable = [
+        'api_user_id',
         'otp',
         'transaction_fee',
         'paybill_till_number',
@@ -45,5 +46,10 @@ class Transaction extends Model
     public function disputes(): HasMany
     {
         return $this->hasMany(Dispute::class);
+    }
+
+    public function apiUser()
+    {
+        return $this->belongsTo(User::class, 'api_user_id');
     }
 }

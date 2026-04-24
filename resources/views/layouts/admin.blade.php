@@ -72,6 +72,7 @@
                 [
                     'heading' => 'System',
                     'items' => [
+                        ['route' => 'admin.api-access.index', 'pattern' => 'admin.api-access.*', 'label' => 'API & developers', 'icon' => 'code'],
                         ['route' => 'admin.activity-logs.index', 'pattern' => 'admin.activity-logs.*', 'label' => 'Activity log', 'icon' => 'clock'],
                         ['route' => 'admin.sms-logs.index', 'pattern' => 'admin.sms-logs.*', 'label' => 'SMS logs', 'icon' => 'chat'],
                         ['route' => 'admin.site-settings.edit', 'pattern' => 'admin.site-settings.*', 'label' => 'Site settings', 'icon' => 'cog'],
@@ -202,6 +203,7 @@
                 'Content & audit' => [
                     ['route' => 'admin.legal-pages.index', 'label' => 'Legal pages', 'icon' => 'book-open'],
                     ['route' => 'admin.pages.index', 'label' => 'Pages (CMS)', 'icon' => 'document'],
+                    ['route' => 'admin.api-access.index', 'label' => 'API & developers', 'icon' => 'code'],
                     ['route' => 'admin.activity-logs.index', 'label' => 'Activity log', 'icon' => 'clock'],
                     ['route' => 'admin.sms-logs.index', 'label' => 'SMS logs', 'icon' => 'chat'],
                     ['route' => 'admin.site-settings.edit', 'label' => 'Site settings', 'icon' => 'cog'],
