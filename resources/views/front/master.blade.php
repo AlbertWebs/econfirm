@@ -210,7 +210,7 @@
                     <a href="{{ route('home') }}#home" class="block select-none">
                         <img src="{{ asset('uploads/logo-hoz.png') }}"
                              alt="e-confirm Logo"
-                             class="h-14 w-auto object-contain object-left align-middle md:h-16"
+                             class="h-14 w-auto object-contain object-left align-middle"
                              loading="eager"
                              decoding="async">
                     </a>
