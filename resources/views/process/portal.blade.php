@@ -11,7 +11,7 @@
 @section('content')
 <div class="mx-auto" style="max-width: 980px;">
     <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
+                    <div class="card-body">
             <h4 class="fw-bold mb-1">Customer Portal</h4>
             <p class="text-muted mb-0">Real-time escrow data tied to your phone number.</p>
                     </div>

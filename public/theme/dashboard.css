@@ -567,12 +567,12 @@
     .transaction-item .row {
         flex-direction: column;
     }
-
+    
     .transaction-item .col-lg-4 {
         margin-top: 1rem;
         text-align: left !important;
     }
-
+    
     .transaction-item .d-flex {
         flex-direction: column;
         gap: 0.5rem;

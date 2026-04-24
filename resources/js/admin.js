@@ -6,18 +6,33 @@ import Chart from 'chart.js/auto';
 document.addEventListener('alpine:init', () => {
     Alpine.data('adminShell', () => ({
         sidebarOpen: false,
+        /** True when nav is the slide-over drawer (backdrop only in this mode). */
+        isMobileNav: false,
         userMenuOpen: false,
-        isMobile: typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches,
         init() {
             const mq = window.matchMedia('(max-width: 767px)');
-            const sync = () => {
-                this.isMobile = mq.matches;
-                if (!this.isMobile) {
-                    this.sidebarOpen = false;
-                }
+            const syncMobileNav = () => {
+                this.isMobileNav = mq.matches;
             };
-            sync();
-            mq.addEventListener('change', () => sync());
+            const syncDrawerBodyClass = () => {
+                document.body.classList.toggle(
+                    'admin-drawer-open',
+                    this.sidebarOpen && this.isMobileNav
+                );
+            };
+
+            syncMobileNav();
+            this.sidebarOpen = !mq.matches;
+            syncDrawerBodyClass();
+            this.$watch('sidebarOpen', syncDrawerBodyClass);
+
+            mq.addEventListener('change', () => {
+                syncMobileNav();
+                syncDrawerBodyClass();
+                if (!mq.matches) {
+                    this.sidebarOpen = true;
+                }
+            });
         },
         closeSidebar() {
             this.sidebarOpen = false;

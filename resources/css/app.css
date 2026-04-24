@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Admin shell: scrollable regions without visible vertical scrollbar */
+.admin-shell .scrollbar-y-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.admin-shell .scrollbar-y-hidden::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
 /* Alpine.js cloak - hide elements until Alpine initializes */
 [x-cloak] {
     display: none !important;

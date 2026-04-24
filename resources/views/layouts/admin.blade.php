@@ -9,7 +9,7 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet">
     @vite(['resources/js/admin.js'])
     <style>
-        /* Before Alpine hydrates, keep the mobile drawer off-screen (avoids a full-height “splash”). */
+        /* Before Alpine hydrates: hide drawer on small screens only; md+ shows nav by default. */
         @media (max-width: 767.98px) {
             aside[aria-label='Admin navigation']:not(.admin-nav-drawer-open) {
                 transform: translateX(-100%);
@@ -19,16 +19,16 @@
     @stack('head')
 </head>
 <body class="flex h-full min-h-0 max-h-[100dvh] flex-col overflow-hidden bg-slate-50 font-sans text-slate-800 antialiased" x-data="adminShell()" @keydown.escape.window="closeSidebar()">
-    {{-- Mobile overlay --}}
+    {{-- Backdrop when menu drawer is open (all screen sizes) --}}
     <div
-        x-show="sidebarOpen && isMobile"
+        x-show="sidebarOpen && isMobileNav"
         x-transition:enter="transition-opacity ease-out duration-200"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
         x-transition:leave="transition-opacity ease-in duration-150"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        class="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm md:hidden"
+        class="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm"
         @click="closeSidebar()"
         x-cloak
     ></div>
@@ -80,13 +80,15 @@
         @endphp
 
         <aside
-            class="fixed inset-y-0 left-0 z-50 flex h-full max-h-[100dvh] min-h-0 w-64 shrink-0 flex-col border-r border-slate-700/60 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-slate-200 shadow-xl shadow-black/20 ring-1 ring-inset ring-white/[0.04] transition-transform duration-200 ease-out md:relative md:z-0 md:h-full md:max-h-none md:shadow-none md:ring-0"
+            class="fixed inset-y-0 left-0 z-50 flex h-full max-h-[100dvh] min-h-0 w-64 shrink-0 flex-col border-r border-slate-700/60 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-slate-200 shadow-2xl shadow-black/30 ring-1 ring-inset ring-white/[0.06] transition-transform duration-200 ease-out"
             :class="{
-                'admin-nav-drawer-open': sidebarOpen || !isMobile,
-                'translate-x-0': sidebarOpen || !isMobile,
-                '-translate-x-full': !sidebarOpen && isMobile,
+                'admin-nav-drawer-open': sidebarOpen,
+                'translate-x-0': sidebarOpen,
+                '-translate-x-full': !sidebarOpen,
             }"
             aria-label="Admin navigation"
+            aria-hidden="{{ 'true' }}"
+            x-bind:aria-hidden="(!sidebarOpen).toString()"
         >
             <div class="flex h-14 shrink-0 items-center gap-2.5 border-b border-slate-700/50 bg-slate-900/90 px-3 md:h-16 md:px-4">
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 ring-1 ring-emerald-400/25">
@@ -105,7 +107,7 @@
                 </button>
             </div>
 
-            <nav class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-y-contain px-2 py-3" aria-label="Primary">
+            <nav class="scrollbar-y-hidden flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-y-contain px-2 py-3" aria-label="Primary">
                 @foreach ($navGroups as $group)
                     @if (! empty($group['heading']))
                         <p class="px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 first:pt-0">{{ $group['heading'] }}</p>
@@ -259,7 +261,7 @@
                             x-transition:leave-start="opacity-100 scale-100"
                             x-transition:leave-end="opacity-0 scale-95"
                             x-cloak
-                            class="absolute right-0 z-50 mt-2 max-h-[min(28rem,calc(100vh-5rem))] w-[min(100vw-2rem,20rem)] origin-top-right overflow-y-auto overscroll-contain rounded-2xl border border-slate-200/90 bg-white py-2 shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5"
+                            class="scrollbar-y-hidden absolute right-0 z-50 mt-2 max-h-[min(28rem,calc(100vh-5rem))] w-[min(100vw-2rem,20rem)] origin-top-right overflow-y-auto overscroll-contain rounded-2xl border border-slate-200/90 bg-white py-2 shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5"
                         >
                             <div class="border-b border-slate-100 px-4 pb-3 pt-1">
                                 <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Signed in as</p>
@@ -324,7 +326,7 @@
                 </div>
             </header>
 
-            <main class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-6 sm:px-6 lg:px-8">
+            <main class="scrollbar-y-hidden min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-6 sm:px-6 lg:px-8">
                 @if (session('status'))
                     <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900" role="status">
                         {{ session('status') }}
