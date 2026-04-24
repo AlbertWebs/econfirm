@@ -1,26 +1,21 @@
-@extends('front.master-page')
+@extends('front.master')
 
 @section('content')
-<section id="features" class="features text-center">
-
-<div class="container my-5">
-    <style>
-        .container.my-5 p,
-        .container.my-5 ul,
-        .container.my-5 ol {
-            margin-left: 40px;
-        }
-        p{
-            font-size: 0.875rem !important;
-        }
-         ol{
-            font-size: 0.875rem !important;
-        }
-         li{
-            font-size: 0.875rem !important;
-        }
-    </style>
-    <h3 class="mb-4"><strong>Terms and Conditions</strong></h3>
+<section id="features" class="bg-slate-50 py-10 sm:py-12">
+    <div class="mx-auto w-full max-w-4xl px-4 sm:px-6">
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+            <h1 class="mb-6 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Terms and Conditions</h1>
+            <div class="legal-content text-sm leading-7 text-slate-700">
+                <style>
+                    .legal-content h3,
+                    .legal-content h4 { margin-top: 1.5rem; margin-bottom: 0.5rem; font-weight: 700; color: #0f172a; }
+                    .legal-content p { margin-top: 0.75rem; margin-bottom: 0.75rem; }
+                    .legal-content ul,
+                    .legal-content ol { margin-top: 0.75rem; margin-bottom: 0.75rem; padding-left: 1.25rem; }
+                    .legal-content ul { list-style: disc; }
+                    .legal-content ol { list-style: decimal; }
+                    .legal-content li { margin-bottom: 0.4rem; }
+                </style>
 
     <br><h3>1. <strong>Introduction</strong></h3>
     <p>
@@ -122,8 +117,8 @@
     <p>
         e-confirm reserves the right to revise or update these Terms at any time. Significant changes will be communicated via the platform or through registered email addresses. Continued use of the platform after such changes are made constitutes acceptance of the updated Terms. Users are encouraged to review these Terms regularly.
     </p>
-</div>
-
-
+            </div>
+        </div>
+    </div>
 </section>
 @endsection

@@ -175,6 +175,11 @@ class HomeController extends Controller
         return $this->pageFromCmsOrFallback('security', 'front.security');
     }
 
+    public function scamWatchTermsOfUse()
+    {
+        return view('front.scam-watch-terms-of-use');
+    }
+
     public function support()
     {
         return $this->pageFromCmsOrFallback('support', 'front.support');

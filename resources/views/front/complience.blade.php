@@ -1,7 +1,7 @@
-@extends('front.master-page')
+@extends('front.master')
 
 @section('content')
-<section id="features" class="features text-center">
+<section id="features" class="features text-start">
     <style>
         .container.my-5 p,
         .container.my-5 ul,

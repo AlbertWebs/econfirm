@@ -50,6 +50,7 @@ Route::get('/scam-watch/category/{category}', [HomeController::class, 'scamWatch
     ->name('scam.watch.category')
     ->whereIn('category', array_keys(ScamReport::CATEGORY_LABELS));
 Route::get('/scam-watch/reports/{report}/{slug?}', [HomeController::class, 'scamWatchShow'])->name('scam.watch.show');
+Route::get('/scam-watch/terms-of-use', [HomeController::class, 'scamWatchTermsOfUse'])->name('scam.watch.terms');
 Route::post('/submit-scam-report', [HomeController::class, 'submitScamReport'])->name('submit.scam.report');
 Route::post('/like-scam-report/{id}', [HomeController::class, 'likeScamReport'])->name('like.scam.report');
 Route::get('/transaction/status/{id}', [HomeController::class, 'transactionStatus'])->name('transaction.status');

@@ -93,6 +93,9 @@
                     <li>
                         <a href="{{ route('complience') }}" class="inline-flex text-sm text-gray-400 hover:text-green-400 transition-colors rounded-md py-0.5 -mx-1 px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900">Compliance</a>
                     </li>
+                    <li>
+                        <a href="{{ route('scam.watch.terms') }}" class="inline-flex text-sm text-gray-400 hover:text-green-400 transition-colors rounded-md py-0.5 -mx-1 px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900">Scam Watch Terms of Use</a>
+                    </li>
                 </ul>
             </nav>
         </div>
