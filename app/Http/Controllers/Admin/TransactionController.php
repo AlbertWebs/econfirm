@@ -92,32 +92,8 @@ class TransactionController extends Controller
                     );
                 }
 
-                // Explicitly clean up chat/dispute descendants for DBs missing full FK cascades.
-                if (Schema::hasTable('live_chats')) {
-                    $chatIds = DB::table('live_chats')
-                        ->where('transaction_id', $transaction->id)
-                        ->pluck('id');
-
-                    if ($chatIds->isNotEmpty()) {
-                        if (Schema::hasTable('live_chat_messages')) {
-                            $this->runWithReprepareRetry(
-                                fn () => DB::table('live_chat_messages')->whereIn('live_chat_id', $chatIds)->delete()
-                            );
-                        }
-                        if (Schema::hasTable('disputes')) {
-                            $this->runWithReprepareRetry(
-                                fn () => DB::table('disputes')->whereIn('live_chat_id', $chatIds)->delete()
-                            );
-                        }
-                    }
-                }
-
-                if (Schema::hasTable('disputes')) {
-                    $this->deleteByIntColumnUnprepared('disputes', 'transaction_id', (int) $transaction->id);
-                }
-                if (Schema::hasTable('live_chats')) {
-                    $this->deleteByIntColumnUnprepared('live_chats', 'transaction_id', (int) $transaction->id);
-                }
+                // Live chat + disputes: use PDO::exec only (this MySQL host returns 1615 on prepared statements).
+                $this->deleteLiveChatAndDisputeStackForTransaction((int) $transaction->id);
 
                 // Final safety net: clear any remaining FK dependents to transactions.id.
                 $this->deleteFkDependentsForTransaction($transaction->id, [
@@ -128,9 +104,13 @@ class TransactionController extends Controller
                     'mpesa_b2b_callbacks',
                     'mpesa_b2c_callbacks',
                     'mpesa_stk_pushes',
+                    // Cleaned above — never hit these again with the query builder (1615).
+                    'live_chats',
+                    'live_chat_messages',
+                    'disputes',
                 ]);
 
-                $this->runWithReprepareRetry(fn () => $transaction->delete());
+                $this->deleteTransactionRowPdo((int) $transaction->id);
             });
         } catch (QueryException $e) {
             $errorInfo = $e->errorInfo ?? [];
@@ -188,7 +168,7 @@ class TransactionController extends Controller
                 continue;
             }
 
-            DB::table($table)->where($column, $transactionPk)->delete();
+            $this->deleteByIntColumnPdo($table, $column, (int) $transactionPk);
         }
     }
 
@@ -258,21 +238,73 @@ class TransactionController extends Controller
     }
 
     /**
-     * Hard bypass for environments constantly failing with MySQL prepared statements (1615).
+     * Hard bypass for servers that error on Laravel's prepared statements (MySQL 1615).
+     * Uses PDO::exec() — no server-side prepare cache involved.
      */
-    protected function deleteByIntColumnUnprepared(string $table, string $column, int $value): void
+    protected function deleteByIntColumnPdo(string $table, string $column, int $value): int
     {
         $wrappedTable = '`'.str_replace('`', '``', $table).'`';
         $wrappedColumn = '`'.str_replace('`', '``', $column).'`';
         $sql = "DELETE FROM {$wrappedTable} WHERE {$wrappedColumn} = ".(int) $value;
 
-        Log::info('Running unprepared delete', [
+        Log::info('PDO::exec delete', [
             'table' => $table,
             'column' => $column,
             'value' => $value,
         ]);
 
-        DB::unprepared($sql);
+        $pdo = DB::connection()->getPdo();
+
+        return (int) $pdo->exec($sql);
+    }
+
+    /**
+     * @deprecated use deleteByIntColumnPdo
+     */
+    protected function deleteByIntColumnUnprepared(string $table, string $column, int $value): void
+    {
+        $this->deleteByIntColumnPdo($table, $column, $value);
+    }
+
+    /**
+     * Remove live chat + dispute rows without going through the query builder (avoids 1615 on this host).
+     */
+    protected function deleteLiveChatAndDisputeStackForTransaction(int $transactionPk): void
+    {
+        if (! Schema::hasTable('live_chats')) {
+            if (Schema::hasTable('disputes')) {
+                $this->deleteByIntColumnPdo('disputes', 'transaction_id', $transactionPk);
+            }
+
+            return;
+        }
+
+        $pdo = DB::connection()->getPdo();
+        $q = 'SELECT `id` FROM `live_chats` WHERE `transaction_id` = '.(int) $transactionPk;
+        $stmt = $pdo->query($q);
+        $chatIds = $stmt ? $stmt->fetchAll(\PDO::FETCH_COLUMN) : [];
+        $chatIds = array_values(array_filter(array_map('intval', (array) $chatIds)));
+
+        if ($chatIds !== []) {
+            $inList = implode(',', $chatIds);
+            if (Schema::hasTable('live_chat_messages')) {
+                $pdo->exec('DELETE FROM `live_chat_messages` WHERE `live_chat_id` IN ('.$inList.')');
+            }
+            if (Schema::hasTable('disputes')) {
+                $pdo->exec('DELETE FROM `disputes` WHERE `live_chat_id` IN ('.$inList.')');
+            }
+        }
+
+        if (Schema::hasTable('disputes')) {
+            $this->deleteByIntColumnPdo('disputes', 'transaction_id', $transactionPk);
+        }
+
+        $this->deleteByIntColumnPdo('live_chats', 'transaction_id', $transactionPk);
+    }
+
+    protected function deleteTransactionRowPdo(int $transactionPk): void
+    {
+        $this->deleteByIntColumnPdo('transactions', 'id', $transactionPk);
     }
 
     protected function inspectFkDependentsForTransaction(int $transactionPk): array
