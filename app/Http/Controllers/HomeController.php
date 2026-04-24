@@ -163,6 +163,20 @@ class HomeController extends Controller
         }
 
         $page = $products[$product];
+        $cmsPage = Page::query()
+            ->where('slug', 'escrow-'.$product)
+            ->where('is_published', true)
+            ->first();
+
+        if ($cmsPage) {
+            return view('front.product-escrow-cms', [
+                'page' => $cmsPage,
+                'productKey' => $product,
+                'canonicalUrl' => route('escrow.product', ['product' => $product]),
+                'seoTitle' => $cmsPage->title ?: $page['seo_title'],
+                'seoDescription' => $cmsPage->meta_description ?: $page['seo_description'],
+            ]);
+        }
 
         return view('front.product-escrow', [
             'productKey' => $product,

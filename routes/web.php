@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\TransactionController as AdminTransactionControll
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\Auth\PhoneOtpLoginController;
+use App\Http\Controllers\Auth\PhoneOtpRegisterController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
@@ -106,6 +107,15 @@ Route::middleware('guest')->group(function () {
         ->name('login.phone');
     Route::get('/login/phone/cancel', [PhoneOtpLoginController::class, 'cancel'])
         ->name('login.phone.cancel');
+
+    Route::post('/register/phone/send-otp', [PhoneOtpRegisterController::class, 'sendOtp'])
+        ->middleware('throttle:5,1')
+        ->name('register.phone.send-otp');
+    Route::post('/register/phone', [PhoneOtpRegisterController::class, 'verify'])
+        ->middleware('throttle:12,1')
+        ->name('register.phone');
+    Route::get('/register/phone/cancel', [PhoneOtpRegisterController::class, 'cancel'])
+        ->name('register.phone.cancel');
 });
 
 // DashboardController routes

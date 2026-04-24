@@ -1,4 +1,4 @@
-@extends('process.master')
+@extends('process.auth-master')
 
 @section('content')
 <style>
@@ -7,9 +7,17 @@
         --login-green-dark: #155f32;
         --login-green-soft: rgba(24, 116, 60, 0.08);
         --login-green-border: rgba(24, 116, 60, 0.2);
+        --auth-fixed-width: 420px;
     }
     .login-page .min-vh-50 {
-        min-height: calc(100vh - 220px);
+        min-height: 100vh;
+    }
+    .login-page .auth-wrap {
+        width: min(100%, var(--auth-fixed-width));
+        margin-inline: auto;
+    }
+    .login-page .auth-card {
+        width: 100%;
     }
     .login-page .auth-card {
         border: 1px solid var(--login-green-border);
@@ -38,6 +46,9 @@
         border: 1px solid var(--login-green-border);
         border-radius: 12px;
         padding: 4px;
+    }
+    .login-page .login-segment .nav {
+        gap: 6px;
     }
     .login-page .login-segment .nav-link {
         color: #495057;
@@ -111,38 +122,34 @@
     .login-page .login-input-wrap {
         border-radius: 10px;
         align-items: stretch;
+        gap: 8px;
     }
     .login-page .login-input-wrap .input-group-text {
         background-color: #eef1f4 !important;
         color: #495057;
         border: 1px solid #ced4da;
-        border-right: 0;
         min-width: 3.15rem;
         display: flex;
         align-items: center;
         justify-content: center;
         padding-left: 0.9rem;
         padding-right: 0.9rem;
-    }
-    .login-page .login-input-wrap--start-only .input-group-text {
-        border-radius: 10px 0 0 10px;
-    }
-    .login-page .login-input-wrap--password .input-group-text {
-        border-radius: 10px 0 0 10px;
+        border-radius: 10px !important;
     }
     .login-page .login-input-wrap .form-control {
         border: 1px solid #ced4da;
-        border-left: 0;
-        border-right: 0;
-        box-shadow: none;
-        border-radius: 0;
-    }
-    .login-page .login-input-wrap--start-only .form-control {
+        border-left: 1px solid #ced4da;
         border-right: 1px solid #ced4da;
-        border-radius: 0 10px 10px 0;
+        box-shadow: none;
+        border-radius: 10px;
+    }
+    .login-page .login-input-wrap > .form-control,
+    .login-page .login-input-wrap > .form-control:not(:first-child),
+    .login-page .login-input-wrap > .form-control:not(:last-child) {
+        border-radius: 10px !important;
     }
     .login-page .login-input-wrap:focus-within {
-        box-shadow: 0 0 0 0.2rem rgba(24, 116, 60, 0.18);
+        box-shadow: none;
         border-radius: 10px;
     }
     .login-page .login-input-wrap:focus-within .input-group-text,
@@ -158,9 +165,8 @@
         background-color: #eef1f4;
         color: #495057;
         border: 1px solid #ced4da;
-        border-left: 0;
         min-width: 3.15rem;
-        border-radius: 0 10px 10px 0;
+        border-radius: 10px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -192,7 +198,9 @@
     /* Min height set from measured email tab (see script) so both options match the taller email stack */
     .login-page .login-tab-panels {
         min-height: 0;
+        width: 100%;
     }
+    .login-page .login-tab-panels .tab-pane { width: 100%; }
     .login-page .forgot-link {
         color: var(--login-green);
         font-size: 0.875rem;
@@ -239,6 +247,8 @@
         font-variant-numeric: tabular-nums;
         padding-left: 1rem;
         padding-right: 1rem;
+        width: 100%;
+        max-width: 100%;
     }
     .login-page .alert-success {
         border: none;
@@ -266,6 +276,42 @@
     @keyframes login-spin {
         to { transform: rotate(360deg); }
     }
+    @media (max-height: 860px) {
+        .login-page .auth-header {
+            padding: 0.9rem 0.9rem;
+            font-size: 1rem;
+        }
+        .login-page .card-body {
+            padding: 1.1rem 1rem 1.15rem;
+        }
+        .login-page .mb-4 {
+            margin-bottom: 0.8rem !important;
+        }
+        .login-page .mb-3 {
+            margin-bottom: 0.65rem !important;
+        }
+        .login-page .form-control {
+            padding: 0.55rem 0.75rem;
+            font-size: 0.92rem;
+        }
+        .login-page .btn {
+            padding-top: 0.48rem !important;
+            padding-bottom: 0.48rem !important;
+            font-size: 0.9rem;
+        }
+        .login-page .otp-panel {
+            padding: 0.75rem;
+        }
+    }
+    @media (max-height: 760px) {
+        .login-page .auth-wrap {
+            transform: scale(0.92);
+            transform-origin: top center;
+        }
+        .login-page .min-vh-50 {
+            align-items: flex-start !important;
+        }
+    }
 </style>
 
 @php
@@ -274,8 +320,14 @@
 
 <div class="login-page">
     <div class="container">
-        <div class="row justify-content-center align-items-center min-vh-50 py-4">
+        <div class="row justify-content-center align-items-center min-vh-50 py-2">
             <div class="col-12">
+                <div class="auth-wrap">
+                <div class="text-center mb-3">
+                    <a href="{{ route('home') }}" class="d-inline-flex align-items-center justify-content-center" aria-label="Go to homepage">
+                        <img src="{{ asset('uploads/logo-hoz.png') }}" alt="eConfirm" style="height: 46px; width: auto; object-fit: contain;">
+                    </a>
+                </div>
                 <div class="card auth-card shadow">
                     <div class="auth-header">
                         <i class="fas fa-shield-alt me-2" aria-hidden="true"></i> {{ __('Welcome back') }}
@@ -462,6 +514,7 @@
                             </div>
                         </div>
                     </div>
+                </div>
                 </div>
             </div>
         </div>
