@@ -72,6 +72,7 @@
                 [
                     'heading' => 'System',
                     'items' => [
+                        ['route' => 'admin.security.index', 'pattern' => 'admin.security.*', 'label' => 'Security', 'icon' => 'shield'],
                         ['route' => 'admin.api-access.index', 'pattern' => 'admin.api-access.*', 'label' => 'API & developers', 'icon' => 'code'],
                         ['route' => 'admin.activity-logs.index', 'pattern' => 'admin.activity-logs.*', 'label' => 'Activity log', 'icon' => 'clock'],
                         ['route' => 'admin.sms-logs.index', 'pattern' => 'admin.sms-logs.*', 'label' => 'SMS logs', 'icon' => 'chat'],
@@ -203,6 +204,7 @@
                 'Content & audit' => [
                     ['route' => 'admin.legal-pages.index', 'label' => 'Legal pages', 'icon' => 'book-open'],
                     ['route' => 'admin.pages.index', 'label' => 'Pages (CMS)', 'icon' => 'document'],
+                    ['route' => 'admin.security.index', 'label' => 'Security (2FA & email)', 'icon' => 'shield'],
                     ['route' => 'admin.api-access.index', 'label' => 'API & developers', 'icon' => 'code'],
                     ['route' => 'admin.activity-logs.index', 'label' => 'Activity log', 'icon' => 'clock'],
                     ['route' => 'admin.sms-logs.index', 'label' => 'SMS logs', 'icon' => 'chat'],

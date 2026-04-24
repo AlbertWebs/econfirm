@@ -18,6 +18,16 @@
             <p class="mt-1 text-sm text-slate-500">Admin sign in</p>
         </div>
 
+        @if (session('status'))
+            <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900" role="status">
+                {{ session('status') }}
+            </div>
+        @endif
+        @if (session('error'))
+            <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+                {{ session('error') }}
+            </div>
+        @endif
         @if ($errors->any())
             <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
                 {{ $errors->first() }}
@@ -67,6 +77,28 @@
                 Sign in
             </button>
         </form>
+
+        <div class="mt-8 border-t border-slate-200 pt-6">
+            <p class="mb-3 text-center text-xs font-medium uppercase tracking-wide text-slate-500">Did not receive a verification email?</p>
+            <form method="post" action="{{ route('admin.verification.resend') }}" class="space-y-3">
+                @csrf
+                <input
+                    type="email"
+                    name="email"
+                    value="{{ old('email') }}"
+                    required
+                    placeholder="Admin email"
+                    class="block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+                    autocomplete="email"
+                >
+                <button
+                    type="submit"
+                    class="flex w-full justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                >
+                    Resend verification link
+                </button>
+            </form>
+        </div>
     </div>
 </body>
 </html>

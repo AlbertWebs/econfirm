@@ -64,6 +64,84 @@
 @section('content')
     <x-admin.page-title title="M-PESA transactions" />
 
+    <div class="mb-8 grid gap-6 lg:grid-cols-2">
+        <x-admin.card>
+            <x-slot name="header">Inbound callbacks (this server)</x-slot>
+            <p class="mb-4 text-sm text-slate-600">
+                <strong>Safaricom</strong> POSTs JSON to these routes on your app. They are defined in <code class="rounded bg-slate-100 px-1 font-mono text-xs">routes/api.php</code> and are <strong>not</strong> the Escrow developer API (<code class="rounded bg-slate-100 px-1 font-mono text-xs">/api/v1/…</code>).
+                When customers pay through the website or when payouts run, Daraja must be able to reach these HTTPS URLs.
+            </p>
+            <ul class="space-y-3 text-sm">
+                <li class="flex flex-col gap-0.5 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">STK</span>
+                    <span class="font-mono text-xs text-slate-800 break-all">{{ $mpesaCallbackUrls['inbound']['stk'] }}</span>
+                </li>
+                <li class="flex flex-col gap-0.5 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">B2B result / timeout</span>
+                    <span class="font-mono text-xs text-slate-800 break-all">{{ $mpesaCallbackUrls['inbound']['b2b'] }}</span>
+                </li>
+                <li class="flex flex-col gap-0.5 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">B2C result</span>
+                    <span class="font-mono text-xs text-slate-800 break-all">{{ $mpesaCallbackUrls['inbound']['b2c_result'] }}</span>
+                </li>
+                <li class="flex flex-col gap-0.5 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">B2C queue timeout</span>
+                    <span class="font-mono text-xs text-slate-800 break-all">{{ $mpesaCallbackUrls['inbound']['b2c_timeout'] }}</span>
+                </li>
+            </ul>
+        </x-admin.card>
+
+        <x-admin.card>
+            <x-slot name="header">URLs sent on Daraja requests (.env)</x-slot>
+            <p class="mb-4 text-sm text-slate-600">
+                When this application calls Safaricom (STK Push, B2C, B2B), it sends callback fields built from <code class="rounded bg-slate-100 px-1 font-mono text-xs">config/mpesa.php</code> / your <code class="rounded bg-slate-100 px-1 font-mono text-xs">.env</code>.
+                Those values should normally resolve to the <strong>same paths</strong> as the inbound list. If they point elsewhere (wrong tunnel, old domain), callbacks will never hit this app.
+            </p>
+            <p class="mb-4 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-950">
+                <strong>External Escrow API</strong> (<code class="font-mono text-xs">POST /api/v1/transactions</code>, etc.) does not expose separate M-Pesa webhook URLs for API partners. Outbound Daraja calls still use the configured URLs below; funding and payouts are processed on this server.
+            </p>
+            <div class="overflow-x-auto rounded-lg border border-slate-200">
+                <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-3 py-2 font-semibold text-slate-700">Flow</th>
+                            <th class="px-3 py-2 font-semibold text-slate-700">Daraja field</th>
+                            <th class="px-3 py-2 font-semibold text-slate-700">Effective URL</th>
+                            <th class="px-3 py-2 font-semibold text-slate-700">Matches inbound?</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        @foreach ($mpesaCallbackUrls['rows'] as $row)
+                            <tr class="align-top">
+                                <td class="px-3 py-2 text-slate-800">{{ $row['label'] }}</td>
+                                <td class="px-3 py-2">
+                                    <span class="font-mono text-xs text-slate-600">{{ $row['daraja_field'] }}</span>
+                                    <p class="mt-0.5 text-[10px] uppercase tracking-wide text-slate-400">{{ $row['env_hint'] }}</p>
+                                </td>
+                                <td class="max-w-[14rem] px-3 py-2 font-mono text-xs text-slate-800 break-all sm:max-w-none">
+                                    @if ($row['effective'])
+                                        {{ $row['effective'] }}
+                                    @else
+                                        <span class="text-amber-700">Not set</span>
+                                    @endif
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-2">
+                                    @if ($row['missing'] && $row['key'] !== 'b2c_result' && $row['key'] !== 'b2c_timeout')
+                                        <span class="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900 ring-1 ring-amber-200">Fix .env</span>
+                                    @elseif ($row['matches'])
+                                        <span class="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-900 ring-1 ring-emerald-200">Yes</span>
+                                    @else
+                                        <span class="inline-flex rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-900 ring-1 ring-rose-200">No</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </x-admin.card>
+    </div>
+
     <p class="mb-6 max-w-3xl text-sm text-slate-600">
         STK pushes use <code class="rounded bg-slate-100 px-1 font-mono text-xs">mpesa_stk_pushes</code>.
         C2B uses <code class="rounded bg-slate-100 px-1 font-mono text-xs">mpesa_c2b_transactions</code> (populate via your C2B validation callback when ready).

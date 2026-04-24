@@ -698,3 +698,421 @@
 .db-mnav__link--create.is-active > span:last-child {
     color: var(--db-hero-2);
 }
+
+/* ========== Developer API hub — sidebar layout ========== */
+.db-dev-hub {
+    overflow-x: hidden;
+}
+
+body.db-dev-hub--nav-open {
+    overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .db-dev-sidebar,
+    .db-dev-backdrop {
+        transition: none !important;
+    }
+}
+
+.db-dev-app {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+.db-dev-sidebar {
+    width: 17.5rem;
+    max-width: 88vw;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, var(--db-hero-1) 0%, var(--db-hero-2) 45%, #0d5a32 100%);
+    color: rgba(255, 255, 255, 0.92);
+    box-shadow: 4px 0 24px rgba(10, 40, 25, 0.12);
+    z-index: 1060;
+}
+
+.db-dev-sidebar__brand {
+    padding: 1.25rem 1rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.db-dev-sidebar__logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: inherit;
+}
+
+.db-dev-sidebar__logo-mark {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+.db-dev-sidebar__logo-title {
+    display: block;
+    font-family: var(--db-font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+}
+
+.db-dev-sidebar__logo-sub {
+    display: block;
+    font-size: 0.72rem;
+    opacity: 0.75;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.db-dev-sidebar__nav {
+    padding: 1rem 0.65rem;
+    gap: 0.2rem;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+.db-dev-navlink {
+    color: rgba(255, 255, 255, 0.82) !important;
+    border-radius: var(--db-radius-sm);
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid transparent;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.db-dev-navlink:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff !important;
+}
+
+.db-dev-navlink.active {
+    background: rgba(255, 255, 255, 0.16) !important;
+    color: #fff !important;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.db-dev-sidebar__footer {
+    padding: 1rem 0.85rem calc(1rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.db-dev-sidebar__mini {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.78);
+    text-decoration: none;
+    padding: 0.35rem 0.5rem;
+    border-radius: 0.5rem;
+    transition: background 0.2s, color 0.2s;
+}
+
+.db-dev-sidebar__mini:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.db-dev-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: transparent;
+}
+
+.db-dev-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.65rem 1rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--db-border);
+    box-shadow: var(--db-shadow);
+}
+
+.db-dev-topbar__start {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+}
+
+.db-dev-menu-btn {
+    border: 1px solid var(--db-border);
+    background: #fff;
+    color: var(--db-text);
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.65rem;
+}
+
+.db-dev-menu-btn:hover {
+    background: var(--db-elevated);
+    border-color: rgba(15, 107, 58, 0.2);
+    color: var(--db-hero-2);
+}
+
+.db-dev-topbar__titles {
+    min-width: 0;
+}
+
+.db-dev-topbar__title {
+    font-family: var(--db-font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--db-text);
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+}
+
+.db-dev-topbar__subtitle {
+    font-size: 0.78rem;
+    color: var(--db-text-muted);
+    margin-top: 0.1rem;
+}
+
+.db-dev-topbar__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-shrink: 0;
+}
+
+.db-dev-content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.db-dev-content__inner {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 1.25rem 1rem 2.5rem;
+    padding-bottom: calc(2.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.db-dev-section {
+    scroll-margin-top: 5.5rem;
+}
+
+.db-dev-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1055;
+    background: rgba(12, 24, 18, 0.45);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+@media (max-width: 991.98px) {
+    .db-dev-app {
+        flex-direction: column;
+    }
+
+    .db-dev-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        height: 100vh;
+        height: 100dvh;
+        transform: translateX(-102%);
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        padding-top: env(safe-area-inset-top);
+    }
+
+    .db-dev-app--sidebar-open .db-dev-sidebar {
+        transform: translateX(0);
+    }
+
+    .db-dev-backdrop {
+        display: block;
+        pointer-events: none;
+    }
+
+    .db-dev-app--sidebar-open .db-dev-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
+@media (min-width: 992px) {
+    .db-dev-backdrop {
+        display: none !important;
+    }
+}
+
+/* —— Developer hub: API usage visuals —— */
+.db-api-usage-limit-badge {
+    border-radius: var(--db-radius-sm);
+    padding: 0.5rem 0.85rem;
+    background: linear-gradient(135deg, rgba(15, 107, 58, 0.08) 0%, rgba(201, 162, 39, 0.12) 100%);
+    border: 1px solid var(--db-border);
+    box-shadow: var(--db-shadow);
+}
+
+.db-api-usage-empty {
+    background: var(--db-elevated);
+}
+
+.db-api-usage-stat {
+    border-radius: var(--db-radius-sm);
+    padding: 1rem 0.75rem;
+    text-align: center;
+    background: #fff;
+    border: 1px solid var(--db-border);
+    box-shadow: var(--db-shadow);
+}
+
+.db-api-usage-stat__value {
+    font-family: var(--db-font-display);
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: var(--db-hero-2);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+}
+
+.db-api-usage-stat__label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--db-text-muted);
+    margin-top: 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.db-api-usage-stat__hint {
+    font-size: 0.72rem;
+    margin-top: 0.35rem;
+}
+
+.db-api-usage-chart {
+    display: flex;
+    align-items: stretch;
+    gap: 0.35rem;
+    padding: 0.5rem 0 0.25rem;
+    border-radius: var(--db-radius-sm);
+    background: linear-gradient(180deg, rgba(15, 107, 58, 0.04) 0%, rgba(15, 107, 58, 0.01) 100%);
+    border: 1px solid var(--db-border);
+}
+
+.db-api-usage-chart__col {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.db-api-usage-chart__num {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--db-text);
+    line-height: 1.2;
+    min-height: 1rem;
+}
+
+.db-api-usage-chart__bar-wrap {
+    flex: 1;
+    width: 100%;
+    max-width: 2.25rem;
+    min-height: 5.5rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    margin: 0.2rem 0 0.15rem;
+}
+
+.db-api-usage-chart__bar {
+    width: 100%;
+    border-radius: 0.35rem 0.35rem 0.15rem 0.15rem;
+    min-height: 0;
+    background: linear-gradient(180deg, var(--db-hero-3) 0%, var(--db-hero-2) 45%, var(--db-hero-1) 100%);
+    box-shadow: 0 2px 8px rgba(15, 107, 58, 0.25);
+    transition: height 0.35s ease;
+}
+
+.db-api-usage-chart__dow {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--db-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.db-api-usage-chart__date {
+    font-size: 0.58rem;
+    color: var(--db-text-muted);
+    line-height: 1.1;
+    margin-top: 0.05rem;
+    display: none;
+}
+
+@media (min-width: 576px) {
+    .db-api-usage-chart__date {
+        display: block;
+    }
+}
+
+.db-api-usage-hbar {
+    height: 0.55rem;
+    background: rgba(15, 107, 58, 0.08);
+    overflow: hidden;
+}
+
+.db-api-usage-hbar__fill {
+    height: 100%;
+    min-width: 0;
+    background: linear-gradient(90deg, var(--db-hero-2), var(--db-hero-3));
+    transition: width 0.4s ease;
+}
+
+.db-api-usage-hbar__fill--success {
+    background: linear-gradient(90deg, #0f6b3a, #1a8f52);
+}
+
+.db-api-usage-hbar__fill--warning {
+    background: linear-gradient(90deg, #b45309, #d97706);
+}
+
+.db-api-usage-hbar__fill--danger {
+    background: linear-gradient(90deg, #b91c1c, #dc2626);
+}
+
+.db-api-usage-hbar__fill--neutral {
+    background: linear-gradient(90deg, #475569, #64748b);
+}

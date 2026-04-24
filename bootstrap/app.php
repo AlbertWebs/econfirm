@@ -18,9 +18,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'user-access' => \App\Http\Middleware\UserAccess::class,
             'api.auth' => \App\Http\Middleware\AuthenticateApi::class,
+            'admin.verified' => \App\Http\Middleware\EnsureAdminEmailIsVerified::class,
         ]);
         $middleware->redirectGuestsTo(function (Request $request) {
-            if (($request->is('admin') || $request->is('admin/*')) && ! $request->is('admin/login')) {
+            $adminGuestOk = $request->is('admin/login')
+                || $request->is('admin/login/two-factor')
+                || $request->is('admin/email/verify/*')
+                || $request->is('admin/email/resend-verification');
+
+            if (($request->is('admin') || $request->is('admin/*')) && ! $adminGuestOk) {
                 return route('admin.login');
             }
 

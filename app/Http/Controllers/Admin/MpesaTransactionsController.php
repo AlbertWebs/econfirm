@@ -10,6 +10,7 @@ use App\Models\MpesaC2bTransaction;
 use App\Models\MpesaStkPush;
 use App\Services\AdminActivityLogger;
 use App\Services\MpesaAdminApprovalService;
+use App\Support\MpesaCallbackUrls;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -58,7 +59,9 @@ class MpesaTransactionsController extends Controller
                 + MpesaB2b::query()->whereRaw('LOWER(COALESCE(status, "")) = ?', ['pending'])->count(),
         ];
 
-        return view('admin.mpesa-transactions.index', compact('tab', 'rows', 'filters', 'summary'));
+        $mpesaCallbackUrls = MpesaCallbackUrls::adminSummary();
+
+        return view('admin.mpesa-transactions.index', compact('tab', 'rows', 'filters', 'summary', 'mpesaCallbackUrls'));
     }
 
     /**

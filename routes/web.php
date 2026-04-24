@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\AdminSecurityController;
+use App\Http\Controllers\Admin\ApiAccessController;
 use App\Http\Controllers\Admin\BusinessController;
 use App\Http\Controllers\Admin\ContactSubmissionController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
@@ -9,14 +11,15 @@ use App\Http\Controllers\Admin\LegalPageController;
 use App\Http\Controllers\Admin\LiveChatController as AdminLiveChatController;
 use App\Http\Controllers\Admin\MpesaTransactionsController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
-use App\Http\Controllers\Admin\ApiAccessController;
 use App\Http\Controllers\Admin\ScamReportController as AdminScamReportController;
-use App\Http\Controllers\Admin\SmsLogController;
 use App\Http\Controllers\Admin\SiteSettingsController;
+use App\Http\Controllers\Admin\SmsLogController;
 use App\Http\Controllers\Admin\SupportHelpItemController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\AdminEmailVerificationController;
+use App\Http\Controllers\AdminTwoFactorChallengeController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PhoneOtpLoginController;
 use App\Http\Controllers\Auth\PhoneOtpRegisterController;
@@ -179,14 +182,26 @@ Admin panel (dedicated `admin` guard)
 --------------------------------------------
 --------------------------------------------*/
 Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('email/verify/{id}/{hash}', [AdminEmailVerificationController::class, 'verify'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+
+    Route::post('email/resend-verification', [AdminEmailVerificationController::class, 'resend'])
+        ->middleware('throttle:3,1')
+        ->name('verification.resend');
+
     Route::middleware('guest:admin')->group(function () {
         Route::get('login', [AdminAuthController::class, 'showLoginForm'])->name('login');
         Route::post('login', [AdminAuthController::class, 'login'])
             ->middleware('throttle:8,1')
             ->name('login.post');
+        Route::get('login/two-factor', [AdminTwoFactorChallengeController::class, 'create'])->name('two-factor.show');
+        Route::post('login/two-factor', [AdminTwoFactorChallengeController::class, 'store'])
+            ->middleware('throttle:10,1')
+            ->name('two-factor.store');
     });
     Route::post('logout', [AdminAuthController::class, 'logout'])->middleware('auth:admin')->name('logout');
-    Route::middleware('auth:admin')->group(function () {
+    Route::middleware(['auth:admin', 'admin.verified'])->group(function () {
         Route::get('/', function () {
             return redirect()->route('admin.dashboard');
         })->name('index');
@@ -232,5 +247,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('scam-reports/{scam_report}/status', [AdminScamReportController::class, 'updateStatus'])->name('scam-reports.status');
         Route::get('sms-logs', [SmsLogController::class, 'index'])->name('sms-logs.index');
         Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+        Route::get('security', [AdminSecurityController::class, 'index'])->name('security.index');
+        Route::post('security/email/resend', [AdminSecurityController::class, 'sendVerificationEmail'])
+            ->middleware('throttle:3,1')
+            ->name('security.email.resend');
+        Route::post('security/two-factor/start', [AdminSecurityController::class, 'startTwoFactor'])->name('security.two-factor.start');
+        Route::post('security/two-factor/confirm', [AdminSecurityController::class, 'confirmTwoFactor'])
+            ->middleware('throttle:10,1')
+            ->name('security.two-factor.confirm');
+        Route::post('security/two-factor/disable', [AdminSecurityController::class, 'disableTwoFactor'])->name('security.two-factor.disable');
     });
 });
