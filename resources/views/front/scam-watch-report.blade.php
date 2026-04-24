@@ -150,6 +150,30 @@
                     <dd class="text-red-700 font-mono text-base break-all">{{ $report->reported_value }}</dd>
                 </div>
             </dl>
+
+            @if ($report->is_verified && is_array($report->evidence) && count(array_filter($report->evidence, fn ($p) => is_string($p) && $p !== '')) > 0)
+                <div class="mt-8 not-prose border-t border-gray-200 pt-8" aria-label="Report evidence">
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">Evidence</h2>
+                    <p class="text-sm text-gray-600 mb-4">Submitted files (download for your records).</p>
+                    <ul class="space-y-2">
+                        @foreach ($report->evidence as $i => $path)
+                            @if (! is_string($path) || $path === '')
+                                @continue
+                            @endif
+                            <li>
+                                <a
+                                    href="{{ route('scam.watch.evidence', ['report' => $report, 'index' => $i]) }}"
+                                    class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50/80 px-4 py-2.5 text-sm font-semibold text-red-800 transition hover:border-red-300 hover:bg-red-100"
+                                    download
+                                >
+                                    <i class="fas fa-download text-xs" aria-hidden="true"></i>
+                                    Download: {{ basename($path) }}
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
         </article>
 
         <div class="mt-10 flex flex-wrap items-center justify-between gap-4 pt-8 border-t border-gray-200">

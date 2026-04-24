@@ -20,7 +20,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class HomeController extends Controller
 {
@@ -519,6 +521,32 @@ class HomeController extends Controller
     public function scamWatchReportForm()
     {
         return view('front.report-a-scam');
+    }
+
+    /**
+     * Download a submitted evidence file (verified reports only; same storage as admin).
+     */
+    public function scamWatchEvidence(ScamReport $report, int $index): StreamedResponse
+    {
+        if (! $report->is_verified) {
+            abort(404);
+        }
+
+        $paths = $report->evidence;
+        if (! is_array($paths) || ! isset($paths[$index])) {
+            abort(404);
+        }
+        $path = $paths[$index];
+        if (! is_string($path) || $path === '' || str_contains($path, '..')) {
+            abort(404);
+        }
+        if (! Storage::disk('local')->exists($path)) {
+            abort(404);
+        }
+
+        return Storage::disk('local')->response($path, basename($path), [
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     public function scamWatchShow(ScamReport $report, ?string $slug = null)

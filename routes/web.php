@@ -67,6 +67,9 @@ Route::get('/scam-watch/report', [HomeController::class, 'scamWatchReportForm'])
 Route::get('/scam-watch/category/{category}', [HomeController::class, 'scamWatchCategory'])
     ->name('scam.watch.category')
     ->whereIn('category', array_keys(ScamReport::CATEGORY_LABELS));
+Route::get('/scam-watch/reports/{report}/evidence/{index}', [HomeController::class, 'scamWatchEvidence'])
+    ->name('scam.watch.evidence')
+    ->whereNumber('index');
 Route::get('/scam-watch/reports/{report}/{slug?}', [HomeController::class, 'scamWatchShow'])->name('scam.watch.show');
 Route::post('/scam-watch/reports/{report}/comments', [HomeController::class, 'postScamReportComment'])
     ->middleware('throttle:8,1')
