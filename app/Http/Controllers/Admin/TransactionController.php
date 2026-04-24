@@ -113,14 +113,10 @@ class TransactionController extends Controller
                 }
 
                 if (Schema::hasTable('disputes')) {
-                    $this->runWithReprepareRetry(
-                        fn () => DB::table('disputes')->where('transaction_id', $transaction->id)->delete()
-                    );
+                    $this->deleteByIntColumn('disputes', 'transaction_id', (int) $transaction->id);
                 }
                 if (Schema::hasTable('live_chats')) {
-                    $this->runWithReprepareRetry(
-                        fn () => DB::table('live_chats')->where('transaction_id', $transaction->id)->delete()
-                    );
+                    $this->deleteByIntColumn('live_chats', 'transaction_id', (int) $transaction->id);
                 }
 
                 // Final safety net: clear any remaining FK dependents to transactions.id.
@@ -225,6 +221,39 @@ class TransactionController extends Controller
             $attempt++;
             usleep(120000);
             goto beginning;
+        }
+    }
+
+    /**
+     * Delete by integer key with fallback to unprepared SQL for stubborn MySQL 1615 errors.
+     */
+    protected function deleteByIntColumn(string $table, string $column, int $value): void
+    {
+        try {
+            $this->runWithReprepareRetry(
+                fn () => DB::table($table)->where($column, $value)->delete()
+            );
+        } catch (QueryException $e) {
+            $errorInfo = $e->errorInfo ?? [];
+            $driverCode = (int) ($errorInfo[1] ?? 0);
+            $message = strtolower((string) ($errorInfo[2] ?? $e->getMessage()));
+            $isReprepare = $driverCode === 1615 || str_contains($message, 'needs to be re-prepared');
+
+            if (! $isReprepare) {
+                throw $e;
+            }
+
+            $wrappedTable = '`'.str_replace('`', '``', $table).'`';
+            $wrappedColumn = '`'.str_replace('`', '``', $column).'`';
+            $sql = "DELETE FROM {$wrappedTable} WHERE {$wrappedColumn} = ".(int) $value;
+
+            Log::warning('Falling back to unprepared delete after repeated 1615 failures', [
+                'table' => $table,
+                'column' => $column,
+                'value' => $value,
+            ]);
+
+            DB::unprepared($sql);
         }
     }
 
