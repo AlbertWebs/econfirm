@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use App\Models\Transaction;
 use App\Models\User;
-use Illuminate\Support\Str;
+use App\Services\PaymentGatewayAuditLog;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class EscrowApiController extends Controller
 {
     /**
      * Create a new escrow transaction
-     * 
+     *
      * POST /v1/transactions
      */
     public function createTransaction(Request $request): JsonResponse
@@ -36,7 +37,7 @@ class EscrowApiController extends Controller
         }
 
         // Generate unique transaction ID
-        $transactionId = 'txn_' . strtoupper(Str::random(12));
+        $transactionId = 'txn_'.strtoupper(Str::random(12));
 
         $apiUser = $request->api_user;
 
@@ -57,6 +58,12 @@ class EscrowApiController extends Controller
             'status' => 'pending',
         ]);
 
+        PaymentGatewayAuditLog::record('escrow.created', $request, [
+            'transaction_id' => $transaction->transaction_id,
+            'amount' => (float) $transaction->transaction_amount,
+            'currency' => $transaction->currency,
+        ]);
+
         return response()->json([
             'success' => true,
             'message' => 'Escrow transaction created successfully',
@@ -75,7 +82,7 @@ class EscrowApiController extends Controller
 
     /**
      * Get transaction status
-     * 
+     *
      * GET /v1/transactions/{transaction_id}
      */
     public function getTransaction(Request $request, string $transactionId): JsonResponse
@@ -88,11 +95,15 @@ class EscrowApiController extends Controller
             ->first();
 
         if (! $transaction) {
+            PaymentGatewayAuditLog::record('escrow.get.not_found', $request, ['transaction_id' => $transactionId]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Transaction not found',
             ], 404);
         }
+
+        PaymentGatewayAuditLog::record('escrow.get', $request, ['transaction_id' => $transactionId]);
 
         // Get buyer and seller users if they exist
         $buyer = User::where('email', $transaction->buyer_email)->first();
@@ -123,7 +134,7 @@ class EscrowApiController extends Controller
 
     /**
      * Release funds to seller
-     * 
+     *
      * POST /v1/transactions/{transaction_id}/release
      */
     public function releaseFunds(Request $request, string $transactionId): JsonResponse
@@ -159,7 +170,7 @@ class EscrowApiController extends Controller
         if (! in_array($transaction->status, ['funded', 'in_progress', 'pending'], true)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Transaction cannot be released. Current status: ' . $transaction->status,
+                'message' => 'Transaction cannot be released. Current status: '.$transaction->status,
             ], 400);
         }
 
@@ -175,8 +186,12 @@ class EscrowApiController extends Controller
         $transaction->update([
             'status' => 'complete',
             'confirmation_code' => $request->confirmation_code,
-            'transaction_details' => $transaction->transaction_details . 
-                ($request->notes ? "\n\nRelease Notes: " . $request->notes : ''),
+            'transaction_details' => $transaction->transaction_details.
+                ($request->notes ? "\n\nRelease Notes: ".$request->notes : ''),
+        ]);
+
+        PaymentGatewayAuditLog::record('escrow.released', $request, [
+            'transaction_id' => $transaction->transaction_id,
         ]);
 
         return response()->json([

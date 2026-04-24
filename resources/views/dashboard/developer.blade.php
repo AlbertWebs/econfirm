@@ -167,6 +167,12 @@
                     <ul class="list-unstyled small mb-0">
                         <li class="mb-2"><span class="badge bg-light text-dark border me-2">GET</span> <code id="t-ping">{{ $apiRootUrl }}/ping</code> <button type="button" class="btn btn-link btn-sm p-0" data-copy-target="#t-ping">Copy</button></li>
                         <li class="mb-2"><span class="text-muted me-1">v1 base</span> <code id="t-v1">{{ $apiV1Url }}</code> <button type="button" class="btn btn-link btn-sm p-0" data-copy-target="#t-v1">Copy</button></li>
+                        <li class="mb-2 pt-2 border-top"><span class="badge bg-success me-2">POST</span> <code>{{ $apiV1Url }}/payments/stk-push</code></li>
+                        <li class="mb-2"><span class="badge bg-success me-2">POST</span> <code>{{ $apiV1Url }}/payments/c2b</code> <span class="text-muted">(sandbox / when enabled)</span></li>
+                        <li class="mb-2"><span class="badge bg-success me-2">POST</span> <code>{{ $apiV1Url }}/payments/b2c</code></li>
+                        <li class="mb-2"><span class="badge bg-success me-2">POST</span> <code>{{ $apiV1Url }}/payments/b2b</code></li>
+                        <li class="mb-2"><span class="badge bg-light text-dark border me-2">GET</span> <code>{{ $apiV1Url }}/transactions/{id}</code></li>
+                        <li class="mb-2"><span class="badge bg-success me-2">POST</span> <code>{{ $apiV1Url }}/transactions/{id}/reversal</code></li>
                     </ul>
                 </div>
             </div>
@@ -208,7 +214,7 @@
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body">
                     <h2 class="h6 fw-bold text-uppercase text-muted mb-2">Example requests (6 languages)</h2>
-                    <p class="small text-muted mb-3">Ping, create escrow, fetch status, and release use your key and a real <code class="small">transaction_id</code> where shown.</p>
+                    <p class="small text-muted mb-3">Ping, create escrow, STK funding, fetch status, and release use your key and a real <code class="small">transaction_id</code> where shown.</p>
                     @php
                         $codeTabs = [
                             'curl' => 'cURL',
@@ -242,7 +248,7 @@
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body">
                     <h2 class="h6 fw-bold text-uppercase text-muted mb-2">Postman</h2>
-                    <p class="small text-muted mb-3">Collection v2.1: health check, <code>POST /v1/transactions</code>, get transaction, release. Variables <code class="small">apiRoot</code>, <code class="small">apiKey</code>, <code class="small">transactionId</code>.</p>
+                    <p class="small text-muted mb-3">Collection v2.1: health check, escrow v1, and payment gateway routes. Variables <code class="small">apiRoot</code>, <code class="small">apiKey</code>, <code class="small">transactionId</code>.</p>
                     <a href="{{ route('developer.postman.collection') }}" class="btn btn-success btn-sm rounded-pill px-3">Download Postman collection</a>
                     @unless ($keyPreview)
                         <p class="small text-muted mt-2 mb-0">Save a key with <strong>Generate key</strong> first; the download uses your stored key (not the one-time flash banner).</p>
@@ -254,112 +260,22 @@
         <section id="dev-section-mpesa" class="db-dev-section">
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body">
-                    <h2 class="h6 fw-bold text-uppercase text-muted mb-2">M-Pesa: inbound vs Daraja (.env)</h2>
-                    <p class="small text-muted mb-3">
-                        <strong>Inbound</strong> URLs are where <strong>Safaricom</strong> POSTs results. <strong>Daraja request</strong> URLs are the values this server sends when it calls STK/B2C/B2B; they come from <code class="small">.env</code> and should match inbound on production.
-                        The Escrow <strong>REST API</strong> (<code class="small">/api/v1/…</code>) does <em>not</em> use a separate M-Pesa callback URL per partner—funding still lands on these routes.
-                    </p>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <h3 class="h6 fw-semibold mb-2">Inbound (Safaricom → this app)</h3>
-                            <ul class="list-unstyled small mb-0">
-                                <li class="mb-2"><span class="badge bg-light text-dark border me-2">POST</span> <code class="small">{{ $mpesaCallbackUrls['inbound']['stk'] }}</code> — STK</li>
-                                <li class="mb-2"><span class="badge bg-light text-dark border me-2">POST</span> <code class="small">{{ $mpesaCallbackUrls['inbound']['b2b'] }}</code> — B2B result / timeout</li>
-                                <li class="mb-2"><span class="badge bg-light text-dark border me-2">POST</span> <code class="small">{{ $mpesaCallbackUrls['inbound']['b2c_result'] }}</code> — B2C result</li>
-                                <li class="mb-2"><span class="badge bg-light text-dark border me-2">POST</span> <code class="small">{{ $mpesaCallbackUrls['inbound']['b2c_timeout'] }}</code> — B2C queue timeout</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <h3 class="h6 fw-semibold mb-2">Sent on Daraja requests (effective)</h3>
-                            <ul class="list-unstyled small mb-0">
-                                @foreach ($mpesaCallbackUrls['rows'] as $row)
-                                    @php
-                                        $envKey = explode(' ', $row['env_hint'], 2)[0];
-                                    @endphp
-                                    <li class="mb-3">
-                                        <span class="fw-semibold">{{ $row['label'] }}</span>
-                                        @if ($row['effective'])
-                                            <code class="small d-block mt-1 text-break">{{ $row['effective'] }}</code>
-                                        @else
-                                            <span class="small text-warning d-block mt-1">Not set — set <code class="small">{{ $envKey }}</code></span>
-                                        @endif
-                                        @if ($row['matches'])
-                                            <span class="badge bg-success mt-1">Matches inbound route</span>
-                                        @elseif ($row['effective'])
-                                            <span class="badge bg-danger mt-1">Does not match inbound URL</span>
-                                        @endif
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
+                    <h2 class="h6 fw-bold text-uppercase text-muted mb-2">Payments &amp; M-Pesa (platform gateway)</h2>
+                    <div class="alert alert-warning border-0 small mb-3">
+                        <strong>All M-PESA interactions are managed internally by our system.</strong> External developers must not connect directly to Safaricom M-PESA APIs. Integrate only with <code class="small">{{ $apiV1Url }}/…</code> using your API key; we validate, rate-limit, audit-log, and then perform any M-Pesa call from our servers. Consumer keys, passkeys, and certificates never leave our infrastructure.
                     </div>
-                    <p class="small text-muted mb-3">Acknowledgment: HTTP <strong>200</strong> with <code class="small">{"ResultCode":0,"ResultDesc":"Success"}</code> (not part of the escrow API key flow).</p>
-                    <h3 class="h6 fw-semibold mb-2">HTTP response (all handlers)</h3>
-                    <p class="small text-muted mb-2">After processing (or when the payload shape is unexpected), the server responds with:</p>
-                    <pre class="bg-light p-3 rounded small mb-4 font-monospace">HTTP/1.1 200 OK
-Content-Type: application/json
-
-{"ResultCode":0,"ResultDesc":"Success"}</pre>
-                    <p class="small text-muted mb-2">For example, the STK handler still returns the same JSON if <code class="small">Body.stkCallback</code> is missing, so Safaricom always gets a clean acknowledgment.</p>
-                    <h3 class="h6 fw-semibold mb-2">Sample STK callback body (truncated)</h3>
-                    <pre class="bg-light p-3 rounded small mb-4 font-monospace overflow-auto" style="max-height:14rem;">{
-  "Body": {
-    "stkCallback": {
-      "MerchantRequestID": "29115-34620561-1",
-      "CheckoutRequestID": "ws_CO_01012025120000",
-      "ResultCode": 0,
-      "ResultDesc": "The service request is processed successfully.",
-      "CallbackMetadata": {
-        "Item": [
-          { "Name": "Amount", "Value": 100 },
-          { "Name": "MpesaReceiptNumber", "Value": "QGH1234567" },
-          { "Name": "Balance" },
-          { "Name": "TransactionDate", "Value": 20250101120000 },
-          { "Name": "PhoneNumber", "Value": "254712345678" }
-        ]
-      }
-    }
-  }
-}</pre>
-                    <h3 class="h6 fw-semibold mb-2">Sample B2B <code class="small">Result</code> (shape)</h3>
-                    <pre class="bg-light p-3 rounded small mb-4 font-monospace overflow-auto" style="max-height:12rem;">{
-  "Result": {
-    "ResultType": 0,
-    "ResultCode": 0,
-    "ResultDesc": "The service request is processed successfully.",
-    "OriginatorConversationID": "AG_201...",
-    "ConversationID": "AG_201...",
-    "TransactionID": "L...",
-    "ResultParameters": {
-      "ResultParameter": [
-        { "Key": "TransactionReceipt", "Value": "..." },
-        { "Key": "TransactionCompletedDateTime", "Value": "..." },
-        { "Key": "ReceiverPartyPublicName", "Value": "..." },
-        { "Key": "PartyB", "Value": "2547..." },
-        { "Key": "Amount", "Value": 100 }
-      ]
-    }
-  }
-}</pre>
-                    <h3 class="h6 fw-semibold mb-2">Sample B2C <code class="small">Result</code> (shape)</h3>
-                    <pre class="bg-light p-3 rounded small mb-0 font-monospace overflow-auto" style="max-height:12rem;">{
-  "Result": {
-    "ResultType": 0,
-    "ResultCode": 0,
-    "ResultDesc": "The service request is processed successfully.",
-    "OriginatorConversationID": "AG_201...",
-    "ConversationID": "AG_201...",
-    "TransactionID": "L...",
-    "ResultParameters": {
-      "ResultParameter": [
-        { "Key": "TransactionReceipt", "Value": "..." },
-        { "Key": "TransactionCompletedDateTime", "Value": "..." },
-        { "Key": "ReceiverPartyPublicName", "Value": "..." },
-        { "Key": "TransactionAmount", "Value": 100 }
-      ]
-    }
-  }
-}</pre>
+                    <h3 class="h6 fw-semibold mb-2">Typical funding flow</h3>
+                    <ol class="small text-muted mb-4">
+                        <li><code class="small">POST …/transactions</code> — create escrow (pending).</li>
+                        <li><code class="small">POST …/payments/stk-push</code> — body <code class="small">transaction_id</code> + <code class="small">payer_phone</code> (254…); customer confirms on handset.</li>
+                        <li><code class="small">GET …/transactions/{id}</code> — poll escrow status; M-Pesa callbacks are processed on our side.</li>
+                        <li>Payouts (when your escrow rules allow): <code class="small">POST …/payments/b2c</code> or <code class="small">POST …/payments/b2b</code> with the same <code class="small">transaction_id</code>.</li>
+                        <li>Reversals: <code class="small">POST …/transactions/{id}/reversal</code> with <code class="small">mpesa_transaction_id</code> and <code class="small">amount</code> — forwarded only through our backend.</li>
+                    </ol>
+                    <p class="small text-muted mb-2">Optional <code class="small">POST …/payments/c2b</code> calls our internal C2B simulate path (sandbox / when explicitly enabled for production). It is not a shortcut to live paybills outside our controls.</p>
+                    <h3 class="h6 fw-semibold mb-2">Operator-only callback URLs</h3>
+                    <p class="small text-muted mb-2">Inbound HTTPS routes that <strong>only Safaricom</strong> should call (STK, B2B, B2C, reversal) are provisioned by the platform operator in the server environment. They are <strong>not</strong> part of the developer API surface and are not documented here as integration targets.</p>
+                    <p class="small text-muted mb-0">If you operate this deployment, see the admin M-Pesa configuration screens and <code class="small">.env</code> — not the public API docs.</p>
                 </div>
             </div>
         </section>

@@ -455,6 +455,55 @@
   "notes": "Goods received in perfect condition"
 }
               </div>
+
+              <h3>Payments (M-Pesa through our platform only)</h3>
+              <div class="alert alert-warning border-0">
+                <strong>Important:</strong> All M-PESA interactions are managed internally by our system. External developers must not connect directly to Safaricom M-PESA APIs (including Daraja). Use only the endpoints below with your API key; authentication, validation, rate limits, and audit logging run on our servers before any M-Pesa call.
+              </div>
+              <p>After you create an escrow with <code>POST /transactions</code>, fund it with STK Push:</p>
+              <div class="code-block">
+<strong>POST</strong> /payments/stk-push
+
+<strong>Request Body:</strong>
+{
+  "transaction_id": "txn_xxxxxxxx",
+  "payer_phone": "254712345678"
+}
+              </div>
+              <p>Optional sandbox C2B simulate (disabled in production unless explicitly enabled by the operator):</p>
+              <div class="code-block">
+<strong>POST</strong> /payments/c2b
+
+<strong>Request Body:</strong>
+{
+  "amount": 10,
+  "msisdn": "254712345678",
+  "bill_reference": "txn_xxxxxxxx"
+}
+              </div>
+              <p>B2C / B2B disbursements are initiated only through our backend after you reference your escrow row:</p>
+              <div class="code-block">
+<strong>POST</strong> /payments/b2c
+{ "transaction_id": "txn_xxxxxxxx" }
+
+<strong>POST</strong> /payments/b2b
+{ "transaction_id": "txn_xxxxxxxx" }
+              </div>
+              <p>Transaction reversal (server forwards to M-Pesa; async result callbacks are handled on our infrastructure):</p>
+              <div class="code-block">
+<strong>POST</strong> /transactions/{transaction_id}/reversal
+
+<strong>Request Body:</strong>
+{
+  "mpesa_transaction_id": "LXXXXXXXX",
+  "amount": 100,
+  "remarks": "Duplicate payment"
+}
+              </div>
+              <p>Status for an escrow row (same as above):</p>
+              <div class="code-block">
+<strong>GET</strong> /transactions/{transaction_id}
+              </div>
               
               <h3>Error Handling</h3>
               <p>The API uses conventional HTTP response codes to indicate success or failure:</p>
@@ -493,8 +542,7 @@
               </div>
               
               <div class="alert alert-info mt-4">
-                <strong>Rate Limits:</strong> API requests are limited to 1000 requests per hour per API key. 
-                Contact support if you need higher limits.
+                <strong>Rate Limits:</strong> Most v1 routes allow 1000 requests per 60 minutes per API key; payment actions use tighter per-route limits. Contact support if you need higher limits.
               </div>
             </section>
 

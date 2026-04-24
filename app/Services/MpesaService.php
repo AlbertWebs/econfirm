@@ -915,4 +915,98 @@ class MpesaService
 
         return $response->json();
     }
+
+    /**
+     * Request an M-Pesa transaction reversal (server-side only; never expose to browser clients).
+     *
+     * @return array{success: bool, message: string, data?: mixed}
+     */
+    public function requestTransactionReversal(string $mpesaTransactionId, float $amount, string $remarks = 'Reversal'): array
+    {
+        $mpesaTransactionId = trim($mpesaTransactionId);
+        if ($mpesaTransactionId === '') {
+            return ['success' => false, 'message' => 'M-Pesa transaction id is required.'];
+        }
+
+        $amountKes = max(1, (int) round($amount, 0));
+        $shortcode = trim((string) config('mpesa.shortcode'));
+        if ($shortcode === '') {
+            return ['success' => false, 'message' => 'M-Pesa shortcode is not configured.'];
+        }
+
+        $endpoint = (string) config(
+            'mpesa.reversal_url',
+            'https://sandbox.safaricom.co.ke/mpesa/reversal/v1/request'
+        );
+        $token = $this->getAccessToken();
+        if ($token === '') {
+            return ['success' => false, 'message' => 'Could not obtain M-Pesa access token.'];
+        }
+
+        $resultUrl = trim((string) config('mpesa.reversal_result_url', ''));
+        $queueUrl = trim((string) config('mpesa.reversal_queue_timeout_url', ''));
+        if ($resultUrl === '') {
+            $resultUrl = url('/api/mpesa/reversal/result');
+        }
+        if ($queueUrl === '') {
+            $queueUrl = url('/api/mpesa/reversal/timeout');
+        }
+
+        $payload = [
+            'Initiator' => config('mpesa.initiator', 'testapi'),
+            'SecurityCredential' => config('mpesa.security_credential', ''),
+            'CommandID' => 'TransactionReversal',
+            'TransactionID' => $mpesaTransactionId,
+            'Amount' => (string) $amountKes,
+            'ReceiverParty' => $shortcode,
+            'RecieverIdentifierType' => '11',
+            'ResultURL' => $resultUrl,
+            'QueueTimeOutURL' => $queueUrl,
+            'Remarks' => $remarks !== '' ? mb_substr($remarks, 0, 100) : 'Reversal',
+            'Occasion' => 'API reversal',
+        ];
+
+        \Log::info('M-Pesa reversal request', [
+            'mpesa_transaction_id' => $mpesaTransactionId,
+            'amount_kes' => $amountKes,
+        ]);
+
+        try {
+            $response = $this->mpesaHttp()->timeout(60)->withToken($token)->acceptJson()->post($endpoint, $payload);
+        } catch (\Throwable $e) {
+            \Log::error('M-Pesa reversal HTTP exception', ['message' => $e->getMessage()]);
+
+            return [
+                'success' => false,
+                'message' => 'Reversal request failed: '.$e->getMessage(),
+            ];
+        }
+
+        $body = $response->json();
+        if (! is_array($body)) {
+            $body = ['raw' => $response->body()];
+        }
+
+        $responseCode = $body['ResponseCode'] ?? $body['responseCode'] ?? null;
+        $accepted = $response->successful() && (string) $responseCode === '0';
+
+        if ($accepted) {
+            return [
+                'success' => true,
+                'message' => 'Reversal request accepted for processing.',
+                'data' => $body,
+            ];
+        }
+
+        $detail = $body['errorMessage']
+            ?? $body['ResponseDescription']
+            ?? $body['ResultDesc']
+            ?? 'Reversal not accepted';
+
+        return [
+            'success' => false,
+            'message' => is_string($detail) ? $detail : 'Reversal failed.',
+            'data' => $body,
+        ];
+    }
 }

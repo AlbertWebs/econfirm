@@ -76,7 +76,7 @@
                     <li>
                         <a class="nav-link db-dev-navlink" href="#dev-section-mpesa">
                             <span class="db-dev-navlink__icon" aria-hidden="true"><i class="fas fa-mobile-screen-button"></i></span>
-                            <span class="db-dev-navlink__label">M-Pesa URLs</span>
+                            <span class="db-dev-navlink__label">Payments</span>
                         </a>
                     </li>
                     <li>

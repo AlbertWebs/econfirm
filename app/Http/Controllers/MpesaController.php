@@ -33,7 +33,6 @@ class MpesaController extends Controller
     /**
      * Handle M-Pesa callback from Safaricom API.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function handleCallback(Request $request)
@@ -96,7 +95,7 @@ class MpesaController extends Controller
         return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success']);
     }
 
-    //handleB2BCallback
+    // handleB2BCallback
     public function handleB2BCallback(Request $request)
     {
         \Log::info('M-Pesa B2B Callback:', $request->all());
@@ -113,22 +112,22 @@ class MpesaController extends Controller
 
         // Save to database
         \App\Models\MpesaB2bCallback::create([
-            'conversation_id' => $result['ConversationID'] ,
-            'originator_conversation_id' => $result['OriginatorConversationID'] ,
-            'transaction_id' => $result['TransactionID'] ,
-            'result_type' => $result['ResultType'] ,
-            'result_code' => $result['ResultCode'] ,
-            'result_desc' => $result['ResultDesc'] ,
-            'receiver_party_public_name' => $params['ReceiverPartyPublicName'] ,
-            'amount' => $params['Amount'] ,
-            'debit_account_balance' => $params['DebitAccountBalance'] ,
-            'party_a' => $params['PartyA'] ,
-            'party_b' => $params['PartyB'] ,
-            'transaction_receipt' => $params['TransactionReceipt'] ,
-            'transaction_completed_datetime' => $params['TransactionCompletedDateTime'] ,
-            'initiator_account_current_balance' => $params['InitiatorAccountCurrentBalance'] ,
-            'charges_paid' => $params['ChargesPaid'] ,
-            'currency' => $params['Currency'] ,
+            'conversation_id' => $result['ConversationID'],
+            'originator_conversation_id' => $result['OriginatorConversationID'],
+            'transaction_id' => $result['TransactionID'],
+            'result_type' => $result['ResultType'],
+            'result_code' => $result['ResultCode'],
+            'result_desc' => $result['ResultDesc'],
+            'receiver_party_public_name' => $params['ReceiverPartyPublicName'],
+            'amount' => $params['Amount'],
+            'debit_account_balance' => $params['DebitAccountBalance'],
+            'party_a' => $params['PartyA'],
+            'party_b' => $params['PartyB'],
+            'transaction_receipt' => $params['TransactionReceipt'],
+            'transaction_completed_datetime' => $params['TransactionCompletedDateTime'],
+            'initiator_account_current_balance' => $params['InitiatorAccountCurrentBalance'],
+            'charges_paid' => $params['ChargesPaid'],
+            'currency' => $params['Currency'],
             'raw_callback' => $request->all(),
         ]);
 
@@ -197,7 +196,7 @@ class MpesaController extends Controller
             ->first();
     }
 
-    //handleB2CCallback
+    // handleB2CCallback
     public function handleB2CCallback(Request $request)
     {
         \Log::info('M-Pesa B2C Callback:', $request->all());
@@ -267,4 +266,23 @@ class MpesaController extends Controller
         return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success']);
     }
 
+    /**
+     * Daraja TransactionReversal async result (inbound from Safaricom only).
+     */
+    public function handleReversalResult(Request $request)
+    {
+        Log::info('M-Pesa reversal result callback', ['payload' => $request->all()]);
+
+        return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success']);
+    }
+
+    /**
+     * Daraja TransactionReversal queue timeout (inbound from Safaricom only).
+     */
+    public function handleReversalTimeout(Request $request)
+    {
+        Log::info('M-Pesa reversal timeout callback', ['payload' => $request->all()]);
+
+        return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success']);
+    }
 }

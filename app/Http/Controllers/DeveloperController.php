@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transaction;
-use App\Support\MpesaCallbackUrls;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,7 +40,6 @@ class DeveloperController extends Controller
             'storedApiKey' => filled($user->api_key) ? (string) $user->api_key : null,
             'apiTransactions' => $apiTransactions,
             'codeSamples' => $this->buildCodeSamples($apiRoot, $v1, $bearer, $sampleTxn),
-            'mpesaCallbackUrls' => MpesaCallbackUrls::adminSummary(),
             'apiUsage' => $this->buildApiUsageForUser((int) $user->id),
         ]);
     }
@@ -169,8 +167,10 @@ class DeveloperController extends Controller
         $createJson = '{"buyer_email":"buyer@example.com","seller_email":"seller@example.com","amount":1500.5,"currency":"KES","description":"API escrow","terms":"Deliver on receipt of funds."}';
         $releaseJson = '{"confirmation_code":"YOUR_CONFIRMATION_CODE","notes":"Optional note"}';
 
+        $stkJson = '{"transaction_id":"'.$sampleTxn.'","payer_phone":"254712345678"}';
         $curlPing = "curl -sS \"{$apiRoot}/ping\"";
         $curlCreate = "curl -sS -X POST \"{$apiV1}/transactions\" \\\n  -H \"Authorization: Bearer {$bearer}\" \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Accept: application/json\" \\\n  -d '{$createJson}'";
+        $curlStk = "curl -sS -X POST \"{$apiV1}/payments/stk-push\" \\\n  -H \"Authorization: Bearer {$bearer}\" \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Accept: application/json\" \\\n  -d '{$stkJson}'";
         $curlGet = "curl -sS \"{$apiV1}/transactions/{$sampleTxn}\" \\\n  -H \"Authorization: Bearer {$bearer}\" \\\n  -H \"Accept: application/json\"";
         $curlRelease = "curl -sS -X POST \"{$apiV1}/transactions/{$sampleTxn}/release\" \\\n  -H \"Authorization: Bearer {$bearer}\" \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Accept: application/json\" \\\n  -d '{$releaseJson}'";
 
@@ -196,6 +196,20 @@ const created = await fetch(\`\${v1}/transactions\`, {
     currency: "KES",
     description: "API escrow",
     terms: "Deliver on receipt of funds.",
+  }),
+}).then(r => r.json());
+
+// STK funding (after create; uses same transaction id)
+await fetch(\`\${v1}/payments/stk-push\`, {
+  method: "POST",
+  headers: {
+    "Authorization": \`Bearer \${API_KEY}\`,
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+  },
+  body: JSON.stringify({
+    transaction_id: "{$sampleTxn}",
+    payer_phone: "254712345678",
   }),
 }).then(r => r.json());
 
@@ -310,7 +324,7 @@ func main() {
 GO;
 
         return [
-            'curl' => implode("\n\n", [$curlPing, $curlCreate, $curlGet, $curlRelease]),
+            'curl' => implode("\n\n", [$curlPing, $curlCreate, $curlStk, $curlGet, $curlRelease]),
             'javascript' => $js,
             'php' => $php,
             'python' => $py,
@@ -365,7 +379,7 @@ GO;
             'info' => [
                 '_postman_id' => Str::uuid()->toString(),
                 'name' => 'eConfirm Escrow API',
-                'description' => 'Health check + Escrow v1. Set `apiRoot` (e.g. '.$apiRoot.') and `apiKey` (your ek_ key).',
+                'description' => 'Health check + Escrow v1 + payment gateway. Set `apiRoot` (e.g. '.$apiRoot.') and `apiKey` (your ek_ key).',
                 'schema' => 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
             ],
             'variable' => [
@@ -383,6 +397,31 @@ GO;
                         $item('POST /api/v1/transactions/{transaction_id}/release', 'POST', '/v1/transactions/{{transactionId}}/release', $jsonHeader, [
                             'confirmation_code' => 'YOUR_CONFIRMATION_CODE',
                             'notes' => '',
+                        ]),
+                        $item('POST /api/v1/transactions/{transaction_id}/reversal', 'POST', '/v1/transactions/{{transactionId}}/reversal', $jsonHeader, [
+                            'mpesa_transaction_id' => 'LXXXXXXXX',
+                            'amount' => 100,
+                            'remarks' => 'Reversal',
+                        ]),
+                    ],
+                ],
+                [
+                    'name' => 'Payments (platform)',
+                    'item' => [
+                        $item('POST /api/v1/payments/stk-push', 'POST', '/v1/payments/stk-push', $jsonHeader, [
+                            'transaction_id' => '{{transactionId}}',
+                            'payer_phone' => '254712345678',
+                        ]),
+                        $item('POST /api/v1/payments/c2b', 'POST', '/v1/payments/c2b', $jsonHeader, [
+                            'amount' => 10,
+                            'msisdn' => '254712345678',
+                            'bill_reference' => '{{transactionId}}',
+                        ]),
+                        $item('POST /api/v1/payments/b2c', 'POST', '/v1/payments/b2c', $jsonHeader, [
+                            'transaction_id' => '{{transactionId}}',
+                        ]),
+                        $item('POST /api/v1/payments/b2b', 'POST', '/v1/payments/b2b', $jsonHeader, [
+                            'transaction_id' => '{{transactionId}}',
                         ]),
                     ],
                 ],

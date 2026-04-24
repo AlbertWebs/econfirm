@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'user-access' => \App\Http\Middleware\UserAccess::class,
             'api.auth' => \App\Http\Middleware\AuthenticateApi::class,
             'admin.verified' => \App\Http\Middleware\EnsureAdminEmailIsVerified::class,
+            'deprecated.mobile.payment' => \App\Http\Middleware\DeprecateLegacyMobilePaymentRoutes::class,
         ]);
         $middleware->redirectGuestsTo(function (Request $request) {
             $adminGuestOk = $request->is('admin/login')
