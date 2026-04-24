@@ -4,10 +4,16 @@
 @section('page_title', 'Scam reports')
 
 @section('content')
-    <x-admin.page-title
-        title="Scam reports"
-        description="Review Scam Alert submissions. Approving marks a report as verified for the public site."
-    />
+    <x-admin.page-title title="Scam reports" description="Review Scam Alert submissions. Approving marks a report as verified for the public site.">
+        <x-slot:actions>
+            <a
+                href="{{ route('admin.scam-reports.index', array_filter(['status' => 'pending', 'q' => request('q')])) }}"
+                class="inline-flex items-center justify-center rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900 shadow-sm transition hover:bg-amber-100"
+            >
+                Review pending
+            </a>
+        </x-slot:actions>
+    </x-admin.page-title>
 
     <form method="get" class="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
         <div class="min-w-0 flex-1 sm:max-w-md">
@@ -64,9 +70,10 @@
                                             <input type="hidden" name="status" value="approved">
                                             <button
                                                 type="submit"
-                                                class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1"
+                                                title="Publish this report as a verified Scam Alert listing"
+                                                class="inline-flex min-h-[2.25rem] items-center justify-center rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 sm:min-h-0"
                                             >
-                                                Approve
+                                                Approve listing
                                             </button>
                                         </form>
                                     @endunless

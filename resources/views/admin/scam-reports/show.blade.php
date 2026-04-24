@@ -17,19 +17,20 @@
         <div class="mb-6 flex flex-col gap-3 rounded-xl border border-amber-200/90 bg-amber-50/90 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
             <div class="min-w-0">
                 <p class="text-sm font-semibold text-amber-950">Pending moderation</p>
-                <p class="mt-0.5 text-sm text-amber-900/90">Approve this report to mark it <span class="font-medium">Verified</span> on the public Scam Alert page.</p>
+                <p class="mt-0.5 text-sm text-amber-900/90">Use <span class="font-medium">Approve listing</span> to publish as a verified Scam Alert entry.</p>
             </div>
-            <form method="post" action="{{ route('admin.scam-reports.status', $report) }}" class="shrink-0">
+            <form method="post" action="{{ route('admin.scam-reports.status', $report) }}" class="w-full shrink-0 sm:w-auto">
                 @csrf
                 <input type="hidden" name="status" value="approved">
                 <button
                     type="submit"
-                    class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 sm:w-auto"
+                    title="Publish as verified listing on the public Scam Alert page"
+                    class="inline-flex w-full min-h-[2.75rem] items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                 >
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
-                    Approve report
+                    Approve listing
                 </button>
             </form>
         </div>
