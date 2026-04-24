@@ -149,7 +149,7 @@ function transactionFormData() {
                 if (data.success) {
                     this.mpesaResponse = {
                         type: 'success',
-                        message: data.message || 'STK sent. Approve on your phone.',
+                        message: data.message || 'STK sent. Check your phone and enter your M-PESA PIN.',
                     };
                     const checkoutId = data.CheckoutRequestID || (data.data && data.data.CheckoutRequestID);
                     if (checkoutId) {
@@ -182,10 +182,12 @@ function transactionFormData() {
 
         pollTransactionStatus() {
             const self = this;
-            const maxAttempts = 24;
-            const pollInterval = 5000;
+            const maxAttempts = 60;
+            const pollInterval = 4000;
             this._clearStatusTimer();
             let attempts = 0;
+
+            const timeoutMessage = 'We have not received final confirmation from M-Pesa yet. If you entered your PIN and the amount left your account, wait a few minutes, check your SMS, or open your dashboard. You can also refresh this page.';
 
             const scheduleNext = function () {
                 self._clearStatusTimer();
@@ -196,7 +198,7 @@ function transactionFormData() {
 
             const pollOne = function () {
                 if (attempts >= maxAttempts) {
-                    self.mpesaResponse = { type: 'warning', message: 'No confirmation yet. Check SMS or your dashboard.' };
+                    self.mpesaResponse = { type: 'warning', message: timeoutMessage };
                     return;
                 }
                 attempts++;
@@ -204,11 +206,42 @@ function transactionFormData() {
                     clearTimeout(self._statusPollTimer);
                     self._statusPollTimer = null;
                 }
-                fetch('/transaction/status/' + self.checkoutRequestId, {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                const cid = encodeURIComponent(self.checkoutRequestId || '');
+                if (!cid || cid === 'null' || cid === 'undefined') {
+                    self._clearStatusTimer();
+                    self.mpesaResponse = { type: 'error', message: 'Missing payment session. Please start again from the form.' };
+                    return;
+                }
+                fetch('/transaction/status/' + cid + '?_=' + Date.now(), {
+                    cache: 'no-store',
+                    credentials: 'same-origin',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
                 })
-                .then(res => res.json())
-                .then(data => {
+                .then(async function (res) {
+                    let data = {};
+                    try {
+                        data = await res.json();
+                    } catch (e) {
+                        data = {};
+                    }
+                    if (res.status === 404) {
+                        self._clearStatusTimer();
+                        self.mpesaResponse = { type: 'error', message: data.message || 'Payment session not found. Please retry the transaction.' };
+                        return;
+                    }
+                    if (!res.ok) {
+                        self.mpesaResponse = {
+                            type: 'warning',
+                            message: data.message || ('Checking with M-Pesa… (server returned HTTP ' + res.status + '). Please wait.'),
+                        };
+                        if (attempts >= maxAttempts) {
+                            self._clearStatusTimer();
+                            self.mpesaResponse = { type: 'warning', message: timeoutMessage };
+                            return;
+                        }
+                        scheduleNext();
+                        return;
+                    }
                     const st = (data.status != null ? String(data.status) : '').toLowerCase();
                     if (st === 'success' || st === 'completed') {
                         self._clearStatusTimer();
@@ -221,7 +254,7 @@ function transactionFormData() {
                             type: 'success',
                             message: data.message || 'Your escrow has been funded. Redirecting…',
                         };
-                        setTimeout(() => {
+                        setTimeout(function () {
                             window.location.href = '/get-transaction/' + encodeURIComponent(data.transaction_id);
                         }, 1500);
                     } else if (st === 'failed') {
@@ -233,20 +266,25 @@ function transactionFormData() {
                     } else if (st === 'pending') {
                         self.mpesaResponse = {
                             type: 'success',
-                            message: data.message || 'Waiting for M-Pesa… (PIN entered? This can take up to a minute.)'
+                            message: data.message || 'Waiting for M-Pesa… (after your PIN, confirmation can take a minute or more.)',
                         };
+                        if (attempts >= maxAttempts) {
+                            self._clearStatusTimer();
+                            self.mpesaResponse = { type: 'warning', message: timeoutMessage };
+                            return;
+                        }
                         scheduleNext();
                     } else if (attempts >= maxAttempts) {
                         self._clearStatusTimer();
-                        self.mpesaResponse = { type: 'warning', message: 'No confirmation yet. Check SMS or your dashboard.' };
+                        self.mpesaResponse = { type: 'warning', message: timeoutMessage };
                     } else {
                         scheduleNext();
                     }
                 })
-                .catch(() => {
+                .catch(function () {
                     if (attempts >= maxAttempts) {
                         self._clearStatusTimer();
-                        self.mpesaResponse = { type: 'warning', message: 'Confirmation timed out. Check SMS or your dashboard.' };
+                        self.mpesaResponse = { type: 'warning', message: timeoutMessage };
                     } else {
                         scheduleNext();
                     }

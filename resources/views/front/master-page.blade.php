@@ -304,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     mpesaResponse.style.display = 'block';
                     if (data.success) {
                         
-                        mpesaResponse.textContent = data.message || 'STK sent. Approve on your phone.';
+                        mpesaResponse.textContent = data.message || 'STK sent. Check your phone and enter your M-PESA PIN.';
                         mpesaResponse.className = 'alert alert-success text-center';
                         // Check for CheckoutRequestID before polling
                         const checkoutRequestId = data.CheckoutRequestID || (data.data && data.data.CheckoutRequestID);

@@ -479,6 +479,22 @@ class MpesaService
         return $d;
     }
 
+    /** Safaricom may send codes as int, string, or omit; empty/non-numeric → null. */
+    protected static function stkQueryNumericCode(mixed $v): ?int
+    {
+        if ($v === null || $v === '') {
+            return null;
+        }
+        if (is_bool($v)) {
+            return null;
+        }
+        if (is_numeric($v)) {
+            return (int) $v;
+        }
+
+        return null;
+    }
+
     /**
      * @return array{0: int, 1: string}
      */
@@ -487,33 +503,39 @@ class MpesaService
         if (! is_array($body) || $body === []) {
             return [1, ''];
         }
-        $code = $body['ResultCode'] ?? null;
-        $desc = $body['ResultDesc'] ?? null;
+        $code = self::stkQueryNumericCode($body['ResultCode'] ?? $body['resultCode'] ?? null);
+        $desc = $body['ResultDesc'] ?? $body['resultDesc'] ?? null;
         if (isset($body['Result']) && is_array($body['Result'])) {
             if ($code === null) {
-                $code = $body['Result']['ResultCode'] ?? $code;
+                $code = self::stkQueryNumericCode($body['Result']['ResultCode'] ?? $body['Result']['resultCode'] ?? null);
             }
             if ($desc === null || $desc === '') {
-                $desc = $body['Result']['ResultDesc'] ?? $desc;
+                $desc = $body['Result']['ResultDesc'] ?? $body['Result']['resultDesc'] ?? $desc;
             }
         }
         if (isset($body['Body']) && is_array($body['Body'])) {
             if ($code === null) {
-                $code = $body['Body']['ResultCode'] ?? $code;
+                $code = self::stkQueryNumericCode($body['Body']['ResultCode'] ?? $body['Body']['resultCode'] ?? null);
             }
             if ($desc === null || $desc === '') {
-                $desc = $body['Body']['ResultDesc'] ?? $desc;
+                $desc = $body['Body']['ResultDesc'] ?? $body['Body']['resultDesc'] ?? $desc;
             }
         }
         $bodyInner = is_array($body['Body'] ?? null) ? $body['Body'] : null;
         if ($bodyInner !== null && isset($bodyInner['stkCallback']) && is_array($bodyInner['stkCallback'])) {
             $stkCb = $bodyInner['stkCallback'];
             if ($code === null) {
-                $code = $stkCb['ResultCode'] ?? null;
+                $code = self::stkQueryNumericCode($stkCb['ResultCode'] ?? $stkCb['resultCode'] ?? null);
             }
             if ($desc === null || $desc === '') {
-                $desc = $stkCb['ResultDesc'] ?? $desc;
+                $desc = $stkCb['ResultDesc'] ?? $stkCb['resultDesc'] ?? $desc;
             }
+        }
+        if ($code === null) {
+            $code = self::stkQueryNumericCode($body['ResponseCode'] ?? $body['responseCode'] ?? null);
+        }
+        if ($desc === null || $desc === '') {
+            $desc = $body['ResponseDescription'] ?? $body['responseDescription'] ?? null;
         }
 
         return [

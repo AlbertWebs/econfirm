@@ -961,7 +961,7 @@ class HomeController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'STK sent. Approve on your phone.',
+                'message' => 'STK sent. Check your phone and enter your M-PESA PIN.',
                 'CheckoutRequestID' => $mpesaResponse['data']['CheckoutRequestID'] ?? null,
             ]);
         } else {
@@ -1009,12 +1009,12 @@ class HomeController extends Controller
         if ($stk->status !== 'Success') {
             // Querying STK too soon after the push often returns ResultDesc "still under processing"
             // and scares users who have not seen the phone prompt yet. Defer the first real query briefly.
-            $minAgeBeforeStkQuerySeconds = 8;
+            $minAgeBeforeStkQuerySeconds = 5;
             if ($stk->created_at && abs((int) $stk->created_at->diffInSeconds(now())) < $minAgeBeforeStkQuerySeconds) {
                 return response()->json([
                     'success' => true,
                     'status' => 'Pending',
-                    'message' => 'STK sent. Approve on your phone.',
+                    'message' => 'STK sent. Check your phone and enter your M-PESA PIN.',
                 ]);
             }
             // Callback can be delayed/missed; fallback to Daraja STK query.
