@@ -1,4 +1,4 @@
-@props(['title'])
+@props(['title', 'description' => null])
 <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <div class="min-w-0">
         <h2 class="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">{{ $title }}</h2>

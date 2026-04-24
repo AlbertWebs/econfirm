@@ -7,6 +7,7 @@ use App\Models\ScamReport;
 use App\Services\AdminActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ScamReportController extends Controller
@@ -38,7 +39,7 @@ class ScamReportController extends Controller
     public function updateStatus(Request $request, ScamReport $scam_report): RedirectResponse
     {
         $data = $request->validate([
-            'status' => ['required', 'string', 'max:50'],
+            'status' => ['required', 'string', Rule::in(['pending', 'approved'])],
         ]);
         $scam_report->update($data);
         AdminActivityLogger::log('scam_report.status', ScamReport::class, $scam_report->id, ['status' => $data['status']]);

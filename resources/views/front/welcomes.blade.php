@@ -56,7 +56,7 @@
                 
                 <div class="hero-form animate-on-scroll">
                     <div class="form-container">
-                        <h3>Start a Secure Transaction</h3>
+                        <h3>Start Escrow</h3>
                         <form class="transaction-form">
                             <div class="form-group">
                                 <label for="transaction-type">Transaction Type</label>

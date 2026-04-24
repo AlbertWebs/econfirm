@@ -95,9 +95,11 @@
    
    
     <style>
-        /* Smooth scrolling for anchor links */
+        /* Smooth scrolling; clip horizontal overflow without the overflow-x/y pairing bug that creates a second vertical scrollbar. */
         html {
             scroll-behavior: smooth;
+            overflow-x: clip;
+            max-width: 100%;
         }
         
         /* Preloader styles */
@@ -181,7 +183,7 @@
     $navBtnIdle = 'text-gray-700 hover:bg-gray-50 hover:border-green-300';
 @endphp
 <body
-    class="bg-white antialiased overflow-x-hidden"
+    class="bg-white antialiased min-w-0"
     x-data="{
         mobileMenuOpen: false,
         searchPopupOpen: false,
@@ -201,7 +203,7 @@
 </div>
     
     <!-- Header -->
-    <header class="hidden lg:block sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-md">
+    <header class="hidden lg:block sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200">
         <div class="w-full min-w-0 max-w-[min(100%,90rem)] mx-auto px-2.5 sm:px-4 lg:px-8">
             <div class="flex items-center justify-between h-20">
                 <div class="flex-shrink-0">

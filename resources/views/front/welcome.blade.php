@@ -282,7 +282,7 @@ function transactionFormData() {
 <div x-data="transactionFormData()">
 
        <!-- Hero: mobile shows form only; headline and CTAs from lg breakpoint up -->
-<section id="home" class="relative min-h-0 sm:min-h-0 lg:min-h-[75vh] flex items-center bg-gradient-to-br from-green-50 via-white to-emerald-50 overflow-x-hidden overflow-y-visible pt-2 pb-4 sm:pt-3 sm:pb-5 lg:pt-5 lg:pb-8 w-full min-w-0">
+<section id="home" class="relative min-h-0 sm:min-h-0 lg:min-h-[75vh] flex items-start lg:items-center bg-gradient-to-br from-green-50 via-white to-emerald-50 pt-2 pb-4 sm:pt-3 sm:pb-5 lg:pt-5 lg:pb-8 w-full min-w-0 max-w-full">
     <!-- Animated Background Elements -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div class="absolute -top-40 -left-40 w-96 h-96 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
@@ -290,7 +290,7 @@ function transactionFormData() {
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
     </div>
 
-    <div class="relative w-full min-w-0 max-w-[min(100%,90rem)] mx-auto px-2.5 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-6">
+    <div class="relative w-full min-w-0 max-w-[min(100%,90rem)] mx-auto px-4 sm:px-2.5 md:px-4 lg:px-8 py-2 sm:py-3 lg:py-6">
         <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] gap-3 sm:gap-4 lg:gap-8 items-stretch min-w-0 min-h-0">
             <!-- Hero Content (hidden on small screens; form only on mobile) -->
             <div class="hidden lg:flex lg:flex-col lg:min-h-0 lg:min-w-0 lg:h-full lg:justify-start text-center lg:text-left space-y-5 xl:space-y-8" 
@@ -374,7 +374,7 @@ function transactionFormData() {
     $formControl = 'w-full min-w-0 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 border border-gray-200 bg-white rounded-xl shadow-sm hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-[color,box-shadow,border-color] duration-150';
 @endphp
             <!-- Hero Form: narrow on small screens; full width of column from lg up -->
-            <div class="w-full min-w-0 max-w-[19rem] sm:max-w-sm md:max-w-md mx-auto flex flex-col lg:h-full lg:min-h-0 lg:max-w-none lg:w-full lg:mx-0"
+            <div class="w-full min-w-0 max-w-full flex flex-col lg:h-full lg:min-h-0 lg:max-w-none lg:mx-0"
                  x-data="{ inView: true }"
                  x-intersect="inView = true">
                 <div x-show="inView"
@@ -393,7 +393,7 @@ function transactionFormData() {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                 </svg>
                             </div>
-                            <h3 class="min-w-0 text-base sm:text-lg font-bold text-gray-900 leading-snug">Start a Secure Transaction</h3>
+                            <h3 class="min-w-0 text-base sm:text-lg font-bold text-gray-900 leading-snug">Start Escrow</h3>
                         </div>
                 
                     <form @submit.prevent="submitForm($event)" class="mt-4 sm:mt-5 space-y-3.5 sm:space-y-4 w-full min-w-0 text-sm">
@@ -419,7 +419,7 @@ function transactionFormData() {
                                 <ul x-show="transactionTypeOpen && filteredTransactionTypes.length > 0"
                                     x-transition
                                     x-cloak
-                                    class="absolute z-50 left-0 right-0 top-full mt-1.5 w-full min-w-0 max-h-48 sm:max-h-56 overflow-y-auto overflow-x-hidden rounded-xl border border-gray-200/90 bg-white py-1.5 shadow-xl shadow-gray-200/50 ring-1 ring-black/5"
+                                    class="absolute z-50 left-0 right-0 top-full mt-1.5 w-full min-w-0 max-h-48 sm:max-h-56 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-xl border border-gray-200/90 bg-white py-1.5 shadow-xl shadow-gray-200/50 ring-1 ring-black/5"
                                     role="listbox">
                                     <template x-for="t in filteredTransactionTypes" :key="t.value">
                                         <li role="option"
