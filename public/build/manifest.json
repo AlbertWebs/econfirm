@@ -4,12 +4,12 @@
     "name": "module.esm"
   },
   "resources/css/app.css": {
-    "file": "assets/app-BxrbYQwT.css",
+    "file": "assets/app-BGcr2nm2.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/js/admin.js": {
-    "file": "assets/admin-DrYmqsgO.js",
+    "file": "assets/admin-vqTajOoR.js",
     "name": "admin",
     "src": "resources/js/admin.js",
     "isEntry": true,
@@ -17,7 +17,7 @@
       "_module.esm-CwKKyv8g.js"
     ],
     "css": [
-      "assets/app-BxrbYQwT.css"
+      "assets/app-BGcr2nm2.css"
     ]
   },
   "resources/js/app.js": {
