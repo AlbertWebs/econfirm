@@ -45,7 +45,7 @@ class MpesaTransactionsController extends Controller
             'stk_total' => MpesaStkPush::query()->count(),
             'c2b_total_amount' => (float) MpesaC2bTransaction::query()->sum('amount'),
             'c2b_count' => MpesaC2bTransaction::query()->count(),
-            'b2c_total_amount' => (float) MpesaB2c::query()->sum('amount'),
+            'b2c_total_amount' => MpesaB2c::sumEffectiveAmountKes(),
             'b2c_count' => MpesaB2c::query()->count(),
             'b2b_total_amount' => (float) MpesaB2b::query()->sum('amount'),
             'b2b_count' => MpesaB2b::query()->count(),
@@ -116,7 +116,7 @@ class MpesaTransactionsController extends Controller
      */
     protected function paginateB2c(Request $request, array $filters): LengthAwarePaginator
     {
-        $q = MpesaB2c::query()->with(['approvedByAdmin', 'rejectedByAdmin'])->orderByDesc('id');
+        $q = MpesaB2c::query()->with(['approvedByAdmin', 'rejectedByAdmin', 'sourceEscrow'])->orderByDesc('id');
         $this->applyDateRange($q, $filters['date_from'] ?? null, $filters['date_to'] ?? null, 'created_at');
         if (! empty($filters['status'])) {
             $q->whereRaw('LOWER(COALESCE(status, "")) = ?', [strtolower((string) $filters['status'])]);
@@ -147,7 +147,7 @@ class MpesaTransactionsController extends Controller
      */
     protected function paginateB2b(Request $request, array $filters): LengthAwarePaginator
     {
-        $q = MpesaB2b::query()->orderByDesc('id');
+        $q = MpesaB2b::query()->with(['approvedByAdmin', 'rejectedByAdmin', 'sourceEscrow'])->orderByDesc('id');
         $this->applyDateRange($q, $filters['date_from'] ?? null, $filters['date_to'] ?? null, 'created_at');
         if (! empty($filters['status'])) {
             $q->whereRaw('LOWER(COALESCE(status, "")) = ?', [strtolower((string) $filters['status'])]);

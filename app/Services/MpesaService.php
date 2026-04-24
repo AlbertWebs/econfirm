@@ -237,7 +237,10 @@ class MpesaService
             $mpesaB2b->transaction_type = $responseData['TransactionType'] ?? null;
             $mpesaB2b->party_a = $responseData['PartyA'] ?? null;
             $mpesaB2b->party_b = $responseData['PartyB'] ?? null;
-            $mpesaB2b->amount = $responseData['Amount'] ?? null;
+            $requestedB2bAmount = (float) round((float) $transaction->transaction_amount, 0);
+            $mpesaB2b->amount = isset($responseData['Amount']) && $responseData['Amount'] !== '' && $responseData['Amount'] !== null
+                ? (float) $responseData['Amount']
+                : $requestedB2bAmount;
             $mpesaB2b->result_code = $responseData['ResultCode'] ?? null;
             $mpesaB2b->result_desc = $responseData['ResultDesc'] ?? null;
             $mpesaB2b->command_id = $responseData['CommandID'] ?? null;
@@ -247,6 +250,7 @@ class MpesaService
             $mpesaB2b->occasion = $responseData['Occasion'] ?? null;
             $mpesaB2b->status = 'pending';
             $mpesaB2b->raw_response = $responseData;
+            $mpesaB2b->source_transaction_id = $transaction->transaction_id;
             $mpesaB2b->save();
 
             return [
@@ -273,16 +277,34 @@ class MpesaService
      */
     public function b2c(Transaction $transaction): array
     {
-        // TODO: Implement B2C logic
         $endpoint = config('mpesa.b2c_url', 'https://sandbox.safaricom.co.ke/mpesa/b2c/v1/paymentrequest');
         $token = $this->getAccessToken();
+        if ($token === '') {
+            return [
+                'success' => false,
+                'message' => 'M-Pesa authentication failed. Check consumer key/secret and try again.',
+                'data' => null,
+            ];
+        }
+
+        $partyB = preg_replace('/[\s+]/', '', (string) $transaction->receiver_mobile);
+        if ($partyB === '' || ! preg_match('/^254\d{9}$/', $partyB)) {
+            return [
+                'success' => false,
+                'message' => 'Recipient phone is missing or invalid for M-Pesa payout. It must be a Kenya number in 2547XXXXXXXX format.',
+                'data' => null,
+            ];
+        }
+
+        $amountKes = max(1, (int) round((float) $transaction->transaction_amount, 0));
+
         $payload = [
             'InitiatorName' => config('mpesa.initiator', 'testapi'),
             'SecurityCredential' => config('mpesa.security_credential', 'security'),
             'CommandID' => 'BusinessPayment',
-            'Amount' => $transaction->transaction_amount,
+            'Amount' => $amountKes,
             'PartyA' => config('mpesa.shortcode'),
-            'PartyB' => preg_replace('/[\s+]/', '', $transaction->receiver_mobile),
+            'PartyB' => $partyB,
             'Remarks' => $transaction->transaction_details ?? 'Escrow Payout',
             'QueueTimeOutURL' => config('mpesa.b2c_timeout_url', url('/mpesa/b2c/timeout')),
             'ResultURL' => config('mpesa.b2c_result_url', url('/mpesa/b2c/result')),
@@ -293,30 +315,56 @@ class MpesaService
             'payload' => $payload,
             'transaction_id' => $transaction->transaction_id,
         ]);
-        $response = $this->mpesaHttp()->withToken($token)->acceptJson()->post($endpoint, $payload);
+        try {
+            $response = $this->mpesaHttp()->timeout(60)->withToken($token)->acceptJson()->post($endpoint, $payload);
+        } catch (\Throwable $e) {
+            \Log::error('M-Pesa B2C HTTP exception', [
+                'transaction_id' => $transaction->transaction_id,
+                'message' => $e->getMessage(),
+            ]);
 
-        if ($response->successful() && isset($response['ResponseCode']) && $response['ResponseCode'] == '0') {
-            $responseData = $response->json();
+            return [
+                'success' => false,
+                'message' => 'B2C request failed: '.$e->getMessage(),
+                'data' => null,
+            ];
+        }
 
+        $responseData = $response->json();
+        if (! is_array($responseData)) {
+            $responseData = [];
+        }
+        $responseCode = $responseData['ResponseCode'] ?? $responseData['responseCode'] ?? null;
+        $accepted = $response->successful() && (string) $responseCode === '0';
+
+        if ($accepted) {
             // fill the M-Pesa B2c table
             $mpesaB2c = new \App\Models\MpesaB2c;
             $mpesaB2c->originator_conversation_id = $responseData['OriginatorConversationID'] ?? null;
             $mpesaB2c->conversation_id = $responseData['ConversationID'] ?? null;
             $mpesaB2c->transaction_id = $responseData['TransactionID'] ?? null;
             $mpesaB2c->transaction_type = $responseData['TransactionType'] ?? null;
-            $mpesaB2c->receiver_mobile = $responseData['PartyB'] ?? null;
-            $mpesaB2c->amount = $responseData['Amount'] ?? null;
+            $partyBRaw = $responseData['PartyB'] ?? null;
+            $normalizedPartyB = ($partyBRaw !== null && $partyBRaw !== '')
+                ? preg_replace('/[\s+]/', '', (string) $partyBRaw)
+                : preg_replace('/[\s+]/', '', (string) $transaction->receiver_mobile);
+            $mpesaB2c->receiver_mobile = $normalizedPartyB !== '' ? $normalizedPartyB : null;
+            $mpesaB2c->party_b = $mpesaB2c->receiver_mobile;
+            $requestedB2cAmount = (float) $transaction->transaction_amount;
+            $mpesaB2c->amount = isset($responseData['Amount']) && $responseData['Amount'] !== '' && $responseData['Amount'] !== null
+                ? (float) $responseData['Amount']
+                : $requestedB2cAmount;
             $mpesaB2c->result_code = $responseData['ResultCode'] ?? null;
             $mpesaB2c->result_desc = $responseData['ResultDesc'] ?? null;
             $mpesaB2c->command_id = $responseData['CommandID'] ?? null;
             $mpesaB2c->initiator_name = $responseData['InitiatorName'] ?? null;
             $mpesaB2c->security_credential = $responseData['SecurityCredential'] ?? null;
             $mpesaB2c->party_a = $responseData['PartyA'] ?? null;
-            $mpesaB2c->party_b = $responseData['PartyB'] ?? null;
             $mpesaB2c->remarks = $responseData['Remarks'] ?? null;
             $mpesaB2c->occasion = $responseData['Occasion'] ?? null;
             $mpesaB2c->status = $responseData['Status'] ?? 'pending';
             $mpesaB2c->raw_response = $responseData;
+            $mpesaB2c->source_transaction_id = $transaction->transaction_id;
             $mpesaB2c->save();
 
             return [
@@ -326,9 +374,28 @@ class MpesaService
             ];
         }
 
+        $detail = $responseData['errorMessage']
+            ?? $responseData['error_description']
+            ?? $responseData['ResponseDescription']
+            ?? $responseData['responseDescription']
+            ?? $responseData['ResultDesc']
+            ?? null;
+        if (! is_string($detail) || trim($detail) === '') {
+            $detail = 'HTTP '.$response->status().'; ResponseCode='.var_export($responseCode, true);
+        }
+
+        \Log::warning('M-Pesa B2C initiation not accepted', [
+            'transaction_id' => $transaction->transaction_id,
+            'http_status' => $response->status(),
+            'response_code' => $responseCode,
+            'body' => $responseData,
+            'raw' => $response->body(),
+        ]);
+
         return [
             'success' => false,
-            'message' => 'B2C payment initiation failed.',
+            'message' => 'B2C payment initiation failed: '.$detail,
+            'data' => $responseData,
         ];
     }
 
@@ -675,7 +742,9 @@ class MpesaService
                 'transaction_id' => $responseData['TransactionID'] ?? $record->transaction_id,
                 'transaction_type' => $responseData['TransactionType'] ?? null,
                 'receiver_mobile' => $responseData['PartyB'] ?? $record->receiver_mobile,
-                'amount' => $responseData['Amount'] ?? $record->amount,
+                'amount' => (isset($responseData['Amount']) && $responseData['Amount'] !== '' && $responseData['Amount'] !== null)
+                    ? (float) $responseData['Amount']
+                    : $record->amount,
                 'result_code' => $responseData['ResultCode'] ?? null,
                 'result_desc' => $responseData['ResultDesc'] ?? null,
                 'command_id' => $responseData['CommandID'] ?? null,
@@ -759,7 +828,9 @@ class MpesaService
                 'transaction_type' => $responseData['TransactionType'] ?? null,
                 'party_a' => $responseData['PartyA'] ?? $record->party_a,
                 'party_b' => $responseData['PartyB'] ?? $record->party_b,
-                'amount' => $responseData['Amount'] ?? $record->amount,
+                'amount' => (isset($responseData['Amount']) && $responseData['Amount'] !== '' && $responseData['Amount'] !== null)
+                    ? (float) $responseData['Amount']
+                    : $record->amount,
                 'result_code' => $responseData['ResultCode'] ?? null,
                 'result_desc' => $responseData['ResultDesc'] ?? null,
                 'command_id' => $responseData['CommandID'] ?? null,

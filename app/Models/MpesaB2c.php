@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property-read Transaction|null $sourceEscrow
+ */
 class MpesaB2c extends Model
 {
     protected $table = 'mpesa_b2c';
@@ -50,6 +53,54 @@ class MpesaB2c extends Model
     public function rejectedByAdmin(): BelongsTo
     {
         return $this->belongsTo(Admin::class, 'rejected_by_admin_id');
+    }
+
+    /**
+     * Escrow row referenced by source_transaction_id (same string as transactions.transaction_id).
+     */
+    public function sourceEscrow(): BelongsTo
+    {
+        return $this->belongsTo(Transaction::class, 'source_transaction_id', 'transaction_id');
+    }
+
+    /**
+     * KES amount for admin UI: stored column, else Daraja response snapshot, else linked escrow principal.
+     */
+    public function displayAmountKes(): float
+    {
+        $a = (float) ($this->amount ?? 0);
+        if ($a > 0) {
+            return $a;
+        }
+        $raw = $this->raw_response;
+        if (is_array($raw)) {
+            foreach (['Amount', 'amount'] as $k) {
+                if (isset($raw[$k]) && is_numeric($raw[$k]) && (float) $raw[$k] > 0) {
+                    return (float) $raw[$k];
+                }
+            }
+        }
+        if ($this->relationLoaded('sourceEscrow') && $this->sourceEscrow) {
+            return (float) $this->sourceEscrow->transaction_amount;
+        }
+        if ($this->source_transaction_id) {
+            $v = Transaction::where('transaction_id', $this->source_transaction_id)->value('transaction_amount');
+
+            return $v !== null ? (float) $v : 0.0;
+        }
+
+        return 0.0;
+    }
+
+    /**
+     * Total KES for dashboard cards (handles legacy rows with amount 0 before fix).
+     */
+    public static function sumEffectiveAmountKes(): float
+    {
+        return (float) (static::query()
+            ->leftJoin('transactions', 'mpesa_b2c.source_transaction_id', '=', 'transactions.transaction_id')
+            ->selectRaw('COALESCE(SUM(COALESCE(NULLIF(mpesa_b2c.amount, 0), transactions.transaction_amount, 0)), 0) as aggregate')
+            ->value('aggregate') ?? 0);
     }
 
     public function isPending(): bool

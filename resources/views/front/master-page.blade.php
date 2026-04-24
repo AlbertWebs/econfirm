@@ -304,8 +304,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     mpesaResponse.style.display = 'block';
                     if (data.success) {
                         
-                        mpesaResponse.textContent = data.message || 'M-Pesa prompt sent. Approve the payment on your phone when you get the request, then wait a few seconds for confirmation here.';
-                        mpesaResponse.className = 'alert alert-success';
+                        mpesaResponse.textContent = data.message || 'STK sent. Approve on your phone.';
+                        mpesaResponse.className = 'alert alert-success text-center';
                         // Check for CheckoutRequestID before polling
                         const checkoutRequestId = data.CheckoutRequestID || (data.data && data.data.CheckoutRequestID);
                         if (checkoutRequestId) {
@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     } else {
                         mpesaResponse.textContent = data.message || 'Submission failed. Please try again.';
-                        mpesaResponse.className = 'alert alert-warning';
+                        mpesaResponse.className = 'alert alert-warning text-center';
                     }
                 }
             })
@@ -346,7 +346,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     clearInterval(poll);
                     if (mpesaResponse) {
                         mpesaResponse.textContent = data.message || 'Your escrow has been funded. Redirecting…';
-                        mpesaResponse.className = 'alert alert-success';
+                        mpesaResponse.className = 'alert alert-success text-center';
                     }
                     setTimeout(() => {
                         window.location.href = `/get-transaction/${data.transaction_id}`; //only work with transaction_id
@@ -355,17 +355,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     clearInterval(poll);
                     if (mpesaResponse) {
                         mpesaResponse.textContent = data.message || 'Payment failed. Please try again.';
-                        mpesaResponse.className = 'alert alert-danger';
+                        mpesaResponse.className = 'alert alert-danger text-center';
                     }
                 } else if (attempts >= maxAttempts) {
                     clearInterval(poll);
                     if (mpesaResponse) {
                         mpesaResponse.textContent = 'Payment confirmation timed out. Please check your transaction status later.';
-                        mpesaResponse.className = 'alert alert-warning';
+                        mpesaResponse.className = 'alert alert-warning text-center';
                     }
                 } else if (mpesaResponse && data.message) {
                     mpesaResponse.textContent = data.message;
-                    mpesaResponse.className = 'alert alert-info';
+                    mpesaResponse.className = 'alert alert-info text-center';
                 }
             })
             .catch(() => {
@@ -373,7 +373,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     clearInterval(poll);
                     if (mpesaResponse) {
                         mpesaResponse.textContent = 'Payment confirmation timed out. Please check your transaction status later.';
-                        mpesaResponse.className = 'alert alert-warning';
+                        mpesaResponse.className = 'alert alert-warning text-center';
                     }
                 }
             });

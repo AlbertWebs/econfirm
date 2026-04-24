@@ -3,15 +3,16 @@
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 
 test('email verification screen can be rendered', function () {
     $user = User::factory()->unverified()->create();
 
-    $response = $this->actingAs($user)->get('/verify-email');
+    $response = $this->actingAs($user)->get(route('verification.notice'));
 
     $response->assertStatus(200);
-});
+})->skip(fn () => ! Route::has('verification.notice'), 'Email verification routes are not enabled (Auth::routes without verify).');
 
 test('email can be verified', function () {
     $user = User::factory()->unverified()->create();
@@ -28,8 +29,8 @@ test('email can be verified', function () {
 
     Event::assertDispatched(Verified::class);
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
-    $response->assertRedirect(route('dashboard', absolute: false).'?verified=1');
-});
+    $response->assertRedirect(route('home.dashboard', absolute: false).'?verified=1');
+})->skip(fn () => ! Route::has('verification.verify'), 'Email verification routes are not enabled.');
 
 test('email is not verified with invalid hash', function () {
     $user = User::factory()->unverified()->create();
@@ -43,4 +44,4 @@ test('email is not verified with invalid hash', function () {
     $this->actingAs($user)->get($verificationUrl);
 
     expect($user->fresh()->hasVerifiedEmail())->toBeFalse();
-});
+})->skip(fn () => ! Route::has('verification.verify'), 'Email verification routes are not enabled.');

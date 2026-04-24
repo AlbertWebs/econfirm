@@ -55,8 +55,6 @@
             // AJAX Submit for Transaction Form
             const form = document.querySelector('.transaction-form');
             const paymentStatusPoll = { timeoutId: null, checkoutId: null, attempts: 0, maxAttempts: 45 };
-            const manualCheckWrap = document.getElementById('mpesa-manual-check-wrap');
-            const manualCheckBtn = document.getElementById('mpesa-check-status-btn');
 
             function clearPaymentStatusPoll() {
                 if (paymentStatusPoll.timeoutId) {
@@ -65,29 +63,11 @@
                 }
                 paymentStatusPoll.checkoutId = null;
                 paymentStatusPoll.runOnce = null;
-                if (manualCheckWrap) {
-                    manualCheckWrap.style.display = 'none';
-                }
-                if (manualCheckBtn) {
-                    manualCheckBtn.disabled = false;
-                    manualCheckBtn.textContent = 'Check payment status now';
-                }
             }
 
             if (form) {
                 const submitBtn = form.querySelector('button[type="submit"]');
                 const defaultBtnHTML = 'Fund Your Escrow <svg style="vertical-align: middle; margin-left: 8px;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>';
-
-                if (manualCheckBtn) {
-                    manualCheckBtn.addEventListener('click', function () {
-                        if (!paymentStatusPoll.checkoutId) {
-                            return;
-                        }
-                        if (typeof paymentStatusPoll.runOnce === 'function') {
-                            paymentStatusPoll.runOnce(true);
-                        }
-                    });
-                }
 
                 form.addEventListener('submit', function (e) {
                     e.preventDefault();
@@ -113,8 +93,8 @@
                             mpesaResponse.style.display = 'block';
                             if (data.success) {
                                 
-                                mpesaResponse.textContent = data.message || 'M-Pesa prompt sent. Approve the payment on your phone when you get the request, then wait a few seconds for confirmation here.';
-                                mpesaResponse.className = 'alert alert-success';
+                                mpesaResponse.textContent = data.message || 'STK sent. Approve on your phone.';
+                                mpesaResponse.className = 'alert alert-success text-center';
                                 // Check for CheckoutRequestID before polling
                                 const checkoutRequestId = data.CheckoutRequestID || (data.data && data.data.CheckoutRequestID);
                                 if (checkoutRequestId) {
@@ -123,7 +103,7 @@
                                 }
                             } else {
                                 mpesaResponse.textContent = data.message || 'Submission failed. Please try again.';
-                                mpesaResponse.className = 'alert alert-warning';
+                                mpesaResponse.className = 'alert alert-warning text-center';
                             }
                         }
                     })
@@ -141,9 +121,6 @@
                 clearPaymentStatusPoll();
                 paymentStatusPoll.checkoutId = checkoutRequestId;
                 paymentStatusPoll.attempts = 0;
-                if (manualCheckWrap) {
-                    manualCheckWrap.style.display = 'block';
-                }
 
                 const submitBtn = form.querySelector('button[type="submit"]');
                 if (submitBtn) {
@@ -169,8 +146,8 @@
                     if (!manual) {
                         if (paymentStatusPoll.attempts >= paymentStatusPoll.maxAttempts) {
                             if (box) {
-                                box.textContent = 'Still waiting for M-Pesa. You can return to the dashboard and look up this transaction, or check your M-Pesa SMS. Use the button below to check status again.';
-                                box.className = 'alert alert-warning';
+                                box.textContent = 'Still waiting for M-Pesa. Check SMS or your dashboard for this transaction.';
+                                box.className = 'alert alert-warning text-center';
                             }
                             if (submitBtn) {
                                 submitBtn.disabled = false;
@@ -179,11 +156,6 @@
                             return;
                         }
                         paymentStatusPoll.attempts++;
-                    } else {
-                        if (manualCheckBtn) {
-                            manualCheckBtn.disabled = true;
-                            manualCheckBtn.textContent = 'Checking…';
-                        }
                     }
                     const url = '/transaction/status/' + encodeURIComponent(checkoutRequestId) + '?_=' + Date.now();
                     fetch(url, {
@@ -197,14 +169,10 @@
                         return res.json();
                     })
                     .then(function (data) {
-                        if (manual && manualCheckBtn) {
-                            manualCheckBtn.disabled = false;
-                            manualCheckBtn.textContent = 'Check payment status now';
-                        }
                         if (data.status === 'completed' || data.status === 'Success') {
                             if (box) {
                                 box.textContent = (data && data.message) ? data.message : 'Your escrow has been funded. Redirecting…';
-                                box.className = 'alert alert-success';
+                                box.className = 'alert alert-success text-center';
                             }
                             clearPaymentStatusPoll();
                             if (submitBtn) {
@@ -220,7 +188,7 @@
                         if (data.status === 'Failed') {
                             if (box) {
                                 box.textContent = (data && data.message) ? data.message : 'Payment was declined or cancelled.';
-                                box.className = 'alert alert-danger';
+                                box.className = 'alert alert-danger text-center';
                             }
                             clearPaymentStatusPoll();
                             if (submitBtn) {
@@ -231,18 +199,14 @@
                         }
                         if (box && data && data.message) {
                             box.textContent = data.message;
-                            box.className = 'alert alert-info';
+                            box.className = 'alert alert-info text-center';
                         }
                         scheduleNext();
                     })
                     .catch(function () {
-                        if (manual && manualCheckBtn) {
-                            manualCheckBtn.disabled = false;
-                            manualCheckBtn.textContent = 'Check payment status now';
-                        }
                         if (box) {
-                            box.textContent = 'Could not read payment status. Check your connection or your dashboard using your transaction ID. You can use the button below to try again.';
-                            box.className = 'alert alert-warning';
+                            box.textContent = 'Could not read payment status. Check your connection or your dashboard.';
+                            box.className = 'alert alert-warning text-center';
                         }
                         if (submitBtn) {
                             submitBtn.disabled = false;

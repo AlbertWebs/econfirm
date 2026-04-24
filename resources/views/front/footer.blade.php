@@ -2,7 +2,7 @@
     {{-- Subtle top accent — brand green without changing layout --}}
     <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-green-600/40 to-transparent pointer-events-none" aria-hidden="true"></div>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+    <div class="max-w-[min(100%,84rem)] mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-12 mb-10">
             <!-- Brand Column -->
             <div class="sm:col-span-2 lg:col-span-1">

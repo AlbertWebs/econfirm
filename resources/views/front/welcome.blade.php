@@ -40,7 +40,6 @@ function transactionFormData() {
         submitting: false,
         mpesaResponse: null,
         checkoutRequestId: null,
-        manualStatusChecking: false,
         _statusPollTimer: null,
 
         get filteredTransactionTypes() {
@@ -150,7 +149,7 @@ function transactionFormData() {
                 if (data.success) {
                     this.mpesaResponse = {
                         type: 'success',
-                        message: data.message || 'M-Pesa prompt sent. Approve the payment on your phone when you get the request, then wait a few seconds for confirmation here.',
+                        message: data.message || 'STK sent. Approve on your phone.',
                     };
                     const checkoutId = data.CheckoutRequestID || (data.data && data.data.CheckoutRequestID);
                     if (checkoutId) {
@@ -181,16 +180,6 @@ function transactionFormData() {
             }
         },
 
-        checkPaymentStatusNow() {
-            if (!this.checkoutRequestId) {
-                return;
-            }
-            this._clearStatusTimer();
-            if (typeof this._statusPollOne === 'function') {
-                this._statusPollOne(true);
-            }
-        },
-
         pollTransactionStatus() {
             const self = this;
             const maxAttempts = 24;
@@ -201,20 +190,16 @@ function transactionFormData() {
             const scheduleNext = function () {
                 self._clearStatusTimer();
                 self._statusPollTimer = setTimeout(function () {
-                    pollOne(false);
+                    pollOne();
                 }, pollInterval);
             };
 
-            const pollOne = function (isManual) {
-                if (isManual) {
-                    self.manualStatusChecking = true;
-                } else {
-                    if (attempts >= maxAttempts) {
-                        self.mpesaResponse = { type: 'warning', message: 'No confirmation yet. Check SMS or search your transaction ID on this site. You can use the button below to check again.' };
-                        return;
-                    }
-                    attempts++;
+            const pollOne = function () {
+                if (attempts >= maxAttempts) {
+                    self.mpesaResponse = { type: 'warning', message: 'No confirmation yet. Check SMS or your dashboard.' };
+                    return;
                 }
+                attempts++;
                 if (self._statusPollTimer) {
                     clearTimeout(self._statusPollTimer);
                     self._statusPollTimer = null;
@@ -224,9 +209,6 @@ function transactionFormData() {
                 })
                 .then(res => res.json())
                 .then(data => {
-                    if (isManual) {
-                        self.manualStatusChecking = false;
-                    }
                     const st = (data.status != null ? String(data.status) : '').toLowerCase();
                     if (st === 'success' || st === 'completed') {
                         self._clearStatusTimer();
@@ -256,25 +238,21 @@ function transactionFormData() {
                         scheduleNext();
                     } else if (attempts >= maxAttempts) {
                         self._clearStatusTimer();
-                        self.mpesaResponse = { type: 'warning', message: 'No confirmation yet. Check SMS or search your transaction ID on this site. You can use the button below to check again.' };
+                        self.mpesaResponse = { type: 'warning', message: 'No confirmation yet. Check SMS or your dashboard.' };
                     } else {
                         scheduleNext();
                     }
                 })
                 .catch(() => {
-                    if (isManual) {
-                        self.manualStatusChecking = false;
-                    }
                     if (attempts >= maxAttempts) {
                         self._clearStatusTimer();
-                        self.mpesaResponse = { type: 'warning', message: 'Payment confirmation timed out. Please check your transaction status later. You can use the button below to try again.' };
+                        self.mpesaResponse = { type: 'warning', message: 'Confirmation timed out. Check SMS or your dashboard.' };
                     } else {
                         scheduleNext();
                     }
                 });
             };
-            this._statusPollOne = pollOne;
-            pollOne(false);
+            pollOne();
         }
     };
 }
@@ -586,24 +564,9 @@ function transactionFormData() {
                                 'bg-red-50 text-red-800 border-red-200': mpesaResponse?.type === 'error',
                                 'bg-yellow-50 text-yellow-800 border-yellow-200': mpesaResponse?.type === 'warning'
                              }"
-                             class="p-3 sm:p-3.5 rounded-xl border text-xs sm:text-sm text-left leading-relaxed shadow-sm"
+                             class="p-3 sm:p-3.5 rounded-xl border text-xs sm:text-sm text-center leading-relaxed shadow-sm"
                              style="display: none;"
                              x-text="mpesaResponse?.message">
-                        </div>
-                        <div x-show="checkoutRequestId" x-cloak class="text-center" style="display: none;">
-                            <button type="button"
-                                    @click="checkPaymentStatusNow()"
-                                    :disabled="manualStatusChecking"
-                                    class="mt-1 w-full sm:w-auto px-4 py-2 text-sm font-medium text-emerald-900 bg-emerald-50 border border-emerald-200/90 rounded-xl hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                                <span x-show="!manualStatusChecking">Check payment status now</span>
-                                <span x-show="manualStatusChecking" class="inline-flex items-center gap-2">
-                                    <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Checking…
-                                </span>
-                            </button>
                         </div>
                         
                         <p class="text-[11px] sm:text-xs text-center text-gray-500 leading-relaxed pt-0.5">

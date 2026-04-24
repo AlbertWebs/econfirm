@@ -961,7 +961,7 @@ class HomeController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'M-Pesa prompt sent. Approve the payment on your phone when you get the request, then wait a few seconds for confirmation here.',
+                'message' => 'STK sent. Approve on your phone.',
                 'CheckoutRequestID' => $mpesaResponse['data']['CheckoutRequestID'] ?? null,
             ]);
         } else {
@@ -1014,7 +1014,7 @@ class HomeController extends Controller
                 return response()->json([
                     'success' => true,
                     'status' => 'Pending',
-                    'message' => 'M-Pesa prompt sent. Approve the payment on your phone when you get the request, then wait a few seconds for confirmation here.',
+                    'message' => 'STK sent. Approve on your phone.',
                 ]);
             }
             // Callback can be delayed/missed; fallback to Daraja STK query.
@@ -1201,13 +1201,14 @@ class HomeController extends Controller
             // Check if OTP is expired
             $otpExpiryTime = 3; // in minutes
             $otpCreatedAt = Carbon::parse($ValidateOTP->updated_at);
-            $otpExpiryAt = $otpCreatedAt->addMinutes($otpExpiryTime);
+            $otpExpiryAt = $otpCreatedAt->copy()->addMinutes($otpExpiryTime);
 
             if (now()->greaterThan($otpExpiryAt)) {
                 \Log::info('OTP expired', [
                     'transaction_id' => $ValidateOTP->transaction_id,
-                    'otp_created_at' => $otpCreatedAt,
-                    'current_time' => now(),
+                    'otp_created_at' => $otpCreatedAt->toIso8601String(),
+                    'otp_expires_at' => $otpExpiryAt->toIso8601String(),
+                    'current_time' => now()->toIso8601String(),
                 ]);
 
                 return response()->json([
@@ -1217,8 +1218,22 @@ class HomeController extends Controller
             }
 
         }
-        // Paybill path → B2B to Paybill/Till; M-Pesa path → B2C to recipient phone. SMS only after Daraja accepts the payout request.
-        if ($ValidateOTP->payment_method === 'paybill') {
+
+        if (strcasecmp((string) $ValidateOTP->status, 'Escrow Funded') !== 0) {
+            $st = (string) $ValidateOTP->status;
+
+            return response()->json([
+                'success' => false,
+                'message' => strcasecmp($st, 'Completed') === 0
+                    ? 'This transaction is already complete. If the recipient did not receive funds, contact support with your transaction ID.'
+                    : 'Escrow must be funded before you can release funds to the recipient. Current status: '.$st,
+            ], 422);
+        }
+
+        $paymentMethod = strtolower(trim((string) ($ValidateOTP->payment_method ?? '')));
+
+        // Paybill path → B2B to Paybill/Till; everything else (mpesa, m-pesa, empty) → B2C to recipient phone.
+        if ($paymentMethod === 'paybill') {
             $mpesa = new MpesaService;
             $b2bResponse = $mpesa->b2b($ValidateOTP);
             if (! $b2bResponse['success']) {

@@ -174,7 +174,7 @@
                             <tr class="hover:bg-slate-50/80">
                                 <td class="px-3 py-2 font-mono text-xs">{{ $r->transaction_id ?? '—' }}</td>
                                 <td class="px-3 py-2">{{ $maskPhone($r->receiver_mobile ?: $r->party_b) }}</td>
-                                <td class="px-3 py-2 text-right tabular-nums">{{ number_format((float) ($r->amount ?? 0), 2) }}</td>
+                                <td class="px-3 py-2 text-right tabular-nums">{{ number_format($r->displayAmountKes(), 2) }}</td>
                                 <td class="max-w-[10rem] truncate px-3 py-2 text-xs" title="{{ $r->remarks }}">{{ $r->remarks ?? '—' }}</td>
                                 <td class="px-3 py-2"><span class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">{{ $r->status }}</span></td>
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600">{{ optional($r->created_at)->format('Y-m-d H:i') }}</td>
@@ -234,7 +234,7 @@
                             <tr class="hover:bg-slate-50/80">
                                 <td class="px-3 py-2 font-mono text-xs">{{ $r->transaction_id ?? '—' }}</td>
                                 <td class="px-3 py-2 font-mono text-xs">{{ $r->party_b ?? '—' }}</td>
-                                <td class="px-3 py-2 text-right tabular-nums">{{ number_format((float) ($r->amount ?? 0), 2) }}</td>
+                                <td class="px-3 py-2 text-right tabular-nums">{{ number_format($r->displayAmountKes(), 2) }}</td>
                                 <td class="max-w-[10rem] truncate px-3 py-2 text-xs" title="{{ $r->remarks }}">{{ $r->remarks ?? '—' }}</td>
                                 <td class="px-3 py-2"><span class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">{{ $r->status }}</span></td>
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600">{{ optional($r->created_at)->format('Y-m-d H:i') }}</td>

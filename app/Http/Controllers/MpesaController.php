@@ -186,7 +186,9 @@ class MpesaController extends Controller
             $b2cRow = isset($result['ConversationID'])
                 ? MpesaB2c::where('conversation_id', $result['ConversationID'])->first()
                 : null;
-            $receiverPhone = $b2cRow->party_b ?? $b2cRow->receiver_mobile ?? null;
+            $receiverPhone = $b2cRow
+                ? ($b2cRow->party_b ?? $b2cRow->receiver_mobile ?? null)
+                : null;
             $name = PhoneAccountProvisioningService::parseReceiverPartyPublicName($params['ReceiverPartyPublicName'] ?? null);
             if ($receiverPhone) {
                 PhoneAccountProvisioningService::ensureUser($receiverPhone, $name, $name !== null);

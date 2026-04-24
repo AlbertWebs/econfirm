@@ -121,7 +121,7 @@
                                     <polyline points="12 5 19 12 12 19" />
                                 </svg>
                             </button>
-                            <p style="text-align:center; margin:0 auto; font-size:10px; display:none;" id="mpesa-response"></p>
+                            <p id="mpesa-response" class="text-center small mt-2 mb-0" style="display: none;" role="status"></p>
 
                             <p class="form-disclaimer">
                                 By submitting this form, you agree to our <a target="new" href="{{route('terms.conditions')}}">Terms of Service</a> and <a target="new" href="{{route('privacy.policy')}}">Privacy Policy</a>.
