@@ -37,7 +37,7 @@
       ]
     },
     {
-      "name": "Scam Watch",
+      "name": "Scam Alert",
       "short_name": "Confirm",
       "description": "View reported scams",
       "url": "/scam-watch",

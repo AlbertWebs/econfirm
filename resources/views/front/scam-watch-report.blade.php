@@ -38,7 +38,7 @@
                 [
                     '@type' => 'ListItem',
                     'position' => 2,
-                    'name' => 'Scam Watch',
+                    'name' => 'Scam Alert',
                     'item' => route('scam.watch'),
                 ],
                 [
@@ -86,7 +86,7 @@
             <ol class="flex flex-wrap items-center gap-2">
                 <li><a href="{{ route('home') }}" class="hover:text-red-600">Home</a></li>
                 <li><span class="text-gray-400">/</span></li>
-                <li><a href="{{ route('scam.watch') }}" class="hover:text-red-600">Scam Watch</a></li>
+                <li><a href="{{ route('scam.watch') }}" class="hover:text-red-600">Scam Alert</a></li>
                 <li><span class="text-gray-400">/</span></li>
                 <li><a href="{{ route('scam.watch.category', ['category' => $report->category]) }}" class="hover:text-red-600">{{ $report->category_label }}</a></li>
                 <li><span class="text-gray-400">/</span></li>

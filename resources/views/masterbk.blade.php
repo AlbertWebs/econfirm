@@ -58,7 +58,7 @@
                     <a href="#pricing">Pricing</a>
                     <a href="#faq">FAQ</a>
                     <button class="btn btn-outline">Log In</button>
-                    <button class="btn btn-outline" id="search-transaction-btn"><i class="fas fa-search"></i> Search Transaction</button>
+                    <button class="btn btn-outline" id="search-transaction-btn"><i class="fas fa-search"></i> Search Escrow</button>
                     <button class="btn btn-primary">
                         <i class="fas fa-search text-white"></i>Custom Solutions
                     </button>
@@ -171,11 +171,11 @@
         </div>
     </footer>
 
-    <!-- Search Transaction Popup (Basic) -->
+    <!-- Search Escrow popup (Basic) -->
     <div id="searchTransactionPopup" style="display:none; position:fixed; z-index:1050; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); align-items:center; justify-content:center;">
         <div style="background:#fff; border-radius:10px; max-width:350px; width:90%; margin:auto; padding:2rem 1.5rem; box-shadow:0 8px 32px rgba(0,0,0,0.18); position:relative;">
             <button id="closeSearchPopup" style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.5rem; color:#888; cursor:pointer;">&times;</button>
-            <h5 style="margin-bottom:1rem;">Search Transaction</h5>
+            <h5 style="margin-bottom:1rem;">Search Escrow</h5>
             <form id="basic-search-transaction-form">
             <div class="form-group mb-3"> 
                 <label for="basic-search-transaction-id" class="form-label">Transaction ID</label>

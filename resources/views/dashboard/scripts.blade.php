@@ -253,7 +253,7 @@
                 run(false);
             }
 
-            // Show Popup for Search Transaction
+            // Show Search Escrow popup
             const searchBtn = document.getElementById('search-transaction-btn');
             const popup = document.getElementById('searchTransactionPopup');
             const closeBtn = document.getElementById('closeSearchPopup');

@@ -13,12 +13,35 @@
     <div class="relative mx-auto w-full max-w-6xl px-4 sm:px-6">
         <div class="grid gap-6 lg:grid-cols-3 lg:gap-8">
             <div class="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
-                <h1 class="mb-3 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{{ $page->title }}</h1>
-                @if(filled($page->meta_description))
-                    <p class="mb-6 text-sm leading-6 text-slate-600">{{ $page->meta_description }}</p>
-                @endif
+                {{-- SEO title & meta description: head only; keep a short h1 for accessibility --}}
+                <h1 class="sr-only">{{ $productName ?? ($page->title ?? 'eConfirm escrow') }}</h1>
                 <div class="prose prose-slate max-w-none prose-headings:font-semibold prose-a:text-emerald-700">
                     {!! $page->body !!}
+                </div>
+                <div class="mt-8 border-t border-slate-200 pt-8">
+                    <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Next steps</p>
+                    <div class="flex flex-wrap gap-2.5 sm:gap-3">
+                        <a href="{{ route('register') }}"
+                           class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-emerald-400 hover:bg-emerald-50/60">
+                            Create account
+                        </a>
+                        <a href="{{ route('login') }}"
+                           class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-emerald-400 hover:bg-emerald-50/60">
+                            Sign in
+                        </a>
+                        <a href="{{ route('help') }}"
+                           class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-emerald-200 hover:bg-white">
+                            Help &amp; FAQs
+                        </a>
+                        <a href="{{ route('terms.conditions') }}"
+                           class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-emerald-200 hover:bg-white">
+                            Terms of Service
+                        </a>
+                        <a href="{{ route('scam.watch') }}"
+                           class="inline-flex items-center justify-center rounded-lg border border-red-200 bg-red-50/80 px-4 py-2.5 text-sm font-medium text-red-800 transition hover:bg-red-100">
+                            Scam Alert
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -39,7 +62,7 @@
                         <li><a href="{{ route('security') }}" class="text-emerald-700 hover:underline">Security & assurance</a></li>
                         <li><a href="{{ route('support') }}" class="text-emerald-700 hover:underline">Support center</a></li>
                         <li><a href="{{ route('help') }}" class="text-emerald-700 hover:underline">FAQs & help</a></li>
-                        <li><a href="{{ route('scam.watch') }}" class="text-emerald-700 hover:underline">Scam Watch alerts</a></li>
+                        <li><a href="{{ route('scam.watch') }}" class="text-emerald-700 hover:underline">Scam Alert reports</a></li>
                     </ul>
                 </div>
             </aside>

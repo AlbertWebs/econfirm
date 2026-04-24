@@ -534,7 +534,7 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                     </svg>
-                    <span>Trusted by 10,000+ clients worldwide</span>
+                    <span>Trusted by {{ number_format(trusted_clients_count()) }}+ clients worldwide</span>
                 </div>
                 
                 <h1 class="hero-title-v2">
@@ -602,11 +602,11 @@
     <div class="container">
         <div class="stats-grid-v2">
             <div class="stat-item-v2">
-                <div class="stat-number-v2" data-count="10000">0</div>
+                <div class="stat-number-v2" data-count="{{ trusted_clients_count() }}">0</div>
                 <div class="stat-label-v2">Active Users</div>
             </div>
             <div class="stat-item-v2">
-                <div class="stat-number-v2" data-count="50000">0</div>
+                <div class="stat-number-v2" data-count="{{ trusted_transactions_count() }}">0</div>
                 <div class="stat-label-v2">Transactions</div>
             </div>
             <div class="stat-item-v2">

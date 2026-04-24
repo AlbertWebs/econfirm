@@ -1,7 +1,7 @@
 @extends('front.master')
 
-@section('seo_title', 'Report a Scam | eConfirm Scam Watch')
-@section('seo_description', 'Report fraudulent websites, phone numbers, or email addresses to help protect others. Submit details and optional evidence through eConfirm Scam Watch.')
+@section('seo_title', 'Report a Scam | eConfirm Scam Alert')
+@section('seo_description', 'Report fraudulent websites, phone numbers, or email addresses to help protect others. Submit details and optional evidence through eConfirm Scam Alert.')
 @section('canonical_url', route('scam.watch.report'))
 
 @section('content')
@@ -11,13 +11,13 @@
             <ol class="flex flex-wrap items-center gap-2">
                 <li><a href="{{ route('home') }}" class="hover:text-red-600">Home</a></li>
                 <li><span class="text-gray-400">/</span></li>
-                <li><a href="{{ route('scam.watch') }}" class="hover:text-red-600">Scam Watch</a></li>
+                <li><a href="{{ route('scam.watch') }}" class="hover:text-red-600">Scam Alert</a></li>
                 <li><span class="text-gray-400">/</span></li>
                 <li class="text-gray-900 font-medium">Report a scam</li>
             </ol>
         </nav>
         <a href="{{ route('scam.watch') }}" class="inline-flex items-center gap-2 text-red-600 font-semibold hover:underline text-sm mb-6">
-            <i class="fas fa-arrow-left"></i> Back to Scam Watch
+            <i class="fas fa-arrow-left"></i> Back to Scam Alert
         </a>
         <p class="text-sm font-semibold text-red-600 uppercase tracking-wide mb-2">Submit a report</p>
         <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">Report a Scam</h1>
@@ -322,7 +322,7 @@
                             </div>
                             <a href="{{ route('scam.watch') }}"
                                class="mt-5 inline-flex items-center gap-2 text-red-600 font-semibold hover:text-red-700 hover:underline">
-                                <i class="fas fa-arrow-right"></i> Continue to Scam Watch
+                                <i class="fas fa-arrow-right"></i> Continue to Scam Alert
                             </a>
                         </div>
                     </div>

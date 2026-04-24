@@ -125,7 +125,7 @@
           100% { transform: rotate(360deg); }
         }
 
-        /* Search Transaction Popup Animation */
+        /* Search Escrow popup animation */
         #searchTransactionPopup {
           opacity: 0;
           pointer-events: none;
@@ -167,33 +167,73 @@
     $navProducts = $navProductConfig['items'] ?? [];
     $navProductDropdown = $navProductConfig['dropdown'] ?? ['image' => 'uploads/logo-hoz.png', 'image_alt' => 'e-confirm', 'image_title' => ''];
     $navProductLinkColumns = array_chunk($navProducts, max(1, (int) ceil(max(count($navProducts), 1) / 2)));
+    $navOnHome = request()->routeIs('home', 'home.v2');
+    $navOnFeatures = request()->routeIs('features');
+    $navOnEscrowProduct = request()->routeIs('escrow.product');
+    $navOnScamAlert = request()->is('scam-watch*');
+    $navOnUserDashboard = request()->routeIs('user.dashboard', 'user.dashboard.create', 'home.dashboard');
+    $navOnLogin = request()->routeIs('login', 'register');
+    $navConfirmBase = 'px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5 border';
+    $navConfirmActive = 'text-red-800 bg-red-50 font-semibold border-red-300 ring-1 ring-red-200/60';
+    $navConfirmIdle = 'text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200';
+    $navBtnBase = 'px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-2 border border-gray-300';
+    $navBtnActive = 'text-green-800 bg-green-50 font-semibold border-green-300 ring-1 ring-green-200/50';
+    $navBtnIdle = 'text-gray-700 hover:bg-gray-50 hover:border-green-300';
 @endphp
-<body class="bg-white antialiased overflow-x-hidden" x-data="{ mobileMenuOpen: false, searchPopupOpen: false, productsDropdownOpen: false, mobileProductsOpen: false }" @keydown.escape.window="productsDropdownOpen = false">
+<body
+    class="bg-white antialiased overflow-x-hidden"
+    x-data="{
+        mobileMenuOpen: false,
+        searchPopupOpen: false,
+        productsDropdownOpen: false,
+        mobileProductsOpen: false,
+        isHome: @json($navOnHome),
+        isFeaturesPage: @json($navOnFeatures),
+        activeHash: '',
+        syncHash() { this.activeHash = (typeof window !== 'undefined' && window.location) ? window.location.hash : ''; }
+    }"
+    x-init="syncHash()"
+    @hashchange.window="syncHash()"
+    @popstate.window="syncHash()"
+    @keydown.escape.window="productsDropdownOpen = false">
 <div id="preloader" class="fixed inset-0 z-50 flex items-center justify-center bg-white transition-opacity duration-400">
     <div class="w-16 h-16 border-4 border-gray-200 border-t-green-700 rounded-full animate-spin"></div>
 </div>
     
     <!-- Header -->
     <header class="hidden lg:block sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="w-full min-w-0 max-w-[min(100%,90rem)] mx-auto px-2.5 sm:px-4 lg:px-8">
             <div class="flex items-center justify-between h-20">
                 <div class="flex-shrink-0">
-                    <a href="{{ route('home') }}#home" class="block transition-transform hover:scale-105 duration-200">
-                        <img src="{{ asset('uploads/logo-hoz.png') }}" alt="e-confirm Logo" class="h-14 md:h-16">
+                    <a href="{{ route('home') }}#home" class="block select-none">
+                        <img src="{{ asset('uploads/logo-hoz.png') }}"
+                             alt="e-confirm Logo"
+                             class="h-14 w-auto object-contain object-left align-middle md:h-16"
+                             loading="eager"
+                             decoding="async">
                     </a>
                 </div>
                 
                 <!-- Desktop Navigation -->
                 <nav class="hidden lg:flex items-center space-x-2">
-                    <a href="{{ route('home') }}#home" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200">Get Started</a>
-                    <a href="{{ route('home') }}#features" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200">Features</a>
+                    <a href="{{ route('home') }}#home"
+                       class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+                       :class="(isHome && (!activeHash || activeHash === '' || activeHash === '#home')) ? 'text-green-800 bg-green-100 font-semibold ring-1 ring-green-200/80 shadow-sm' : 'text-gray-700 hover:text-green-700 hover:bg-green-50'">Get Started</a>
+                    <a href="{{ route('home') }}#features"
+                       class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+                       :class="(isFeaturesPage || (isHome && activeHash === '#features')) ? 'text-green-800 bg-green-100 font-semibold ring-1 ring-green-200/80 shadow-sm' : 'text-gray-700 hover:text-green-700 hover:bg-green-50'">Features</a>
                     <div class="relative" @click.outside="productsDropdownOpen = false">
                         <button type="button"
                                 @click="productsDropdownOpen = !productsDropdownOpen"
                                 :aria-expanded="productsDropdownOpen"
                                 aria-haspopup="true"
                                 aria-controls="nav-products-list"
-                                class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200 flex items-center gap-1.5">
+                                @class([
+                                    'px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5',
+                                    $navOnEscrowProduct
+                                        ? 'text-green-800 bg-green-100 font-semibold ring-1 ring-green-200/80 shadow-sm'
+                                        : 'text-gray-700 hover:text-green-700 hover:bg-green-50',
+                                ])>
                             Products
                             <i class="fas fa-chevron-down text-[0.65rem] transition-transform duration-200" :class="productsDropdownOpen && 'rotate-180'"></i>
                         </button>
@@ -212,7 +252,12 @@
                                             <li>
                                                 <a href="{{ route('escrow.product', $item['slug']) }}"
                                                    @click="productsDropdownOpen = false"
-                                                   class="block px-3 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-800 transition-colors min-w-0">
+                                                   @class([
+                                                       'block px-3 py-2.5 text-sm transition-colors min-w-0',
+                                                       $navOnEscrowProduct && request()->route('product') === $item['slug']
+                                                           ? 'font-semibold text-green-900 bg-green-50/90'
+                                                           : 'text-gray-700 hover:bg-green-50 hover:text-green-800',
+                                                   ])>
                                                     {{ $item['label'] }}
                                                 </a>
                                             </li>
@@ -236,19 +281,27 @@
                             </div>
                         </div>
                     </div>
-                    <a href="{{ route('home') }}#how-it-works" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200">How It Works</a>
-                    <a href="{{ route('scam.watch') }}" class="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 flex items-center gap-1.5 border border-red-200">
+                    <a href="{{ route('home') }}#how-it-works"
+                       class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+                       :class="(isHome && activeHash === '#how-it-works') ? 'text-green-800 bg-green-100 font-semibold ring-1 ring-green-200/80 shadow-sm' : 'text-gray-700 hover:text-green-700 hover:bg-green-50'">How It Works</a>
+                    <a href="{{ route('scam.watch') }}"
+                       @class([$navConfirmBase, $navOnScamAlert ? $navConfirmActive : $navConfirmIdle])>
                         <i class="fas fa-shield-alt text-xs"></i> Confirm
                     </a>
                     
                     <div class="h-6 w-px bg-gray-300 mx-2"></div>
                     
-                    <button @click="searchPopupOpen = true" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-green-300 transition-all duration-200 flex items-center gap-2">
-                        <i class="fas fa-search text-xs"></i> Search Transaction
+                    <button type="button"
+                            @click="searchPopupOpen = true"
+                            class="px-4 py-2 text-sm font-medium border rounded-lg transition-all duration-200 flex items-center gap-2"
+                            :class="searchPopupOpen ? 'text-green-800 bg-green-50 font-semibold border-green-300 ring-1 ring-green-200/50' : 'text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-green-300'">
+                        <i class="fas fa-search text-xs"></i> Search Escrow
                     </button>
 
                     @if (auth()->check())
-                        <button onclick="window.location.href='{{ route('user.dashboard') }}'" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-green-300 transition-all duration-200 flex items-center gap-2">
+                        <button type="button"
+                                onclick="window.location.href='{{ route('user.dashboard') }}'"
+                                @class([$navBtnBase, $navOnUserDashboard ? $navBtnActive : $navBtnIdle])>
                             <i class="fas fa-tachometer-alt text-xs"></i> Dashboard
                         </button>
                         <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200" title="Logout">
@@ -258,7 +311,9 @@
                             @csrf
                         </form>
                     @else
-                        <button onclick="window.location.href='{{ route('login') }}'" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-green-300 transition-all duration-200 flex items-center gap-2">
+                        <button type="button"
+                                onclick="window.location.href='{{ route('login') }}'"
+                                @class([$navBtnBase, $navOnLogin ? $navBtnActive : $navBtnIdle])>
                             <i class="fas fa-sign-in text-xs"></i> Log In
                         </button>
                     @endif
@@ -277,13 +332,22 @@
             
             <!-- Mobile Navigation -->
             <nav x-show="mobileMenuOpen" x-transition class="lg:hidden pb-4 space-y-2 border-t border-gray-200 mt-2 pt-4" style="display: none;">
-                <a href="{{ route('home') }}#home" @click="mobileMenuOpen = false" class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-all duration-200">Get Started</a>
-                <a href="{{ route('home') }}#features" @click="mobileMenuOpen = false" class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-all duration-200">Features</a>
+                <a href="{{ route('home') }}#home" @click="mobileMenuOpen = false"
+                   class="block px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200"
+                   :class="(isHome && (!activeHash || activeHash === '' || activeHash === '#home')) ? 'text-green-800 bg-green-100 font-semibold ring-1 ring-green-200/80' : 'text-gray-700 hover:bg-green-50 hover:text-green-700'">Get Started</a>
+                <a href="{{ route('home') }}#features" @click="mobileMenuOpen = false"
+                   class="block px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200"
+                   :class="(isFeaturesPage || (isHome && activeHash === '#features')) ? 'text-green-800 bg-green-100 font-semibold ring-1 ring-green-200/80' : 'text-gray-700 hover:bg-green-50 hover:text-green-700'">Features</a>
                 <div>
                     <button type="button"
                             @click="mobileProductsOpen = !mobileProductsOpen"
                             :aria-expanded="mobileProductsOpen"
-                            class="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-all duration-200">
+                            @class([
+                                'w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200',
+                                $navOnEscrowProduct
+                                    ? 'text-green-800 bg-green-100 font-semibold ring-1 ring-green-200/80'
+                                    : 'text-gray-700 hover:bg-green-50 hover:text-green-700',
+                            ])>
                         <span>Products</span>
                         <i class="fas fa-chevron-down text-xs transition-transform" :class="mobileProductsOpen && 'rotate-180'"></i>
                     </button>
@@ -294,28 +358,53 @@
                         @foreach ($navProducts as $item)
                             <a href="{{ route('escrow.product', $item['slug']) }}"
                                @click="mobileMenuOpen = false; mobileProductsOpen = false"
-                               class="block px-3 py-2 text-sm text-gray-600 hover:text-green-800 hover:bg-green-50/80 rounded-lg">
+                               @class([
+                                   'block px-3 py-2 text-sm rounded-lg transition-colors',
+                                   $navOnEscrowProduct && request()->route('product') === $item['slug']
+                                       ? 'font-semibold text-green-900 bg-green-50/90'
+                                       : 'text-gray-600 hover:text-green-800 hover:bg-green-50/80',
+                               ])>
                                 {{ $item['label'] }}
                             </a>
                         @endforeach
                     </div>
                 </div>
-                <a href="{{ route('home') }}#how-it-works" @click="mobileMenuOpen = false" class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-all duration-200">How It Works</a>
-                <a href="{{ route('scam.watch') }}" @click="mobileMenuOpen = false" class="block px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-all duration-200 flex items-center gap-2 border border-red-200">
+                <a href="{{ route('home') }}#how-it-works" @click="mobileMenuOpen = false"
+                   class="block px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200"
+                   :class="(isHome && activeHash === '#how-it-works') ? 'text-green-800 bg-green-100 font-semibold ring-1 ring-green-200/80' : 'text-gray-700 hover:bg-green-50 hover:text-green-700'">How It Works</a>
+                <a href="{{ route('scam.watch') }}" @click="mobileMenuOpen = false"
+                   @class([
+                       'block px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-2',
+                       $navOnScamAlert ? 'text-red-800 bg-red-50 font-semibold border border-red-300 ring-1 ring-red-200/60' : 'text-red-600 hover:bg-red-50 hover:text-red-700 border border-red-200',
+                   ])>
                     <i class="fas fa-shield-alt text-xs"></i> Confirm
                 </a>
                 
                 <div class="h-px bg-gray-200 my-2"></div>
                 
-                <button @click="searchPopupOpen = true; mobileMenuOpen = false" class="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-green-300 transition-all duration-200 flex items-center gap-2">
-                    <i class="fas fa-search text-xs"></i> Search Transaction
+                <button type="button" @click="searchPopupOpen = true; mobileMenuOpen = false"
+                        class="w-full text-left px-4 py-2.5 text-sm font-medium border rounded-lg transition-all duration-200 flex items-center gap-2"
+                        :class="searchPopupOpen ? 'text-green-800 bg-green-50 font-semibold border-green-300 ring-1 ring-green-200/50' : 'text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-green-300'">
+                    <i class="fas fa-search text-xs"></i> Search Escrow
                 </button>
                 @if (auth()->check())
-                    <button onclick="window.location.href='{{ route('user.dashboard') }}'" class="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-green-300 transition-all duration-200 flex items-center gap-2">
+                    <button type="button" onclick="window.location.href='{{ route('user.dashboard') }}'"
+                            @class([
+                                'w-full text-left px-4 py-2.5 text-sm font-medium border rounded-lg transition-all duration-200 flex items-center gap-2',
+                                $navOnUserDashboard
+                                    ? 'text-green-800 bg-green-50 font-semibold border-green-300 ring-1 ring-green-200/50'
+                                    : 'text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-green-300',
+                            ])>
                         <i class="fas fa-tachometer-alt text-xs"></i> Dashboard
                     </button>
                 @else
-                    <button onclick="window.location.href='{{ route('login') }}'" class="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-green-300 transition-all duration-200 flex items-center gap-2">
+                    <button type="button" onclick="window.location.href='{{ route('login') }}'"
+                            @class([
+                                'w-full text-left px-4 py-2.5 text-sm font-medium border rounded-lg transition-all duration-200 flex items-center gap-2',
+                                $navOnLogin
+                                    ? 'text-green-800 bg-green-50 font-semibold border-green-300 ring-1 ring-green-200/50'
+                                    : 'text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-green-300',
+                            ])>
                         <i class="fas fa-sign-in text-xs"></i> Log In
                     </button>
                 @endif
@@ -386,7 +475,7 @@
         });
     </script>
 
-    <!-- Search Transaction Popup -->
+    <!-- Search Escrow popup -->
     <div x-show="searchPopupOpen" 
          @click.away="searchPopupOpen = false"
          x-transition:enter="transition ease-out duration-300"
@@ -438,7 +527,7 @@
             <button @click="searchPopupOpen = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
                 <i class="fas fa-times text-xl"></i>
             </button>
-            <h3 class="text-xl font-semibold text-gray-900 mb-4">Search Transaction</h3>
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">Search Escrow</h3>
             <form @submit.prevent="search()">
                 <div class="mb-4">
                     <label for="basic-search-transaction-id" class="block text-sm font-medium text-gray-700 mb-2">Transaction ID</label>

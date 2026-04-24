@@ -78,7 +78,7 @@ class SupportHelpItemSeeder extends Seeder
                 'ref_key' => 'help_faq_3',
                 'kind' => SupportHelpItem::KIND_HELP_FAQ,
                 'title' => 'How do I track my transaction?',
-                'body' => '<p class="mt-4 text-gray-600 leading-relaxed">You can track your transaction using the transaction ID provided when you create it. Use the "Search Transaction" feature on our website or log into your dashboard to view all your transactions.</p>',
+                'body' => '<p class="mt-4 text-gray-600 leading-relaxed">You can track your transaction using the transaction ID provided when you create it. Use the "Search Escrow" feature on our website or log into your dashboard to view all your transactions.</p>',
                 'icon' => null,
                 'sort_order' => 30,
             ],

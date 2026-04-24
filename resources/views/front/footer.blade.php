@@ -62,9 +62,9 @@
                 </div>
             </nav>
 
-            <!-- Scam Watch -->
-            <nav class="min-w-0" aria-label="Scam Watch">
-                <h3 class="text-white font-semibold text-base mb-1">Scam Watch</h3>
+            <!-- Scam Alert -->
+            <nav class="min-w-0" aria-label="Scam Alert">
+                <h3 class="text-white font-semibold text-base mb-1">Scam Alert</h3>
                 <p class="text-xs text-gray-500 mb-4">Reported threats &amp; categories</p>
                 <ul class="space-y-2.5">
                     <li>
@@ -100,7 +100,7 @@
                         <a href="{{ route('complience') }}" class="inline-flex text-sm text-gray-400 hover:text-green-400 transition-colors rounded-md py-0.5 -mx-1 px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900">Compliance</a>
                     </li>
                     <li>
-                        <a href="{{ route('scam.watch.terms') }}" class="inline-flex text-sm text-gray-400 hover:text-green-400 transition-colors rounded-md py-0.5 -mx-1 px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900">Scam Watch Terms of Use</a>
+                        <a href="{{ route('scam.watch.terms') }}" class="inline-flex text-sm text-gray-400 hover:text-green-400 transition-colors rounded-md py-0.5 -mx-1 px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900">Scam Alert Terms of Use</a>
                     </li>
                 </ul>
             </nav>
@@ -171,7 +171,7 @@
                     </a>
                     <a href="{{ route('scam.watch') }}" class="inline-flex items-center justify-center gap-2 text-sm font-medium text-gray-300 bg-gray-800/40 hover:bg-gray-800 border border-gray-700/60 hover:border-gray-600 px-4 py-2.5 rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900">
                         <i class="fas fa-shield-alt text-red-400/90 text-xs" aria-hidden="true"></i>
-                        <span>Scam Watch</span>
+                        <span>Scam Alert</span>
                     </a>
                 </div>
 

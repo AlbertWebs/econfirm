@@ -12,7 +12,7 @@
             '@context' => 'https://schema.org',
             '@type' => 'CollectionPage',
             '@id' => $canonicalUrl.'#collection',
-            'name' => $label.' — Scam Watch',
+            'name' => $label.' — Scam Alert',
             'description' => $metaDescription,
             'url' => $canonicalUrl,
             'isPartOf' => [
@@ -34,7 +34,7 @@
                 [
                     '@type' => 'ListItem',
                     'position' => 2,
-                    'name' => 'Scam Watch',
+                    'name' => 'Scam Alert',
                     'item' => route('scam.watch'),
                 ],
                 [
@@ -60,7 +60,7 @@
             <ol class="flex flex-wrap items-center gap-2">
                 <li><a href="{{ route('home') }}" class="hover:text-red-600">Home</a></li>
                 <li><span class="text-gray-400">/</span></li>
-                <li><a href="{{ route('scam.watch') }}" class="hover:text-red-600">Scam Watch</a></li>
+                <li><a href="{{ route('scam.watch') }}" class="hover:text-red-600">Scam Alert</a></li>
                 <li><span class="text-gray-400">/</span></li>
                 <li class="text-gray-900 font-medium">{{ $label }}</li>
             </ol>

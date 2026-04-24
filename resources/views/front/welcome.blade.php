@@ -291,9 +291,9 @@ function transactionFormData() {
     </div>
 
     <div class="relative w-full min-w-0 max-w-[min(100%,90rem)] mx-auto px-2.5 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-6">
-        <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] gap-3 sm:gap-4 lg:gap-8 items-start lg:items-center min-w-0">
+        <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] gap-3 sm:gap-4 lg:gap-8 items-stretch min-w-0 min-h-0">
             <!-- Hero Content (hidden on small screens; form only on mobile) -->
-            <div class="hidden lg:block min-w-0 text-center lg:text-left space-y-5 xl:space-y-8" 
+            <div class="hidden lg:flex lg:flex-col lg:min-h-0 lg:min-w-0 lg:h-full lg:justify-start text-center lg:text-left space-y-5 xl:space-y-8" 
                  x-data="{ inView: true }"
                  x-intersect="inView = true">
                 <div x-show="inView" 
@@ -301,11 +301,11 @@ function transactionFormData() {
                      x-transition:enter="transition ease-out duration-700"
                      x-transition:enter-start="opacity-0 translate-y-8"
                      x-transition:enter-end="opacity-100 translate-y-0"
-                     class="inline-flex items-center gap-2 px-4 py-2.5 bg-white/80 backdrop-blur-sm border border-green-200 text-green-700 rounded-full text-sm font-semibold shadow-sm hover:shadow-md transition-all duration-300">
-                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     class="inline-flex w-fit max-w-full items-center gap-2 px-4 py-2.5 bg-white/80 backdrop-blur-sm border border-green-200 text-green-700 rounded-full text-sm font-semibold shadow-sm hover:shadow-md transition-all duration-300 self-start">
+                    <svg class="w-4 h-4 shrink-0 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                         </svg>
-                        <span>Trusted by over 10,000 clients</span>
+                        <span>Trusted by over {{ number_format(trusted_clients_count()) }} clients</span>
                     </div>
                 
                 <div class="space-y-4">
@@ -374,7 +374,7 @@ function transactionFormData() {
     $formControl = 'w-full min-w-0 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 border border-gray-200 bg-white rounded-xl shadow-sm hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-[color,box-shadow,border-color] duration-150';
 @endphp
             <!-- Hero Form: narrow on small screens; full width of column from lg up -->
-            <div class="w-full min-w-0 max-w-[19rem] sm:max-w-sm md:max-w-md mx-auto lg:max-w-none lg:w-full lg:mx-0"
+            <div class="w-full min-w-0 max-w-[19rem] sm:max-w-sm md:max-w-md mx-auto flex flex-col lg:h-full lg:min-h-0 lg:max-w-none lg:w-full lg:mx-0"
                  x-data="{ inView: true }"
                  x-intersect="inView = true">
                 <div x-show="inView"
@@ -382,7 +382,7 @@ function transactionFormData() {
                      x-transition:enter="transition ease-out duration-700 delay-200"
                      x-transition:enter-start="opacity-0 translate-y-8"
                      x-transition:enter-end="opacity-100 translate-y-0"
-                     class="bg-white/95 backdrop-blur-sm rounded-2xl p-3.5 sm:p-5 md:p-6 border border-gray-200/90 shadow-[0_12px_40px_-12px_rgba(15,118,110,0.15)] ring-1 ring-gray-100/80 relative w-full min-w-0 max-w-full overflow-visible">
+                     class="bg-white/95 backdrop-blur-sm rounded-2xl p-3.5 sm:p-5 md:p-6 border border-gray-200/90 shadow-[0_12px_40px_-12px_rgba(15,118,110,0.15)] ring-1 ring-gray-100/80 relative w-full min-w-0 max-w-full overflow-visible lg:min-h-full">
                     <!-- Decorative gradient overlay -->
                     <div class="absolute top-0 right-0 w-32 h-32 sm:w-52 sm:h-52 bg-gradient-to-br from-emerald-100/50 to-green-50/30 rounded-full blur-2xl -mr-12 -mt-12 sm:-mr-28 sm:-mt-28 pointer-events-none"></div>
                     <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-green-100/30 to-transparent rounded-full blur-2xl -ml-8 -mb-8 pointer-events-none"></div>
@@ -712,7 +712,7 @@ function transactionFormData() {
                  x-transition:enter-start="opacity-0 translate-y-8"
                  x-transition:enter-end="opacity-100 translate-y-0"
                  class="text-center p-6 bg-white/60 backdrop-blur-sm rounded-xl border border-gray-200">
-                <div class="text-3xl lg:text-4xl font-bold text-green-600 mb-2">10,000+</div>
+                <div class="text-3xl lg:text-4xl font-bold text-green-600 mb-2">{{ number_format(trusted_clients_count()) }}+</div>
                 <div class="text-sm font-medium text-gray-600">Active Users</div>
             </div>
             <div x-show="inView"
@@ -721,7 +721,7 @@ function transactionFormData() {
                  x-transition:enter-start="opacity-0 translate-y-8"
                  x-transition:enter-end="opacity-100 translate-y-0"
                  class="text-center p-6 bg-white/60 backdrop-blur-sm rounded-xl border border-gray-200">
-                <div class="text-3xl lg:text-4xl font-bold text-green-600 mb-2">KES 500M+</div>
+                <div class="text-3xl lg:text-4xl font-bold text-green-600 mb-2">{{ format_funds_protected_stk_kes_for_stat() }}</div>
                 <div class="text-sm font-medium text-gray-600">Protected</div>
             </div>
             <div x-show="inView"
@@ -730,7 +730,7 @@ function transactionFormData() {
                  x-transition:enter-start="opacity-0 translate-y-8"
                  x-transition:enter-end="opacity-100 translate-y-0"
                  class="text-center p-6 bg-white/60 backdrop-blur-sm rounded-xl border border-gray-200">
-                <div class="text-3xl lg:text-4xl font-bold text-green-600 mb-2">50,000+</div>
+                <div class="text-3xl lg:text-4xl font-bold text-green-600 mb-2">{{ number_format(trusted_transactions_count()) }}+</div>
                 <div class="text-sm font-medium text-gray-600">Transactions</div>
             </div>
             <div x-show="inView"

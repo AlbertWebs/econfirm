@@ -1,9 +1,9 @@
 @extends('front.master')
 
-@section('seo_title', 'Scam Watch: Reported Scams, Fake Sites & Fraud Alerts | eConfirm')
+@section('seo_title', 'Scam Alert: Reported Scams, Fake Sites & Fraud Alerts | eConfirm')
 @section('seo_description', 'Browse community-reported scams: fake job ads, romance fraud phone numbers, phishing websites, and suspicious emails. Search, filter by category, and report scams to protect others in Kenya and beyond.')
 @section('canonical_url', route('scam.watch'))
-@section('seo_keywords', 'scam watch Kenya, reported scam websites, fake job ads, romance scam numbers, phishing email list, fraud alerts, eConfirm scam reports')
+@section('seo_keywords', 'scam alert Kenya, reported scam websites, fake job ads, romance scam numbers, phishing email list, fraud alerts, eConfirm scam reports')
 
 @push('structured_data')
 @php
@@ -13,7 +13,7 @@
             '@context' => 'https://schema.org',
             '@type' => 'CollectionPage',
             '@id' => route('scam.watch').'#collection',
-            'name' => 'Scam Watch — community fraud reports',
+            'name' => 'Scam Alert — community fraud reports',
             'description' => 'Directory of user-reported scam websites, phone numbers, and emails with categories including job scams and romance scams.',
             'url' => route('scam.watch'),
             'isPartOf' => [
@@ -28,7 +28,7 @@
 @endpush
 
 @section('content')
-<!-- Scam Watch Hero Section -->
+<!-- Scam Alert hero section -->
 <section class="relative py-16 lg:py-20 bg-gradient-to-br from-red-50 via-white to-orange-50 overflow-hidden">
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div class="absolute top-0 right-0 w-96 h-96 bg-red-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
@@ -43,7 +43,7 @@
                 </svg>
             </div>
             <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
-                Scam Watch
+                Scam Alert
             </h1>
             <p class="text-lg sm:text-xl text-gray-600 mb-8">
                 Stay informed about reported scams and fraudulent websites. Help protect others by reporting suspicious activities.

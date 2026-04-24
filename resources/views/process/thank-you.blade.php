@@ -39,7 +39,7 @@
             </div>
             <div class="col-12 col-md-6">
                 <a href="{{ route('scam.watch') }}" class="btn btn-outline-dark w-100 text-start">
-                    <i class="fas fa-shield-alt me-2"></i> Confirm / Scam Watch
+                    <i class="fas fa-shield-alt me-2"></i> Confirm / Scam Alert
                 </a>
             </div>
         </div>

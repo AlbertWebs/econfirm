@@ -6,17 +6,37 @@
 @section('seo_keywords', 'eConfirm escrow, M-Pesa escrow, '.$productName.', '.$industryKeyword.', secure escrow Kenya, buyer seller protection')
 
 @section('content')
-<section class="bg-gradient-to-b from-emerald-50 to-white py-14 lg:py-20">
+<h1 class="sr-only">{{ $productName }}</h1>
+<section class="bg-gradient-to-b from-emerald-50 to-white py-10 lg:py-12">
     <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <p class="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">Escrow Solutions</p>
-        <h1 class="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">{{ $productName }}</h1>
-        <p class="mt-4 max-w-3xl text-base leading-7 text-slate-700">
-            Use eConfirm to secure {{ strtolower($productName) }} with trusted M-Pesa escrow controls.
-            Ideal for {{ $industryKeyword }} where buyer-seller trust and payment release conditions matter.
-        </p>
-        <div class="mt-7 flex flex-wrap gap-3">
+        <div class="flex flex-wrap gap-3">
             <a href="{{ route('home') }}" class="inline-flex items-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700">Start with eConfirm</a>
             <a href="{{ route('contact') }}" class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Talk to support</a>
+        </div>
+        <div class="mt-6 border-t border-emerald-200/60 pt-6">
+            <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-emerald-800/80">More options</p>
+            <div class="flex flex-wrap gap-2.5 sm:gap-3">
+                <a href="{{ route('register') }}"
+                   class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-emerald-400 hover:bg-white">
+                    Create account
+                </a>
+                <a href="{{ route('login') }}"
+                   class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-emerald-400 hover:bg-white">
+                    Sign in
+                </a>
+                <a href="{{ route('help') }}"
+                   class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-emerald-200 hover:bg-white">
+                    Help &amp; FAQs
+                </a>
+                <a href="{{ route('terms.conditions') }}"
+                   class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-emerald-200 hover:bg-white">
+                    Terms of Service
+                </a>
+                <a href="{{ route('scam.watch') }}"
+                   class="inline-flex items-center justify-center rounded-lg border border-red-200 bg-red-50/90 px-4 py-2.5 text-sm font-medium text-red-800 transition hover:bg-red-100">
+                    Scam Alert
+                </a>
+            </div>
         </div>
     </div>
 </section>

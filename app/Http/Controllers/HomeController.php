@@ -173,6 +173,7 @@ class HomeController extends Controller
             return view('front.product-escrow-cms', [
                 'page' => $cmsPage,
                 'productKey' => $product,
+                'productName' => $page['name'],
                 'canonicalUrl' => route('escrow.product', ['product' => $product]),
                 'seoTitle' => $cmsPage->title ?: $page['seo_title'],
                 'seoDescription' => $cmsPage->meta_description ?: $page['seo_description'],
@@ -617,7 +618,7 @@ class HomeController extends Controller
             ->paginate(20);
 
         $canonicalUrl = route('scam.watch.category', ['category' => $category]);
-        $pageTitle = $label.' — reported scams & numbers | eConfirm Scam Watch';
+        $pageTitle = $label.' — reported scams & numbers | eConfirm Scam Alert';
         $metaDescription = 'Browse community-reported '.$label.' on eConfirm: fake websites, phone numbers, and emails users flagged to help others stay safe.';
 
         return view('front.scam-watch-category', compact(
@@ -683,7 +684,7 @@ class HomeController extends Controller
             default => 'Scam email',
         };
 
-        return $value.' — '.$type.' ('.$report->category_label.') | eConfirm Scam Watch';
+        return $value.' — '.$type.' ('.$report->category_label.') | eConfirm Scam Alert';
     }
 
     private function scamReportMetaDescription(ScamReport $report): string
