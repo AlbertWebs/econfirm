@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TransactionController extends Controller
@@ -58,6 +59,14 @@ class TransactionController extends Controller
     public function destroy(Transaction $transaction)
     {
         $transactionId = $transaction->transaction_id;
+        $diagnosticId = (string) Str::uuid();
+
+        Log::info('Transaction delete requested', [
+            'diagnostic_id' => $diagnosticId,
+            'transaction_id' => $transactionId,
+            'transaction_pk' => $transaction->id,
+            'fk_dependents_before' => $this->inspectFkDependentsForTransaction($transaction->id),
+        ]);
 
         try {
             DB::transaction(function () use ($transaction, $transactionId) {
@@ -114,16 +123,21 @@ class TransactionController extends Controller
                 $transaction->delete();
             });
         } catch (QueryException $e) {
+            $errorInfo = $e->errorInfo ?? [];
             Log::warning('Transaction delete blocked by DB constraint', [
+                'diagnostic_id' => $diagnosticId,
                 'transaction_id' => $transactionId,
                 'transaction_pk' => $transaction->id,
                 'sql_state' => $e->getCode(),
+                'driver_code' => $errorInfo[1] ?? null,
+                'driver_message' => $errorInfo[2] ?? null,
                 'error' => $e->getMessage(),
+                'fk_dependents_after' => $this->inspectFkDependentsForTransaction($transaction->id),
             ]);
 
             return redirect()
                 ->route('admin.transactions.index')
-                ->with('error', 'Could not delete transaction '.$transactionId.'. Some related records are still protected.');
+                ->with('error', 'Could not delete transaction '.$transactionId.'. Some related records are still protected. Ref: '.$diagnosticId);
         }
 
         return redirect()
@@ -166,6 +180,55 @@ class TransactionController extends Controller
 
             DB::table($table)->where($column, $transactionPk)->delete();
         }
+    }
+
+    protected function inspectFkDependentsForTransaction(int $transactionPk): array
+    {
+        $connection = DB::connection();
+        if ($connection->getDriverName() !== 'mysql') {
+            return [];
+        }
+
+        $database = $connection->getDatabaseName();
+        $rows = $connection->select(
+            "
+            SELECT
+                kcu.TABLE_NAME AS table_name,
+                kcu.COLUMN_NAME AS column_name,
+                kcu.CONSTRAINT_NAME AS constraint_name
+            FROM information_schema.KEY_COLUMN_USAGE kcu
+            WHERE kcu.REFERENCED_TABLE_SCHEMA = ?
+              AND kcu.REFERENCED_TABLE_NAME = 'transactions'
+              AND kcu.REFERENCED_COLUMN_NAME = 'id'
+            ",
+            [$database]
+        );
+
+        $out = [];
+        foreach ($rows as $row) {
+            $table = (string) ($row->table_name ?? '');
+            $column = (string) ($row->column_name ?? '');
+            if ($table === '' || $column === '') {
+                continue;
+            }
+            if (! Schema::hasTable($table) || ! Schema::hasColumn($table, $column)) {
+                continue;
+            }
+
+            $count = (int) DB::table($table)->where($column, $transactionPk)->count();
+            if ($count < 1) {
+                continue;
+            }
+
+            $out[] = [
+                'table' => $table,
+                'column' => $column,
+                'constraint' => (string) ($row->constraint_name ?? ''),
+                'count' => $count,
+            ];
+        }
+
+        return $out;
     }
 
     public function export(Request $request): StreamedResponse
