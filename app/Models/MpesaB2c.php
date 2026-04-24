@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 /**
  * @property-read Transaction|null $sourceEscrow
@@ -106,5 +107,66 @@ class MpesaB2c extends Model
     public function isPending(): bool
     {
         return strcasecmp((string) $this->status, 'pending') === 0;
+    }
+
+    /**
+     * Admin list/detail: human payout state using row + optional pre-hydrated adminLatestCallback relation.
+     *
+     * @return array{label: string, sublabel: string, badge_class: string}
+     */
+    public function adminPayoutOutcome(): array
+    {
+        if ($this->rejected_at) {
+            return [
+                'label' => 'Rejected (admin)',
+                'sublabel' => Str::limit(trim((string) ($this->rejection_reason ?? '')), 96) ?: '—',
+                'badge_class' => 'bg-rose-100 text-rose-900 ring-1 ring-rose-200',
+            ];
+        }
+
+        if ($this->isPending() && empty($this->originator_conversation_id)) {
+            return [
+                'label' => 'Awaiting admin',
+                'sublabel' => 'Not submitted to Safaricom yet',
+                'badge_class' => 'bg-amber-100 text-amber-950 ring-1 ring-amber-200',
+            ];
+        }
+
+        $cb = $this->relationLoaded('adminLatestCallback') ? $this->getRelation('adminLatestCallback') : null;
+        if ($cb instanceof MpesaB2cCallback) {
+            $rc = (int) ($cb->result_code ?? 1);
+            if ($rc === 0) {
+                $parts = array_filter([
+                    $cb->transaction_receipt ? 'Receipt: '.$cb->transaction_receipt : null,
+                    $cb->result_desc ? (string) $cb->result_desc : null,
+                ]);
+
+                return [
+                    'label' => 'Paid (M-Pesa)',
+                    'sublabel' => Str::limit(implode(' · ', $parts) ?: 'Result code 0', 120),
+                    'badge_class' => 'bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200',
+                ];
+            }
+
+            return [
+                'label' => 'Failed (M-Pesa)',
+                'sublabel' => Str::limit(trim((string) ($cb->result_desc ?? 'Result '.$cb->result_code)), 120),
+                'badge_class' => 'bg-rose-100 text-rose-900 ring-1 ring-rose-200',
+            ];
+        }
+
+        if (! empty($this->originator_conversation_id) || ! empty($this->conversation_id)) {
+            return [
+                'label' => 'Awaiting result',
+                'sublabel' => 'Sent to Safaricom; no callback row stored yet',
+                'badge_class' => 'bg-sky-100 text-sky-950 ring-1 ring-sky-200',
+            ];
+        }
+
+        return [
+            'label' => (string) ($this->status ?: 'Unknown'),
+            'sublabel' => Str::limit(trim((string) ($this->result_desc ?? '')), 96) ?: '—',
+            'badge_class' => 'bg-slate-100 text-slate-800 ring-1 ring-slate-200',
+        ];
     }
 }

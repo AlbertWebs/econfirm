@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\MpesaB2b;
 use App\Models\MpesaB2c;
+use App\Models\MpesaB2cCallback;
 use App\Models\MpesaC2bTransaction;
 use App\Models\MpesaStkPush;
 use App\Services\AdminActivityLogger;
@@ -40,6 +41,10 @@ class MpesaTransactionsController extends Controller
             'b2c' => $this->paginateB2c($request, $filters),
             'b2b' => $this->paginateB2b($request, $filters),
         };
+
+        if ($tab === 'b2c' && $rows instanceof LengthAwarePaginator && $rows->getCollection()->isNotEmpty()) {
+            $this->hydrateB2cLatestCallbacks($rows);
+        }
 
         $summary = [
             'stk_total' => MpesaStkPush::query()->count(),
@@ -171,6 +176,68 @@ class MpesaTransactionsController extends Controller
         }
 
         return $q->paginate(25)->withQueryString();
+    }
+
+    /**
+     * Attach latest matching {@see MpesaB2cCallback} per row for admin payout badges (one extra query per page).
+     */
+    protected function hydrateB2cLatestCallbacks(LengthAwarePaginator $paginator): void
+    {
+        $collection = $paginator->getCollection();
+        /** @var \Illuminate\Support\Collection<int, string> $idPool */
+        $idPool = $collection->flatMap(function (MpesaB2c $row) {
+            return array_filter([$row->conversation_id, $row->originator_conversation_id], fn ($v) => $v !== null && $v !== '');
+        })->unique()->values();
+        if ($idPool->isEmpty()) {
+            return;
+        }
+        $ids = $idPool->all();
+        $callbacks = MpesaB2cCallback::query()
+            ->where(function ($w) use ($ids) {
+                $w->whereIn('conversation_id', $ids)->orWhereIn('originator_conversation_id', $ids);
+            })
+            ->orderByDesc('id')
+            ->get();
+        /** @var array<string, MpesaB2cCallback> $byAnyId */
+        $byAnyId = [];
+        foreach ($callbacks as $cb) {
+            foreach (array_filter([$cb->conversation_id, $cb->originator_conversation_id], fn ($v) => $v !== null && $v !== '') as $idKey) {
+                if (! array_key_exists($idKey, $byAnyId)) {
+                    $byAnyId[$idKey] = $cb;
+                }
+            }
+        }
+        foreach ($collection as $row) {
+            $candidates = [];
+            foreach (array_filter([$row->conversation_id, $row->originator_conversation_id], fn ($v) => $v !== null && $v !== '') as $kid) {
+                if (isset($byAnyId[$kid])) {
+                    $candidates[$byAnyId[$kid]->id] = $byAnyId[$kid];
+                }
+            }
+            $picked = $candidates === [] ? null : collect($candidates)->sortByDesc('id')->first();
+            $row->setRelation('adminLatestCallback', $picked);
+        }
+    }
+
+    public function showB2c(MpesaB2c $mpesa_b2c): View
+    {
+        $mpesa_b2c->load(['approvedByAdmin', 'rejectedByAdmin', 'sourceEscrow']);
+        $ids = array_values(array_unique(array_filter(
+            [$mpesa_b2c->conversation_id, $mpesa_b2c->originator_conversation_id],
+            fn ($v) => $v !== null && $v !== ''
+        )));
+        $callbacks = collect();
+        if ($ids !== []) {
+            $callbacks = MpesaB2cCallback::query()
+                ->where(function ($w) use ($ids) {
+                    $w->whereIn('conversation_id', $ids)->orWhereIn('originator_conversation_id', $ids);
+                })
+                ->orderByDesc('id')
+                ->get();
+        }
+        $mpesa_b2c->setRelation('adminLatestCallback', $callbacks->sortByDesc('id')->first());
+
+        return view('admin.mpesa-transactions.b2c-detail', compact('mpesa_b2c', 'callbacks'));
     }
 
     protected function applyDateRange($query, ?string $from, ?string $to, string $column): void

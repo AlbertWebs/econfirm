@@ -181,6 +181,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('transactions', AdminTransactionController::class)->only(['index', 'show', 'destroy']);
         Route::get('business', [BusinessController::class, 'index'])->name('business.index');
         Route::get('mpesa-transactions', [MpesaTransactionsController::class, 'index'])->name('mpesa-transactions.index');
+        Route::get('mpesa-transactions/b2c/{mpesa_b2c}', [MpesaTransactionsController::class, 'showB2c'])->name('mpesa-transactions.b2c.show');
         Route::post('mpesa-transactions/b2c/{mpesa_b2c}/approve', [MpesaTransactionsController::class, 'approveB2c'])->name('mpesa-transactions.b2c.approve');
         Route::post('mpesa-transactions/b2c/{mpesa_b2c}/reject', [MpesaTransactionsController::class, 'rejectB2c'])->name('mpesa-transactions.b2c.reject');
         Route::post('mpesa-transactions/b2b/{mpesa_b2b}/approve', [MpesaTransactionsController::class, 'approveB2b'])->name('mpesa-transactions.b2b.approve');

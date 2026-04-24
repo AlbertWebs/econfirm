@@ -164,6 +164,7 @@
                             <th class="px-3 py-2 text-right text-xs font-semibold uppercase text-slate-600">Amount</th>
                             <th class="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-600">Reason</th>
                             <th class="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-600">Status</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-600">Payout</th>
                             <th class="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-600">Requested</th>
                             <th class="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-600">Initiated by</th>
                             <th class="px-3 py-2 text-right text-xs font-semibold uppercase text-slate-600">Actions</th>
@@ -177,11 +178,20 @@
                                 <td class="px-3 py-2 text-right tabular-nums">{{ number_format($r->displayAmountKes(), 2) }}</td>
                                 <td class="max-w-[10rem] truncate px-3 py-2 text-xs" title="{{ $r->remarks }}">{{ $r->remarks ?? '—' }}</td>
                                 <td class="px-3 py-2"><span class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">{{ $r->status }}</span></td>
+                                @php($payout = $r->adminPayoutOutcome())
+                                <td class="max-w-[11rem] px-3 py-2">
+                                    <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold {{ $payout['badge_class'] }}">{{ $payout['label'] }}</span>
+                                    <p class="mt-1 text-xs leading-snug text-slate-500">{{ $payout['sublabel'] }}</p>
+                                </td>
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600">{{ optional($r->created_at)->format('Y-m-d H:i') }}</td>
                                 <td class="max-w-[8rem] truncate px-3 py-2 text-xs text-slate-600" title="{{ $r->initiator_name }}">{{ $r->initiator_name ?? '—' }}</td>
                                 <td class="px-3 py-2 text-right">
-                                    @if ($r->isPending())
-                                        <div class="flex flex-col items-end gap-2">
+                                    <div class="flex flex-col items-end gap-2">
+                                        <a
+                                            href="{{ route('admin.mpesa-transactions.b2c.show', $r) }}"
+                                            class="inline-flex rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                                        >Details</a>
+                                        @if ($r->isPending())
                                             <form method="post" action="{{ route('admin.mpesa-transactions.b2c.approve', $r) }}" class="inline" onsubmit="return confirm('Approve this B2C payout?');">
                                                 @csrf
                                                 <button type="submit" class="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-emerald-700">Approve</button>
@@ -191,15 +201,13 @@
                                                 <input type="text" name="rejection_reason" required placeholder="Rejection reason" class="w-full rounded border border-slate-300 px-2 py-1 text-xs">
                                                 <button type="submit" class="rounded-lg border border-red-300 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-800 hover:bg-red-100">Reject</button>
                                             </form>
-                                        </div>
-                                    @else
-                                        <span class="text-xs text-slate-400">—</span>
-                                    @endif
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                             @if ($r->approved_at || $r->rejected_at)
                                 <tr class="bg-slate-50/80 text-xs text-slate-600">
-                                    <td colspan="8" class="px-3 py-1.5">
+                                    <td colspan="9" class="px-3 py-1.5">
                                         @if ($r->approved_at)
                                             Approved {{ $r->approved_at->format('Y-m-d H:i') }} @if($r->approvedByAdmin) by {{ $r->approvedByAdmin->email }} @endif
                                         @endif
@@ -211,7 +219,7 @@
                                 </tr>
                             @endif
                         @empty
-                            <tr><td colspan="8" class="p-6"><x-admin.empty-state>No B2C records.</x-admin.empty-state></td></tr>
+                            <tr><td colspan="9" class="p-6"><x-admin.empty-state>No B2C records.</x-admin.empty-state></td></tr>
                         @endforelse
                     </tbody>
                 </table>
