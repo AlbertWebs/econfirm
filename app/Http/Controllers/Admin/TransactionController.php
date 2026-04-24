@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MpesaStkPush;
 use App\Models\Transaction;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -48,6 +49,23 @@ class TransactionController extends Controller
         }
 
         return view('admin.transactions.show', compact('transaction', 'stkRows'));
+    }
+
+    public function destroy(Transaction $transaction)
+    {
+        $transactionId = $transaction->transaction_id;
+
+        try {
+            $transaction->delete();
+        } catch (QueryException) {
+            return redirect()
+                ->route('admin.transactions.index')
+                ->with('error', 'Could not delete transaction '.$transactionId.'. It is referenced by related records.');
+        }
+
+        return redirect()
+            ->route('admin.transactions.index')
+            ->with('status', 'Transaction '.$transactionId.' deleted.');
     }
 
     public function export(Request $request): StreamedResponse

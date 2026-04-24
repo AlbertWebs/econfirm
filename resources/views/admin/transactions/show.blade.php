@@ -11,6 +11,13 @@
         <a href="{{ route('transaction.index', ['id' => $transaction->transaction_id]) }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800 hover:bg-emerald-100">
             Public page
         </a>
+        <form method="POST" action="{{ route('admin.transactions.destroy', $transaction) }}" onsubmit="return confirm('Delete transaction {{ $transaction->transaction_id }}? This cannot be undone.');">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="inline-flex items-center rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100">
+                Delete
+            </button>
+        </form>
     </div>
 
     <div class="grid gap-6 lg:grid-cols-2">

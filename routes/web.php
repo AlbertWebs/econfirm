@@ -133,7 +133,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         })->name('index');
         Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::get('transactions/export', [AdminTransactionController::class, 'export'])->name('transactions.export');
-        Route::resource('transactions', AdminTransactionController::class)->only(['index', 'show']);
+        Route::resource('transactions', AdminTransactionController::class)->only(['index', 'show', 'destroy']);
         Route::get('business', [BusinessController::class, 'index'])->name('business.index');
         Route::get('mpesa-transactions', [MpesaTransactionsController::class, 'index'])->name('mpesa-transactions.index');
         Route::post('mpesa-transactions/b2c/{mpesa_b2c}/approve', [MpesaTransactionsController::class, 'approveB2c'])->name('mpesa-transactions.b2c.approve');

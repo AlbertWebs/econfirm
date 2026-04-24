@@ -62,6 +62,7 @@
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600 sm:px-5">Status</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600 sm:px-5">Sender</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600 sm:px-5">Created</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-600 sm:px-5">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 bg-white">
@@ -77,10 +78,20 @@
                             </td>
                             <td class="whitespace-nowrap px-4 py-3 text-slate-600 sm:px-5">{{ $t->sender_mobile }}</td>
                             <td class="whitespace-nowrap px-4 py-3 text-slate-500 sm:px-5">{{ optional($t->created_at)->format('Y-m-d H:i') }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right sm:px-5">
+                                <div class="inline-flex items-center gap-2">
+                                    <a href="{{ route('admin.transactions.show', $t) }}" class="inline-flex rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">View transaction details</a>
+                                    <form method="POST" action="{{ route('admin.transactions.destroy', $t) }}" onsubmit="return confirm('Delete transaction {{ $t->transaction_id }}? This cannot be undone.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="inline-flex rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6">
+                            <td colspan="7">
                                 <x-admin.empty-state>No matching transactions.</x-admin.empty-state>
                             </td>
                         </tr>
