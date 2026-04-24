@@ -286,12 +286,17 @@ class SmsService
         $ref = $transaction->transaction_id;
         $amt = number_format((float) $transaction->transaction_amount, 2);
 
-        $senderMsg = "eConfirm: You approved escrow {$ref}. We've started sending KES {$amt} to the recipient.";
-
         if ($isB2bToPaybill) {
             $pb = $transaction->paybill_till_number ?? '';
+            $senderMsg = "eConfirm: You approved escrow {$ref}. We've started sending KES {$amt} to the recipient.";
             $receiverMsg = "eConfirm: Your payment has been approved! KES {$amt} is on its way to Paybill/Till {$pb}.";
         } else {
+            $recv = trim((string) ($transaction->receiver_mobile ?? ''));
+            $recv254 = $recv !== '' ? self::normalizeKenyaTo254($recv) : '';
+            $phoneForSms = preg_match('/^254\d{9}$/', $recv254) ? $recv254 : ($recv !== '' ? $recv : '');
+            $senderMsg = $phoneForSms !== ''
+                ? "eConfirm: You approved escrow {$ref}. We've started sending KES {$amt} to the recipient ({$phoneForSms})."
+                : "eConfirm: You approved escrow {$ref}. We've started sending KES {$amt} to the recipient.";
             $receiverMsg = "eConfirm: Your payment has been approved. Your money is headed to your M-Pesa.";
         }
 

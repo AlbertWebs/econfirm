@@ -22,10 +22,21 @@ class DisputeController extends Controller
 
         $disputes = $query->orderByDesc('updated_at')->paginate(30)->withQueryString();
 
+        $byStatus = Dispute::query()
+            ->selectRaw('status, COUNT(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
         return view('admin.disputes.index', [
             'disputes' => $disputes,
             'statuses' => Dispute::STATUSES,
             'filterStatus' => $request->string('status')->toString(),
+            'summary' => [
+                'total' => Dispute::query()->count(),
+                'created' => (int) ($byStatus[Dispute::STATUS_CREATED] ?? 0),
+                'ongoing' => (int) ($byStatus[Dispute::STATUS_ONGOING] ?? 0),
+                'resolved' => (int) ($byStatus[Dispute::STATUS_RESOLVED] ?? 0),
+            ],
         ]);
     }
 

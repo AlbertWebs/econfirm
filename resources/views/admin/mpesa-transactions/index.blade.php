@@ -16,6 +16,49 @@
 
         return substr($digits, 0, 3).str_repeat('•', max(2, strlen($digits) - 5)).substr($digits, -2);
     };
+    /** Tailwind badge for C2B / B2C / B2B workflow status text (case-insensitive). */
+    $mpesaWorkflowStatusBadgeClass = function (?string $raw): string {
+        $s = mb_strtolower(trim((string) $raw), 'UTF-8');
+        if ($s === '') {
+            return 'bg-slate-100 text-slate-600 ring-1 ring-slate-200';
+        }
+        if (
+            str_contains($s, 'success')
+            || $s === 'completed'
+            || str_contains($s, 'complete')
+            || $s === 'paid'
+            || str_contains($s, 'confirmed')
+        ) {
+            return 'bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200';
+        }
+        if (
+            str_contains($s, 'pending')
+            || str_contains($s, 'await')
+            || $s === 'processing'
+            || str_contains($s, 'in progress')
+            || str_contains($s, 'queued')
+        ) {
+            return 'bg-amber-100 text-amber-950 ring-1 ring-amber-200';
+        }
+        if (str_contains($s, 'approv') && ! str_contains($s, 'unapprov')) {
+            return 'bg-sky-100 text-sky-950 ring-1 ring-sky-200';
+        }
+        if (
+            str_contains($s, 'fail')
+            || str_contains($s, 'reject')
+            || str_contains($s, 'cancel')
+            || str_contains($s, 'error')
+            || str_contains($s, 'declin')
+            || str_contains($s, 'invalid')
+        ) {
+            return 'bg-rose-100 text-rose-900 ring-1 ring-rose-200';
+        }
+        if (str_contains($s, 'timeout') || str_contains($s, 'expired')) {
+            return 'bg-orange-100 text-orange-950 ring-1 ring-orange-200';
+        }
+
+        return 'bg-slate-100 text-slate-700 ring-1 ring-slate-200';
+    };
 @endphp
 
 @section('content')
@@ -116,7 +159,13 @@
                                 <td class="max-w-[10rem] truncate px-3 py-2 font-mono text-xs text-slate-800" title="{{ $r->reference }}">{{ $r->reference ?: '—' }}</td>
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-700">{{ $maskPhone($r->phone) }}</td>
                                 <td class="whitespace-nowrap px-3 py-2 text-right tabular-nums text-slate-800">{{ number_format((float) $r->amount, 2) }}</td>
-                                <td class="px-3 py-2"><span class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">{{ $r->status }}</span></td>
+                                @php($stkAdminStatus = $r->adminDisplayStatus())
+                                <td class="max-w-[14rem] px-3 py-2">
+                                    <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold {{ $r->adminStatusBadgeClass($stkAdminStatus) }}">{{ $stkAdminStatus }}</span>
+                                    @if ($r->result_desc && $stkAdminStatus === 'Request cancelled by user')
+                                        <p class="mt-1 text-xs leading-snug text-slate-500" title="{{ $r->result_desc }}">{{ \Illuminate\Support\Str::limit($r->result_desc, 72) }}</p>
+                                    @endif
+                                </td>
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600">{{ optional($r->created_at)->format('Y-m-d H:i') }}</td>
                                 <td class="px-3 py-2 font-mono text-xs text-slate-600">{{ $r->response_code ?? '—' }}</td>
                                 <td class="max-w-[12rem] truncate px-3 py-2 font-mono text-xs text-slate-600" title="{{ $r->checkout_request_id }}">{{ $r->checkout_request_id }}</td>
@@ -147,7 +196,9 @@
                                 <td class="px-3 py-2 text-right tabular-nums">{{ number_format((float) $r->amount, 2) }}</td>
                                 <td class="max-w-[8rem] truncate px-3 py-2 text-xs" title="{{ $r->bill_reference_number }}">{{ $r->bill_reference_number ?? '—' }}</td>
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600">{{ optional($r->transaction_time)->format('Y-m-d H:i') ?: optional($r->created_at)->format('Y-m-d H:i') }}</td>
-                                <td class="px-3 py-2"><span class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">{{ $r->status }}</span></td>
+                                <td class="px-3 py-2">
+                                    <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold {{ $mpesaWorkflowStatusBadgeClass($r->status) }}">{{ $r->status ?? '—' }}</span>
+                                </td>
                                 <td class="px-3 py-2 font-mono text-xs">{{ $r->mpesa_receipt_number ?? '—' }}</td>
                             </tr>
                         @empty
@@ -177,7 +228,9 @@
                                 <td class="px-3 py-2">{{ $maskPhone($r->receiver_mobile ?: $r->party_b) }}</td>
                                 <td class="px-3 py-2 text-right tabular-nums">{{ number_format($r->displayAmountKes(), 2) }}</td>
                                 <td class="max-w-[10rem] truncate px-3 py-2 text-xs" title="{{ $r->remarks }}">{{ $r->remarks ?? '—' }}</td>
-                                <td class="px-3 py-2"><span class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">{{ $r->status }}</span></td>
+                                <td class="px-3 py-2">
+                                    <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold {{ $mpesaWorkflowStatusBadgeClass($r->status) }}">{{ $r->status ?? '—' }}</span>
+                                </td>
                                 @php($payout = $r->adminPayoutOutcome())
                                 <td class="max-w-[11rem] px-3 py-2">
                                     <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold {{ $payout['badge_class'] }}">{{ $payout['label'] }}</span>
@@ -244,7 +297,9 @@
                                 <td class="px-3 py-2 font-mono text-xs">{{ $r->party_b ?? '—' }}</td>
                                 <td class="px-3 py-2 text-right tabular-nums">{{ number_format($r->displayAmountKes(), 2) }}</td>
                                 <td class="max-w-[10rem] truncate px-3 py-2 text-xs" title="{{ $r->remarks }}">{{ $r->remarks ?? '—' }}</td>
-                                <td class="px-3 py-2"><span class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">{{ $r->status }}</span></td>
+                                <td class="px-3 py-2">
+                                    <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold {{ $mpesaWorkflowStatusBadgeClass($r->status) }}">{{ $r->status ?? '—' }}</span>
+                                </td>
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600">{{ optional($r->created_at)->format('Y-m-d H:i') }}</td>
                                 <td class="max-w-[8rem] truncate px-3 py-2 text-xs text-slate-600" title="{{ $r->initiator }}">{{ $r->initiator ?? '—' }}</td>
                                 <td class="px-3 py-2 text-right">
