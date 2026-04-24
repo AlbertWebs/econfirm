@@ -14,32 +14,56 @@
         };
     @endphp
 
+    <div class="relative mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-5 text-white shadow-xl sm:p-6">
+        <div class="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-emerald-400/20 blur-2xl"></div>
+        <div class="pointer-events-none absolute -bottom-12 -left-12 h-36 w-36 rounded-full bg-sky-300/20 blur-2xl"></div>
+        <div class="relative flex flex-wrap items-start justify-between gap-4">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.15em] text-emerald-200/90">Escrow transaction</p>
+                <h2 class="mt-2 break-all text-xl font-semibold sm:text-2xl">{{ $transaction->transaction_id }}</h2>
+                <div class="mt-3 flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+                    <span class="inline-flex items-center rounded-full bg-white/10 px-2.5 py-1 font-medium text-white/90 ring-1 ring-inset ring-white/20">
+                        ID #{{ $transaction->id }}
+                    </span>
+                    <span class="inline-flex items-center rounded-full px-2.5 py-1 font-semibold ring-1 ring-inset {{ $statusClass }}">
+                        {{ $transaction->status ?: 'Unknown' }}
+                    </span>
+                </div>
+            </div>
+            <div class="text-left sm:text-right">
+                <p class="text-xs uppercase tracking-wide text-white/70">Amount</p>
+                <p class="mt-1 text-2xl font-bold tabular-nums sm:text-3xl">KES {{ number_format((float) $transaction->transaction_amount, 2) }}</p>
+                <p class="mt-1 text-xs text-white/70">Updated {{ optional($transaction->updated_at)->format('Y-m-d H:i') ?? '—' }}</p>
+            </div>
+        </div>
+    </div>
+
     <div class="mb-6 flex flex-wrap gap-2">
-        <a href="{{ route('admin.transactions.index', request()->query()) }}" class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+        <a href="{{ route('admin.transactions.index', request()->query()) }}" class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
             Back to list
         </a>
-        <a href="{{ route('transaction.index', ['id' => $transaction->transaction_id]) }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800 hover:bg-emerald-100">
+        <a href="{{ route('transaction.index', ['id' => $transaction->transaction_id]) }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800 shadow-sm hover:bg-emerald-100">
             Public page
         </a>
         <form method="POST" action="{{ route('admin.transactions.destroy', $transaction) }}" onsubmit="return confirm('Delete transaction {{ $transaction->transaction_id }}? This cannot be undone.');">
             @csrf
             @method('DELETE')
-            <button type="submit" class="inline-flex items-center rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100">
+            <button type="submit" class="inline-flex items-center rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-100">
                 Delete
             </button>
         </form>
     </div>
 
     <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-admin.card class="border border-slate-200">
+        <x-admin.card class="border border-slate-200 bg-white/95 shadow-sm">
             <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Reference</p>
             <p class="mt-2 break-all font-mono text-sm text-slate-900">{{ $transaction->transaction_id }}</p>
         </x-admin.card>
-        <x-admin.card class="border border-slate-200">
+        <x-admin.card class="border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white shadow-sm">
             <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Amount</p>
-            <p class="mt-2 text-2xl font-semibold tabular-nums text-slate-900">KES {{ number_format((float) $transaction->transaction_amount, 2) }}</p>
+            <p class="mt-2 text-2xl font-semibold tabular-nums text-emerald-800">KES {{ number_format((float) $transaction->transaction_amount, 2) }}</p>
         </x-admin.card>
-        <x-admin.card class="border border-slate-200">
+        <x-admin.card class="border border-slate-200 bg-white/95 shadow-sm">
             <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Status</p>
             <div class="mt-2">
                 <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset {{ $statusClass }}">
@@ -47,7 +71,7 @@
                 </span>
             </div>
         </x-admin.card>
-        <x-admin.card class="border border-slate-200">
+        <x-admin.card class="border border-slate-200 bg-white/95 shadow-sm">
             <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Created</p>
             <p class="mt-2 text-sm font-medium text-slate-900">{{ optional($transaction->created_at)->format('Y-m-d H:i') ?? '—' }}</p>
             <p class="mt-1 text-xs text-slate-500">Updated: {{ optional($transaction->updated_at)->format('Y-m-d H:i') ?? '—' }}</p>
@@ -55,7 +79,7 @@
     </div>
 
     <div class="grid gap-6 lg:grid-cols-2">
-        <x-admin.card>
+        <x-admin.card class="border border-slate-200 shadow-sm">
             <h3 class="mb-4 text-sm font-semibold text-slate-900">Core transaction data</h3>
             <dl class="space-y-3 text-sm">
                 <div class="flex justify-between gap-4 border-b border-slate-100 pb-2">
@@ -89,7 +113,7 @@
             </dl>
         </x-admin.card>
 
-        <x-admin.card>
+        <x-admin.card class="border border-slate-200 shadow-sm">
             <h3 class="mb-4 text-sm font-semibold text-slate-900">Participants & request tracing</h3>
             <dl class="space-y-3 text-sm">
                 <div class="flex justify-between gap-4 border-b border-slate-100 pb-2">
@@ -111,14 +135,14 @@
             </dl>
         </x-admin.card>
 
-        <x-admin.card class="lg:col-span-2">
+        <x-admin.card class="lg:col-span-2 border border-slate-200 shadow-sm">
             <h3 class="mb-2 text-sm font-semibold text-slate-900">Transaction notes/details</h3>
             <div class="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
                 <p class="break-words text-sm leading-relaxed text-slate-700">{{ $transaction->transaction_details ?? '—' }}</p>
             </div>
         </x-admin.card>
 
-        <x-admin.card class="lg:col-span-2" :flush="true">
+        <x-admin.card class="lg:col-span-2 border border-slate-200 shadow-sm" :flush="true">
             <x-slot:header>
                 <div class="flex items-center justify-between gap-3">
                     <span>M-Pesa STK activity</span>
