@@ -235,7 +235,10 @@ function transactionFormData() {
                             self.checkoutRequestId = null;
                             return;
                         }
-                        self.mpesaResponse = { type: 'success', message: 'Payment received! Redirecting...' };
+                        self.mpesaResponse = {
+                            type: 'success',
+                            message: data.message || 'Your escrow has been funded. Redirecting…',
+                        };
                         setTimeout(() => {
                             window.location.href = '/get-transaction/' + encodeURIComponent(data.transaction_id);
                         }, 1500);

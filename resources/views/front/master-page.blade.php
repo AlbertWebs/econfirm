@@ -345,7 +345,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (st === 'completed' || st === 'success') {
                     clearInterval(poll);
                     if (mpesaResponse) {
-                        mpesaResponse.textContent = 'Payment received! Redirecting...';
+                        mpesaResponse.textContent = data.message || 'Your escrow has been funded. Redirecting…';
                         mpesaResponse.className = 'alert alert-success';
                     }
                     setTimeout(() => {

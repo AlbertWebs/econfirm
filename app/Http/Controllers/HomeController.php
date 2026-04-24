@@ -12,6 +12,7 @@ use App\Models\ScamReportLike;
 use App\Models\SupportHelpItem;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\EscrowStkFundingService;
 use App\Services\MpesaService;
 use App\Services\SmsService;
 use App\Services\StkRequestIpLimiter;
@@ -1051,7 +1052,7 @@ class HomeController extends Controller
                     'message' => MpesaService::friendlyStkQueryPendingMessage($pendingText),
                 ]);
             }
-        } elseif (! $this->hasStkCallbackItemMetadata($stk->callback_metadata)) {
+        } elseif (! EscrowStkFundingService::callbackMetadataHasUsableItems($stk->callback_metadata)) {
             // STK row already Success (e.g. from a prior poll) but no usable metadata yet — confirm with live query.
             $query = (new MpesaService)->stkPushQuery($id);
             if (($query['status'] ?? null) === 'Success') {
@@ -1067,7 +1068,7 @@ class HomeController extends Controller
             }
         }
 
-        if (! $this->hasStkCallbackItemMetadata($stk->callback_metadata) && ! $allowFundWithoutCallbackItems) {
+        if (! EscrowStkFundingService::callbackMetadataHasUsableItems($stk->callback_metadata) && ! $allowFundWithoutCallbackItems) {
             return response()->json([
                 'success' => true,
                 'status' => 'Pending',
@@ -1081,13 +1082,9 @@ class HomeController extends Controller
             ]);
         }
 
-        $transaction = Transaction::where('checkout_request_id', $id)->first();
+        $transaction = EscrowStkFundingService::markFundedIfNotAlready($stk);
 
         if (! $transaction) {
-            \Log::error('STK Success but no matching escrow transaction', [
-                'checkout_request_id' => $id,
-            ]);
-
             return response()->json([
                 'success' => true,
                 'status' => 'Success',
@@ -1096,50 +1093,12 @@ class HomeController extends Controller
             ]);
         }
 
-        $alreadyFunded = in_array($transaction->status, ['Escrow Funded', 'Completed'], true);
-
-        if (! $alreadyFunded) {
-            $transaction->status = 'Escrow Funded';
-            $transaction->save();
-
-            try {
-                (new SmsService)->notifyEscrowFunded($transaction->fresh());
-            } catch (\Throwable $e) {
-                \Log::error('Escrow funded SMS failed', [
-                    'transaction_id' => $transaction->transaction_id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
-
         return response()->json([
             'success' => true,
-            'message' => 'Transaction successful.',
+            'message' => 'Your escrow has been funded. Redirecting…',
             'transaction_id' => $transaction->transaction_id,
             'status' => 'Success',
         ]);
-    }
-
-    /**
-     * True if M-Pesa CallbackMetadata items look usable (list of Name/Value, or a single item).
-     */
-    protected function hasStkCallbackItemMetadata(mixed $raw): bool
-    {
-        if (! is_array($raw) || $raw === []) {
-            return false;
-        }
-
-        if (isset($raw['Name'])) {
-            return true;
-        }
-
-        foreach ($raw as $row) {
-            if (is_array($row) && isset($row['Name'])) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     // createOTP

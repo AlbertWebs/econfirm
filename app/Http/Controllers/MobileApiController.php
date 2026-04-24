@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Otp;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Services\EscrowStkFundingService;
 use App\Services\MpesaService;
 use App\Services\SmsService;
 use App\Services\StkRequestIpLimiter;
@@ -265,28 +266,14 @@ class MobileApiController extends Controller
             }
 
             if ($stkPush->status === 'Success') {
-                $transaction = Transaction::where('checkout_request_id', $request->checkout_request_id)->first();
-                
-                if ($transaction) {
-                    $transaction->status = 'Escrow Funded';
-                    $transaction->save();
-
-                    try {
-                        (new SmsService())->notifyEscrowFunded($transaction);
-                    } catch (\Throwable $e) {
-                        Log::error('Escrow funded SMS failed (mobile)', [
-                            'transaction_id' => $transaction->transaction_id,
-                            'error' => $e->getMessage(),
-                        ]);
-                    }
-                }
+                $transaction = EscrowStkFundingService::markFundedIfNotAlready($stkPush);
 
                 return response()->json([
                     'success' => true,
                     'status' => 'completed',
-                    'message' => 'Payment successful! Funds are now in escrow.',
+                    'message' => 'Your escrow has been funded.',
                     'data' => [
-                        'transaction_id' => $transaction->transaction_id ?? null,
+                        'transaction_id' => $transaction?->transaction_id,
                         'status' => 'Escrow Funded',
                     ]
                 ]);

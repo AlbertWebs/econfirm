@@ -41,6 +41,8 @@ class Transaction extends Model
         'currency',
         'terms',
         'confirmation_code',
+        'checkout_request_id',
+        'merchant_request_id',
     ];
 
     public function disputes(): HasMany

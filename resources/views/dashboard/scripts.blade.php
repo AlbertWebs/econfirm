@@ -203,7 +203,7 @@
                         }
                         if (data.status === 'completed' || data.status === 'Success') {
                             if (box) {
-                                box.textContent = (data && data.message) ? data.message : 'Payment received! Redirecting...';
+                                box.textContent = (data && data.message) ? data.message : 'Your escrow has been funded. Redirecting…';
                                 box.className = 'alert alert-success';
                             }
                             clearPaymentStatusPoll();

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MpesaB2c;
 use App\Models\MpesaStkPush;
 use App\Models\Transaction;
+use App\Services\EscrowStkFundingService;
 use App\Services\PhoneAccountProvisioningService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -61,6 +62,15 @@ class MpesaController extends Controller
             $stkPush->save();
 
             if ((int) $resultCode === 0) {
+                try {
+                    EscrowStkFundingService::markFundedIfNotAlready($stkPush);
+                } catch (\Throwable $e) {
+                    Log::error('Escrow funding from STK callback failed', [
+                        'checkout_request_id' => $checkoutRequestID,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
                 $metaMap = $this->stkMetadataItemsToMap(is_array($callbackMetadata) ? $callbackMetadata : []);
                 $payerPhone = isset($metaMap['PhoneNumber']) ? (string) $metaMap['PhoneNumber'] : (string) $stkPush->phone;
                 $stkDisplayName = PhoneAccountProvisioningService::displayNameFromStkMetadata($metaMap);
@@ -76,6 +86,11 @@ class MpesaController extends Controller
                     PhoneAccountProvisioningService::ensureUser($escrow->receiver_mobile);
                 }
             }
+        } else {
+            Log::warning('M-Pesa STK callback: no mpesa_stk_pushes row for CheckoutRequestID', [
+                'CheckoutRequestID' => $checkoutRequestID,
+                'MerchantRequestID' => $merchantRequestID,
+            ]);
         }
 
         return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success']);
