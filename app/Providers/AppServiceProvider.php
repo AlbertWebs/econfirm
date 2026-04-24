@@ -13,6 +13,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $helpersPath = app_path('helpers.php');
+        if (is_file($helpersPath)) {
+            require_once $helpersPath;
+        }
+
         $this->app->singleton(SiteSettingsService::class, fn () => new SiteSettingsService);
 
         // If composer package discovery did not run (e.g. deploy with --no-scripts), DomPDF is never
