@@ -113,10 +113,10 @@ class TransactionController extends Controller
                 }
 
                 if (Schema::hasTable('disputes')) {
-                    $this->deleteByIntColumn('disputes', 'transaction_id', (int) $transaction->id);
+                    $this->deleteByIntColumnUnprepared('disputes', 'transaction_id', (int) $transaction->id);
                 }
                 if (Schema::hasTable('live_chats')) {
-                    $this->deleteByIntColumn('live_chats', 'transaction_id', (int) $transaction->id);
+                    $this->deleteByIntColumnUnprepared('live_chats', 'transaction_id', (int) $transaction->id);
                 }
 
                 // Final safety net: clear any remaining FK dependents to transactions.id.
@@ -255,6 +255,24 @@ class TransactionController extends Controller
 
             DB::unprepared($sql);
         }
+    }
+
+    /**
+     * Hard bypass for environments constantly failing with MySQL prepared statements (1615).
+     */
+    protected function deleteByIntColumnUnprepared(string $table, string $column, int $value): void
+    {
+        $wrappedTable = '`'.str_replace('`', '``', $table).'`';
+        $wrappedColumn = '`'.str_replace('`', '``', $column).'`';
+        $sql = "DELETE FROM {$wrappedTable} WHERE {$wrappedColumn} = ".(int) $value;
+
+        Log::info('Running unprepared delete', [
+            'table' => $table,
+            'column' => $column,
+            'value' => $value,
+        ]);
+
+        DB::unprepared($sql);
     }
 
     protected function inspectFkDependentsForTransaction(int $transactionPk): array
