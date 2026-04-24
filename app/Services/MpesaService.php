@@ -26,6 +26,23 @@ class MpesaService
     }
 
     /**
+     * Daraja ResultURL / QueueTimeOutURL must match real routes (see routes/api.php).
+     */
+    protected function b2cResultUrl(): string
+    {
+        $u = trim((string) config('mpesa.b2c_result_url', ''));
+
+        return $u !== '' ? $u : url('/api/mpesa/b2c/callback');
+    }
+
+    protected function b2cTimeoutUrl(): string
+    {
+        $u = trim((string) config('mpesa.b2c_timeout_url', ''));
+
+        return $u !== '' ? $u : url('/api/mpesa/b2c/timeout');
+    }
+
+    /**
      * Guzzle SSL options: fixes cURL error 60 on Windows when php.ini has no CA bundle.
      */
     protected function mpesaHttp(): \Illuminate\Http\Client\PendingRequest
@@ -306,8 +323,8 @@ class MpesaService
             'PartyA' => config('mpesa.shortcode'),
             'PartyB' => $partyB,
             'Remarks' => $transaction->transaction_details ?? 'Escrow Payout',
-            'QueueTimeOutURL' => config('mpesa.b2c_timeout_url', url('/mpesa/b2c/timeout')),
-            'ResultURL' => config('mpesa.b2c_result_url', url('/mpesa/b2c/result')),
+            'QueueTimeOutURL' => $this->b2cTimeoutUrl(),
+            'ResultURL' => $this->b2cResultUrl(),
             'Occasion' => $transaction->transaction_type ?? 'Escrow',
         ];
         // Log the payload for debugging
@@ -744,8 +761,8 @@ class MpesaService
             'PartyA' => config('mpesa.shortcode'),
             'PartyB' => $partyB,
             'Remarks' => $record->remarks ?: 'Escrow Payout',
-            'QueueTimeOutURL' => config('mpesa.b2c_timeout_url', url('/mpesa/b2c/timeout')),
-            'ResultURL' => config('mpesa.b2c_result_url', url('/mpesa/b2c/result')),
+            'QueueTimeOutURL' => $this->b2cTimeoutUrl(),
+            'ResultURL' => $this->b2cResultUrl(),
             'Occasion' => $record->occasion ?: 'Escrow',
         ];
 
