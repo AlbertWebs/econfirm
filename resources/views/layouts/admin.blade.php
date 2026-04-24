@@ -67,6 +67,7 @@
                         ['route' => 'admin.support-help-items.index', 'pattern' => 'admin.support-help-items.*', 'label' => 'Support & help', 'icon' => 'lifebuoy'],
                         ['route' => 'admin.legal-pages.index', 'pattern' => 'admin.legal-pages.*', 'label' => 'Legal pages', 'icon' => 'book-open'],
                         ['route' => 'admin.pages.index', 'pattern' => 'admin.pages.*', 'label' => 'Pages (CMS)', 'icon' => 'document'],
+                        ['route' => 'admin.blogs.index', 'pattern' => 'admin.blogs.*', 'label' => 'Insights / Blog', 'icon' => 'document'],
                     ],
                 ],
                 [

@@ -3,7 +3,8 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "postinstall": "node scripts/copy-tinymce.cjs"
     },
     "devDependencies": {
         "@alpinejs/intersect": "^3.15.11",
@@ -19,6 +20,7 @@
         "postcss": "^8.4.31",
         "sass": "^1.56.1",
         "tailwindcss": "^3.1.0",
+        "tinymce": "^6.8.4",
         "vite": "^6.2.4"
     },
     "dependencies": {

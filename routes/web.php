@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\AdminSecurityController;
 use App\Http\Controllers\Admin\ApiAccessController;
+use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\BusinessController;
 use App\Http\Controllers\Admin\ContactSubmissionController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeveloperController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InsightsController;
 use App\Http\Controllers\LiveChatController;
 use App\Models\ScamReport;
 use Illuminate\Support\Facades\Auth;
@@ -90,6 +92,8 @@ Route::get('/transaction/status/{id}', [HomeController::class, 'transactionStatu
 Route::get('/get-access-token', [HomeController::class, 'getAccessToken'])->name('get.access.token');
 Route::post('/create-otp', [HomeController::class, 'createOTP'])->name('create.otp');
 Route::get('/api/documentation', [HomeController::class, 'getAPIDocumentation'])->name('api-documentation');
+Route::get('/insights', [InsightsController::class, 'index'])->name('insights.index');
+Route::get('/insights/{slug}', [InsightsController::class, 'show'])->name('insights.show');
 
 Route::get('/e-contract', [HomeController::class, 'getEContract'])->name('e-contract');
 Route::get('/e-contract-print/{transactionID}', [ContractController::class, 'generateEscrowPdf'])->name('e-contract.print');
@@ -225,6 +229,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('live-chats/{liveChat}/typing', [AdminLiveChatController::class, 'typing'])->name('live-chats.typing');
         Route::get('disputes', [AdminDisputeController::class, 'index'])->name('disputes.index');
         Route::post('disputes/{dispute}/status', [AdminDisputeController::class, 'updateStatus'])->name('disputes.status');
+        Route::resource('blogs', BlogController::class)->except(['show']);
+        Route::post('blogs/upload-editor-image', [BlogController::class, 'uploadEditorImage'])
+            ->name('blogs.upload-editor-image')
+            ->middleware('throttle:30,1');
         Route::resource('pages', AdminPageController::class);
         Route::resource('support-help-items', SupportHelpItemController::class)->except(['show']);
         Route::get('site-settings', [SiteSettingsController::class, 'edit'])->name('site-settings.edit');

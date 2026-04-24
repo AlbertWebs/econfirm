@@ -165,6 +165,10 @@
                         <i class="fas fa-envelope text-green-500/90 text-xs" aria-hidden="true"></i>
                         <span>Contact</span>
                     </a>
+                    <a href="{{ route('insights.index') }}" class="inline-flex items-center justify-center gap-2 text-sm font-medium text-gray-300 bg-gray-800/40 hover:bg-gray-800 border border-gray-700/60 hover:border-gray-600 px-4 py-2.5 rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900">
+                        <i class="fas fa-lightbulb text-amber-400/90 text-xs" aria-hidden="true"></i>
+                        <span>Insights</span>
+                    </a>
                     <a href="{{ route('api-documentation') }}" class="inline-flex items-center justify-center gap-2 text-sm font-medium text-gray-300 bg-gray-800/40 hover:bg-gray-800 border border-gray-700/60 hover:border-gray-600 px-4 py-2.5 rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900">
                         <i class="fas fa-code text-green-500/90 text-xs" aria-hidden="true"></i>
                         <span>API docs</span>
