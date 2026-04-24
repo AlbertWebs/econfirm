@@ -14,6 +14,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Services\MpesaService;
 use App\Services\SmsService;
+use App\Services\StkRequestIpLimiter;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -846,9 +847,17 @@ class HomeController extends Controller
         $transaction->merchant_request_id = null; // Initialize as null
         $transaction->save();
 
+        $clientIp = $request->ip();
+        if (StkRequestIpLimiter::isBlocked($clientIp)) {
+            return response()->json([
+                'success' => false,
+                'message' => StkRequestIpLimiter::MESSAGE,
+            ], 429);
+        }
+
         // Use MpesaService for STK push
         $mpesa = new MpesaService;
-        $mpesaResponse = $mpesa->stkPush($transaction);
+        $mpesaResponse = $mpesa->stkPush($transaction, $clientIp);
         // dd($mpesaResponse); // Debugging line, remove in production
 
         if ($mpesaResponse['success']) {

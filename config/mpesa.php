@@ -33,4 +33,10 @@ return [
      */
     'verify_ssl' => filter_var(env('MPESA_HTTP_VERIFY_SSL', true), FILTER_VALIDATE_BOOLEAN),
     'ca_bundle' => env('MPESA_CA_BUNDLE'),
+
+    /*
+     * Block new STK pushes when this IP already has N rows in mpesa_stk_pushes with status Pending.
+     * Set to 0 to disable. Requires initiator_ip column (see migration).
+     */
+    'stk_max_uncompleted_per_ip' => (int) env('STK_MAX_UNCOMPLETED_PER_IP', 3),
 ];

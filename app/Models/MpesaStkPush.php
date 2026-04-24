@@ -9,6 +9,7 @@ class MpesaStkPush extends Model
     protected $table = 'mpesa_stk_pushes';
 
     protected $fillable = [
+        'initiator_ip',
         'phone',
         'amount',
         'reference',

@@ -56,8 +56,10 @@ class MpesaService
 
     /**
      * Initiate M-Pesa STK Push
+     *
+     * @param  string|null  $initiatorIp  Client IP (stored on mpesa_stk_pushes for per-IP limits)
      */
-    public function stkPush(Transaction $transaction): array
+    public function stkPush(Transaction $transaction, ?string $initiatorIp = null): array
     {
         $timestamp = now()->format('YmdHis');
         $password = base64_encode(config('mpesa.shortcode').config('mpesa.passkey').$timestamp);
@@ -146,6 +148,7 @@ class MpesaService
         if ($response->successful() && $responseCodeOk) {
             // Save CheckoutRequestID and MerchantRequestID
             $MpesaStkPush = new MpesaStkPush;
+            $MpesaStkPush->initiator_ip = $initiatorIp;
             $MpesaStkPush->phone = $transaction->sender_mobile;
             $MpesaStkPush->amount = $this->stkChargeAmountKes($transaction);
             $MpesaStkPush->reference = $transaction->transaction_id;

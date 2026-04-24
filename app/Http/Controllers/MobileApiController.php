@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Services\MpesaService;
 use App\Services\SmsService;
+use App\Services\StkRequestIpLimiter;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
@@ -169,9 +170,17 @@ class MobileApiController extends Controller
                 ], 400);
             }
 
+            $clientIp = $request->ip();
+            if (StkRequestIpLimiter::isBlocked($clientIp)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => StkRequestIpLimiter::MESSAGE,
+                ], 429);
+            }
+
             // Initialize M-Pesa STK Push
             $mpesa = new MpesaService();
-            $mpesaResponse = $mpesa->stkPush($transaction);
+            $mpesaResponse = $mpesa->stkPush($transaction, $clientIp);
 
             if ($mpesaResponse['success']) {
                 $transaction->status = 'stk_initiated';
