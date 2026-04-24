@@ -51,7 +51,7 @@
         @error('content')
             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
         @enderror
-        <p class="mt-1 text-xs text-slate-500">Self-hosted TinyMCE (no API key). Images upload to our server.</p>
+        <p class="mt-1 text-xs text-slate-500">TinyMCE (open source, no API key). Uses local <code class="rounded bg-slate-100 px-1">public/vendor/tinymce</code> when present after <code class="rounded bg-slate-100 px-1">npm install</code>; otherwise loads the same build from jsDelivr. Images upload to our server.</p>
     </div>
     <div>
         <label for="meta_title" class="mb-1.5 block text-sm font-medium text-slate-700">SEO meta title</label>
@@ -63,22 +63,37 @@
     </div>
 </div>
 
-@push('head')
-    <script src="{{ asset('vendor/tinymce/tinymce.min.js') }}"></script>
-@endpush
+@php
+    $tinymceVersion = '6.8.4';
+    $tinymceLocalPath = public_path('vendor/tinymce/tinymce.min.js');
+    $tinymceHasLocal = is_file($tinymceLocalPath);
+    $tinymceScript = $tinymceHasLocal
+        ? asset('vendor/tinymce/tinymce.min.js')
+        : 'https://cdn.jsdelivr.net/npm/tinymce@'.$tinymceVersion.'/tinymce.min.js';
+    $tinymceBase = $tinymceHasLocal
+        ? rtrim(asset('vendor/tinymce'), '/')
+        : 'https://cdn.jsdelivr.net/npm/tinymce@'.$tinymceVersion;
+@endphp
 @push('scripts')
+<script src="{{ $tinymceScript }}" referrerpolicy="origin"></script>
 <script>
 (function () {
     var uploadUrl = @json(route('admin.blogs.upload-editor-image'));
     var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    var tinymceBase = @json($tinymceBase);
 
     function initTinyMCE() {
         if (typeof tinymce === 'undefined') {
-            console.error('TinyMCE not loaded from /vendor/tinymce (run npm install).');
+            console.error('TinyMCE failed to load. Check network tab for script errors, or run npm install and deploy public/vendor/tinymce.');
+            return;
+        }
+        if (!document.getElementById('blog_content')) {
             return;
         }
         tinymce.init({
             selector: '#blog_content',
+            base_url: tinymceBase,
+            suffix: '.min',
             height: 520,
             menubar: false,
             branding: false,
