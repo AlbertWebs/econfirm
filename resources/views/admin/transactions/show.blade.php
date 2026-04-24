@@ -4,6 +4,16 @@
 @section('page_title', 'Escrow detail')
 
 @section('content')
+    @php
+        $status = strtolower((string) $transaction->status);
+        $statusClass = match (true) {
+            str_contains($status, 'complete'), str_contains($status, 'success'), str_contains($status, 'approved') => 'bg-emerald-100 text-emerald-800 ring-emerald-200',
+            str_contains($status, 'pending'), str_contains($status, 'processing') => 'bg-amber-100 text-amber-800 ring-amber-200',
+            str_contains($status, 'reject'), str_contains($status, 'fail'), str_contains($status, 'cancel'), str_contains($status, 'dispute') => 'bg-rose-100 text-rose-800 ring-rose-200',
+            default => 'bg-slate-100 text-slate-700 ring-slate-200',
+        };
+    @endphp
+
     <div class="mb-6 flex flex-wrap gap-2">
         <a href="{{ route('admin.transactions.index', request()->query()) }}" class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
             Back to list
@@ -20,9 +30,33 @@
         </form>
     </div>
 
+    <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <x-admin.card class="border border-slate-200">
+            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Reference</p>
+            <p class="mt-2 break-all font-mono text-sm text-slate-900">{{ $transaction->transaction_id }}</p>
+        </x-admin.card>
+        <x-admin.card class="border border-slate-200">
+            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Amount</p>
+            <p class="mt-2 text-2xl font-semibold tabular-nums text-slate-900">KES {{ number_format((float) $transaction->transaction_amount, 2) }}</p>
+        </x-admin.card>
+        <x-admin.card class="border border-slate-200">
+            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Status</p>
+            <div class="mt-2">
+                <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset {{ $statusClass }}">
+                    {{ $transaction->status ?: 'Unknown' }}
+                </span>
+            </div>
+        </x-admin.card>
+        <x-admin.card class="border border-slate-200">
+            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Created</p>
+            <p class="mt-2 text-sm font-medium text-slate-900">{{ optional($transaction->created_at)->format('Y-m-d H:i') ?? '—' }}</p>
+            <p class="mt-1 text-xs text-slate-500">Updated: {{ optional($transaction->updated_at)->format('Y-m-d H:i') ?? '—' }}</p>
+        </x-admin.card>
+    </div>
+
     <div class="grid gap-6 lg:grid-cols-2">
         <x-admin.card>
-            <h3 class="mb-4 text-sm font-semibold text-slate-900">Core</h3>
+            <h3 class="mb-4 text-sm font-semibold text-slate-900">Core transaction data</h3>
             <dl class="space-y-3 text-sm">
                 <div class="flex justify-between gap-4 border-b border-slate-100 pb-2">
                     <dt class="text-slate-500">DB id</dt>
@@ -56,7 +90,7 @@
         </x-admin.card>
 
         <x-admin.card>
-            <h3 class="mb-4 text-sm font-semibold text-slate-900">Parties</h3>
+            <h3 class="mb-4 text-sm font-semibold text-slate-900">Participants & request tracing</h3>
             <dl class="space-y-3 text-sm">
                 <div class="flex justify-between gap-4 border-b border-slate-100 pb-2">
                     <dt class="text-slate-500">Sender</dt>
@@ -78,12 +112,21 @@
         </x-admin.card>
 
         <x-admin.card class="lg:col-span-2">
-            <h3 class="mb-2 text-sm font-semibold text-slate-900">Details</h3>
-            <p class="break-words text-sm text-slate-700">{{ $transaction->transaction_details ?? '—' }}</p>
+            <h3 class="mb-2 text-sm font-semibold text-slate-900">Transaction notes/details</h3>
+            <div class="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
+                <p class="break-words text-sm leading-relaxed text-slate-700">{{ $transaction->transaction_details ?? '—' }}</p>
+            </div>
         </x-admin.card>
 
         <x-admin.card class="lg:col-span-2" :flush="true">
-            <x-slot:header>M-Pesa STK (by checkout / reference)</x-slot:header>
+            <x-slot:header>
+                <div class="flex items-center justify-between gap-3">
+                    <span>M-Pesa STK activity</span>
+                    <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                        {{ $stkRows->count() }} {{ \Illuminate\Support\Str::plural('record', $stkRows->count()) }}
+                    </span>
+                </div>
+            </x-slot:header>
             <x-admin.table-wrap class="rounded-none border-0">
                 <table class="min-w-full divide-y divide-slate-200 text-sm">
                     <thead class="bg-slate-50">
@@ -100,8 +143,10 @@
                             <tr class="hover:bg-slate-50/80">
                                 <td class="whitespace-nowrap px-4 py-2">{{ $s->id }}</td>
                                 <td class="whitespace-nowrap px-4 py-2">{{ $s->phone }}</td>
-                                <td class="whitespace-nowrap px-4 py-2 tabular-nums">{{ $s->amount }}</td>
-                                <td class="whitespace-nowrap px-4 py-2">{{ $s->status }}</td>
+                                <td class="whitespace-nowrap px-4 py-2 tabular-nums">KES {{ number_format((float) $s->amount, 2) }}</td>
+                                <td class="whitespace-nowrap px-4 py-2">
+                                    <span class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">{{ $s->status }}</span>
+                                </td>
                                 <td class="max-w-xs break-all px-4 py-2 font-mono text-xs">{{ $s->checkout_request_id }}</td>
                             </tr>
                         @empty
