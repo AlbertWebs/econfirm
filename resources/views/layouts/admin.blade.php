@@ -80,11 +80,12 @@
         @endphp
 
         <aside
-            class="fixed inset-y-0 left-0 z-50 flex h-full max-h-[100dvh] min-h-0 w-64 shrink-0 flex-col border-r border-slate-700/60 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-slate-200 shadow-2xl shadow-black/30 ring-1 ring-inset ring-white/[0.06] transition-transform duration-200 ease-out"
+            class="fixed inset-y-0 left-0 z-50 flex h-full max-h-[100dvh] min-h-0 w-64 shrink-0 flex-col border-r border-slate-700/60 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-slate-200 shadow-2xl shadow-black/30 ring-1 ring-inset ring-white/[0.06] transition-transform duration-200 ease-out md:static md:inset-auto md:z-20 md:max-h-none md:shadow-none md:ring-0"
             :class="{
                 'admin-nav-drawer-open': sidebarOpen,
                 'translate-x-0': sidebarOpen,
                 '-translate-x-full': !sidebarOpen,
+                'md:hidden': !sidebarOpen,
             }"
             aria-label="Admin navigation"
             aria-hidden="{{ 'true' }}"
@@ -97,14 +98,26 @@
                 <div class="min-w-0">
                     <span class="block truncate text-sm font-semibold tracking-tight text-white">e-confirm</span>
                 </div>
-                <button
-                    type="button"
-                    class="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-800 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 active:scale-95 md:hidden"
-                    @click="closeSidebar()"
-                    aria-label="Close menu"
-                >
-                    <x-admin.icon name="x" class="h-5 w-5" />
-                </button>
+                <div class="ml-auto flex shrink-0 items-center gap-0.5">
+                    <button
+                        type="button"
+                        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-800 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 active:scale-95"
+                        x-show="sidebarOpen && !isMobileNav"
+                        x-cloak
+                        @click="sidebarOpen = false"
+                        aria-label="Hide sidebar"
+                    >
+                        <x-admin.icon name="chevron-left" class="h-5 w-5" />
+                    </button>
+                    <button
+                        type="button"
+                        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-800 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 active:scale-95 md:hidden"
+                        @click="closeSidebar()"
+                        aria-label="Close menu"
+                    >
+                        <x-admin.icon name="x" class="h-5 w-5" />
+                    </button>
+                </div>
             </div>
 
             <nav class="scrollbar-y-hidden flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-y-contain px-2 py-3" aria-label="Primary">
@@ -201,9 +214,11 @@
                 <div class="flex h-14 shrink-0 items-center gap-3 md:h-16 md:gap-4">
                     <button
                         type="button"
-                        class="inline-flex shrink-0 rounded-xl border border-slate-200/90 bg-white p-2 text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 md:hidden"
+                        class="inline-flex shrink-0 rounded-xl border border-slate-200/90 bg-white p-2 text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                        x-show="!sidebarOpen"
+                        x-cloak
                         @click="sidebarOpen = true"
-                        aria-label="Open menu"
+                        aria-label="Show sidebar"
                     >
                         <x-admin.icon name="bars" class="h-5 w-5" />
                     </button>

@@ -35,7 +35,9 @@ document.addEventListener('alpine:init', () => {
             });
         },
         closeSidebar() {
-            this.sidebarOpen = false;
+            if (this.isMobileNav) {
+                this.sidebarOpen = false;
+            }
         },
     }));
 });
