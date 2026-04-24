@@ -4,9 +4,14 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\View\View;
 
 class RegisterController extends Controller
 {
@@ -40,6 +45,33 @@ class RegisterController extends Controller
         $this->middleware('guest');
     }
 
+    public function showRegistrationForm(): View
+    {
+        return view('auth.register', ['registerAsDeveloper' => false]);
+    }
+
+    public function showDeveloperRegistrationForm(): View
+    {
+        return view('auth.register', ['registerAsDeveloper' => true]);
+    }
+
+    /**
+     * Email/password sign-up for API developers (same user model, type = manager / API).
+     */
+    public function registerDeveloper(Request $request): RedirectResponse
+    {
+        $request->merge(['register_as_developer' => '1']);
+        $this->validator($request->all())->validate();
+
+        $user = $this->create($request->all());
+
+        event(new Registered($user));
+
+        Auth::login($user);
+
+        return redirect()->route('api.home');
+    }
+
     /**
      * Get a validator for an incoming registration request.
      *
@@ -52,6 +84,7 @@ class RegisterController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'register_as_developer' => ['nullable', 'in:1'],
         ]);
     }
 
@@ -63,10 +96,13 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
+        $asDeveloper = isset($data['register_as_developer']) && (string) $data['register_as_developer'] === '1';
+
         return User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'type' => $asDeveloper ? 2 : 0,
         ]);
     }
 }

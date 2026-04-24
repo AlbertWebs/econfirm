@@ -20,6 +20,7 @@ use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PhoneOtpLoginController;
 use App\Http\Controllers\Auth\PhoneOtpRegisterController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeveloperController;
@@ -111,6 +112,11 @@ Route::middleware('guest')->group(function () {
     Route::post('/developer/login', [LoginController::class, 'developerLogin'])
         ->middleware('throttle:12,1')
         ->name('developer.login.submit');
+
+    Route::get('/developer/register', [RegisterController::class, 'showDeveloperRegistrationForm'])->name('developer.register');
+    Route::post('/developer/register', [RegisterController::class, 'registerDeveloper'])
+        ->middleware('throttle:12,1')
+        ->name('developer.register.submit');
 
     Route::post('/login/phone/send-otp', [PhoneOtpLoginController::class, 'sendOtp'])
         ->middleware('throttle:5,1')

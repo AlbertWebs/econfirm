@@ -7,6 +7,14 @@ test('developer login page renders', function () {
     $response->assertSee('API developer', false);
 });
 
+test('developer register page renders', function () {
+    $response = $this->get(route('developer.register'));
+
+    $response->assertOk();
+    $response->assertSee('API developer sign up', false);
+    $response->assertSee(route('developer.register.submit'), false);
+});
+
 test('guest visiting developer portal is redirected to developer login', function () {
     $response = $this->get(route('api.home'));
 

@@ -1,5 +1,14 @@
 @extends('process.auth-master')
 
+@php
+    $registerAsDeveloper = $registerAsDeveloper ?? false;
+    $showOtpTab = ! $registerAsDeveloper && ($errors->has('phone') || $errors->has('otp') || session('register_otp_phone') || session('register_otp_sent'));
+@endphp
+
+@section('title')
+    {{ $registerAsDeveloper ? __('API developer sign up') : __('Create your account') }}
+@endsection
+
 @section('content')
 <style>
     .register-page {
@@ -264,10 +273,6 @@
     }
 </style>
 
-@php
-    $showOtpTab = $errors->has('phone') || $errors->has('otp') || session('register_otp_phone') || session('register_otp_sent');
-@endphp
-
 <div class="register-page">
     <div class="container">
         <div class="row justify-content-center align-items-center min-vh-50 py-2">
@@ -280,10 +285,15 @@
                 </div>
                 <div class="card auth-card shadow">
                     <div class="auth-header">
-                        <i class="fas fa-user-plus me-2" aria-hidden="true"></i> {{ __('Create your account') }}
+                        @if ($registerAsDeveloper)
+                            <i class="fas fa-code me-2" aria-hidden="true"></i> {{ __('API developer sign up') }}
+                        @else
+                            <i class="fas fa-user-plus me-2" aria-hidden="true"></i> {{ __('Create your account') }}
+                        @endif
                     </div>
 
                     <div class="card-body">
+                        @unless ($registerAsDeveloper)
                         <div class="auth-segment mb-4">
                             <ul class="nav nav-pills nav-justified" id="registerTabs" role="tablist">
                                 <li class="nav-item" role="presentation">
@@ -302,12 +312,24 @@
                                 </li>
                             </ul>
                         </div>
+                        @endunless
 
                         <div class="tab-content" id="registerTabsContent">
-                            <div class="tab-pane fade {{ $showOtpTab ? '' : 'show active' }}" id="register-pane-email" role="tabpanel"
-                                aria-labelledby="register-tab-email" tabindex="0">
-                                <p class="auth-intro mb-4">{{ __('Sign up with your email and a password. Use OTP if you prefer a phone-first flow.') }}</p>
-                                <form method="POST" action="{{ route('register') }}" class="js-register-form" data-loading-label="{{ __('Creating account…') }}">
+                            <div
+                                class="tab-pane fade {{ $registerAsDeveloper || ! $showOtpTab ? 'show active' : '' }}"
+                                id="register-pane-email"
+                                role="tabpanel"
+                                @if ($registerAsDeveloper) aria-label="{{ __('Email registration') }}" @else aria-labelledby="register-tab-email" @endif
+                                tabindex="0"
+                            >
+                                <p class="auth-intro mb-4">
+                                    @if ($registerAsDeveloper)
+                                        {{ __('Create your API developer account with email and password. After signing up you can generate your API key and copy ready-made URLs.') }}
+                                    @else
+                                        {{ __('Sign up with your email and a password. Use OTP if you prefer a phone-first flow.') }}
+                                    @endif
+                                </p>
+                                <form method="POST" action="{{ $registerAsDeveloper ? route('developer.register.submit') : route('register') }}" class="js-register-form" data-loading-label="{{ __('Creating account…') }}">
                                     @csrf
 
                                     <div class="mb-3">
@@ -352,12 +374,13 @@
                                     </div>
 
                                     <button type="submit" class="btn btn-primary w-100 py-2 js-register-submit">
-                                        <i class="fas fa-user-plus me-2" aria-hidden="true"></i>
-                                        <span class="js-register-submit-text">{{ __('Create account') }}</span>
+                                        <i class="fas {{ $registerAsDeveloper ? 'fa-code' : 'fa-user-plus' }} me-2" aria-hidden="true"></i>
+                                        <span class="js-register-submit-text">{{ $registerAsDeveloper ? __('Create developer account') : __('Create account') }}</span>
                                     </button>
                                 </form>
                             </div>
 
+                            @unless ($registerAsDeveloper)
                             <div class="tab-pane fade {{ $showOtpTab ? 'show active' : '' }}" id="register-pane-otp" role="tabpanel"
                                 aria-labelledby="register-tab-otp" tabindex="0">
                                 <p class="auth-intro mb-3">{{ __('Create your account with phone OTP. We will verify your number and sign you in instantly.') }}</p>
@@ -451,11 +474,16 @@
                                     </div>
                                 @endif
                             </div>
+                            @endunless
                         </div>
 
                         <p class="text-center small text-muted mt-3 mb-0">
                             {{ __('Already have an account?') }}
-                            <a href="{{ route('login') }}" class="forgot-link text-decoration-none">{{ __('Sign in') }}</a>
+                            @if ($registerAsDeveloper)
+                                <a href="{{ route('developer.login') }}" class="forgot-link text-decoration-none">{{ __('Developer sign in') }}</a>
+                            @else
+                                <a href="{{ route('login') }}" class="forgot-link text-decoration-none">{{ __('Sign in') }}</a>
+                            @endif
                         </p>
                     </div>
                 </div>

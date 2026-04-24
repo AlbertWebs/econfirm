@@ -40,40 +40,70 @@
         color: #374151;
         margin-bottom: 0.4rem;
     }
-    .dev-login-page .form-control {
-        border-radius: 10px;
-        padding: 0.65rem 0.85rem;
-        border-color: #dee2e6;
+    /* Icon + input as separate tiles (not a fused input-group). */
+    .dev-login-page .dev-login-field {
+        display: flex;
+        align-items: stretch;
+        gap: 0.65rem;
+        width: 100%;
     }
-    .dev-login-page .form-control:focus {
-        border-color: var(--login-green);
-        box-shadow: 0 0 0 0.2rem rgba(24, 116, 60, 0.15);
-    }
-    .dev-login-page .login-input-wrap .input-group-text {
-        background-color: #eef1f4 !important;
-        color: #495057;
-        border: 1px solid #ced4da;
-        min-width: 3.15rem;
+    .dev-login-page .dev-login-field__icon {
+        flex: 0 0 auto;
+        width: 3.25rem;
+        min-height: 3.25rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 10px !important;
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 1.05rem;
     }
-    .dev-login-page .login-input-wrap .form-control {
+    .dev-login-page .dev-login-field__control {
+        flex: 1 1 auto;
+        min-width: 0;
+        border-radius: 12px !important;
+        padding: 0.7rem 1rem;
         border: 1px solid #ced4da;
-        border-radius: 10px !important;
+        font-size: 1rem;
     }
-    .dev-login-page .login-input-wrap:focus-within .input-group-text,
-    .dev-login-page .login-input-wrap:focus-within .form-control,
-    .dev-login-page .login-input-wrap:focus-within .password-toggle-btn {
+    .dev-login-page .dev-login-field__toggle {
+        flex: 0 0 auto;
+        width: 3.25rem;
+        min-height: 3.25rem;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+    .dev-login-page .dev-login-field__toggle:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+    }
+    .dev-login-page .dev-login-field:focus-within .dev-login-field__icon,
+    .dev-login-page .dev-login-field:focus-within .dev-login-field__control,
+    .dev-login-page .dev-login-field:focus-within .dev-login-field__toggle {
         border-color: var(--login-green);
+        box-shadow: 0 0 0 1px rgba(24, 116, 60, 0.12);
     }
-    .dev-login-page .password-toggle-btn {
-        background-color: #eef1f4;
-        color: #495057;
-        border: 1px solid #ced4da;
-        min-width: 3.15rem;
-        border-radius: 10px;
+    .dev-login-page .dev-login-field:focus-within .dev-login-field__control {
+        box-shadow: 0 0 0 0.2rem rgba(24, 116, 60, 0.12);
+    }
+    .dev-login-page .dev-login-field .dev-login-field__control:focus {
+        border-color: var(--login-green);
+        box-shadow: 0 0 0 0.2rem rgba(24, 116, 60, 0.15);
+        outline: 0;
+    }
+    .dev-login-page .dev-login-field.is-invalid .dev-login-field__icon,
+    .dev-login-page .dev-login-field.is-invalid .dev-login-field__control,
+    .dev-login-page .dev-login-field.is-invalid .dev-login-field__toggle {
+        border-color: #dc3545;
     }
     .dev-login-page .btn-primary {
         background-color: var(--login-green);
@@ -140,35 +170,35 @@
 
                                 <div class="mb-3">
                                     <label for="email" class="form-label">{{ __('Email address') }}</label>
-                                    <div class="input-group input-group-lg login-input-wrap has-validation">
-                                        <span class="input-group-text" aria-hidden="true"><i class="fas fa-envelope"></i></span>
+                                    <div class="dev-login-field @error('email') is-invalid @enderror">
+                                        <span class="dev-login-field__icon" aria-hidden="true"><i class="fas fa-envelope"></i></span>
                                         <input id="email" type="email"
-                                            class="form-control shadow-none @error('email') is-invalid @enderror"
+                                            class="form-control shadow-none dev-login-field__control @error('email') is-invalid @enderror"
                                             name="email" value="{{ old('email') }}" required autocomplete="email"
                                             placeholder="you@example.com" autofocus>
-                                        @error('email')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
                                     </div>
+                                    @error('email')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
 
                                 <div class="mb-3">
                                     <label for="password" class="form-label">{{ __('Password') }}</label>
-                                    <div class="input-group input-group-lg login-input-wrap has-validation">
-                                        <span class="input-group-text" aria-hidden="true"><i class="fas fa-lock"></i></span>
+                                    <div class="dev-login-field @error('password') is-invalid @enderror">
+                                        <span class="dev-login-field__icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
                                         <input id="password" type="password"
-                                            class="form-control shadow-none @error('password') is-invalid @enderror"
+                                            class="form-control shadow-none dev-login-field__control @error('password') is-invalid @enderror"
                                             name="password" required autocomplete="current-password"
                                             placeholder="••••••••" aria-describedby="passwordToggle">
-                                        <button type="button" class="btn password-toggle-btn px-3" id="passwordToggle"
+                                        <button type="button" class="btn dev-login-field__toggle" id="passwordToggle"
                                             title="{{ __('Show password') }}" aria-label="{{ __('Show password') }}"
                                             aria-pressed="false" tabindex="0">
                                             <i class="fas fa-eye" id="passwordToggleIcon" aria-hidden="true"></i>
                                         </button>
-                                        @error('password')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
                                     </div>
+                                    @error('password')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
 
                                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
@@ -189,7 +219,10 @@
 
                                 <p class="text-center small text-muted mb-0">
                                     <a href="{{ route('login') }}" class="forgot-link text-decoration-none">{{ __('Customer sign in') }}</a>
-                                    @if (Route::has('register'))
+                                    @if (Route::has('developer.register'))
+                                        <span class="text-muted"> · </span>
+                                        <a href="{{ route('developer.register') }}" class="forgot-link text-decoration-none">{{ __('Sign up') }}</a>
+                                    @elseif (Route::has('register'))
                                         <span class="text-muted"> · </span>
                                         <a href="{{ route('register') }}" class="forgot-link text-decoration-none">{{ __('Sign up') }}</a>
                                     @endif
