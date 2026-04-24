@@ -1,17 +1,28 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Models\ScamReport;
-use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\BusinessController;
+use App\Http\Controllers\Admin\ContactSubmissionController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\DisputeController as AdminDisputeController;
+use App\Http\Controllers\Admin\LegalPageController;
+use App\Http\Controllers\Admin\LiveChatController as AdminLiveChatController;
+use App\Http\Controllers\Admin\MpesaTransactionsController;
+use App\Http\Controllers\Admin\PageController as AdminPageController;
+use App\Http\Controllers\Admin\ScamReportController as AdminScamReportController;
+use App\Http\Controllers\Admin\SiteSettingsController;
+use App\Http\Controllers\Admin\SupportHelpItemController;
+use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\Auth\PhoneOtpLoginController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\MpesaController;
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LiveChatController;
-use App\Http\Controllers\Auth\PhoneOtpLoginController;
-
-
+use App\Models\ScamReport;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 // HomeController routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -58,14 +69,10 @@ Route::post('/livechat/{token}/typing', [LiveChatController::class, 'typing'])->
 
 // Test SMS route - Send SMS to +254723014032
 Route::get('/test-sms', [HomeController::class, 'testSms'])->name('test.sms');
-Route::get('/test-sms/{phone}', [HomeController::class, 'testSms'])->name('test.sms.phone'); 
-
-
+Route::get('/test-sms/{phone}', [HomeController::class, 'testSms'])->name('test.sms.phone');
 
 Route::post('/approve-transaction-post/{id}', [HomeController::class, 'approveTransactionPost'])->name('transaction.approve');
 Route::post('/custom-login', [DashboardController::class, 'customLogin'])->name('custom.login');
-
-
 
 Auth::routes();
 
@@ -105,9 +112,53 @@ Route::middleware(['auth', 'user-access:user'])->group(function () {
 });
 /*------------------------------------------
 --------------------------------------------
-All Admin Routes List
+Admin panel (dedicated `admin` guard)
 --------------------------------------------
 --------------------------------------------*/
-Route::middleware(['auth', 'user-access:admin'])->group(function () {
-    Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::middleware('guest:admin')->group(function () {
+        Route::get('login', [AdminAuthController::class, 'showLoginForm'])->name('login');
+        Route::post('login', [AdminAuthController::class, 'login'])
+            ->middleware('throttle:8,1')
+            ->name('login.post');
+    });
+    Route::post('logout', [AdminAuthController::class, 'logout'])->middleware('auth:admin')->name('logout');
+    Route::middleware('auth:admin')->group(function () {
+        Route::get('/', function () {
+            return redirect()->route('admin.dashboard');
+        })->name('index');
+        Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('transactions/export', [AdminTransactionController::class, 'export'])->name('transactions.export');
+        Route::resource('transactions', AdminTransactionController::class)->only(['index', 'show']);
+        Route::get('business', [BusinessController::class, 'index'])->name('business.index');
+        Route::get('mpesa-transactions', [MpesaTransactionsController::class, 'index'])->name('mpesa-transactions.index');
+        Route::post('mpesa-transactions/b2c/{mpesa_b2c}/approve', [MpesaTransactionsController::class, 'approveB2c'])->name('mpesa-transactions.b2c.approve');
+        Route::post('mpesa-transactions/b2c/{mpesa_b2c}/reject', [MpesaTransactionsController::class, 'rejectB2c'])->name('mpesa-transactions.b2c.reject');
+        Route::post('mpesa-transactions/b2b/{mpesa_b2b}/approve', [MpesaTransactionsController::class, 'approveB2b'])->name('mpesa-transactions.b2b.approve');
+        Route::post('mpesa-transactions/b2b/{mpesa_b2b}/reject', [MpesaTransactionsController::class, 'rejectB2b'])->name('mpesa-transactions.b2b.reject');
+        Route::resource('users', AdminUserController::class)->only(['index', 'show']);
+        Route::get('live-chats', [AdminLiveChatController::class, 'index'])->name('live-chats.index');
+        Route::get('live-chats/{liveChat}', [AdminLiveChatController::class, 'show'])->name('live-chats.show');
+        Route::get('live-chats/{liveChat}/messages', [AdminLiveChatController::class, 'messages'])->name('live-chats.messages');
+        Route::post('live-chats/{liveChat}/send', [AdminLiveChatController::class, 'send'])->name('live-chats.send');
+        Route::post('live-chats/{liveChat}/typing', [AdminLiveChatController::class, 'typing'])->name('live-chats.typing');
+        Route::get('disputes', [AdminDisputeController::class, 'index'])->name('disputes.index');
+        Route::post('disputes/{dispute}/status', [AdminDisputeController::class, 'updateStatus'])->name('disputes.status');
+        Route::resource('pages', AdminPageController::class);
+        Route::resource('support-help-items', SupportHelpItemController::class)->except(['show']);
+        Route::get('site-settings', [SiteSettingsController::class, 'edit'])->name('site-settings.edit');
+        Route::put('site-settings', [SiteSettingsController::class, 'update'])->name('site-settings.update');
+        Route::post('site-settings/reset', [SiteSettingsController::class, 'reset'])->name('site-settings.reset');
+        Route::get('legal-pages', [LegalPageController::class, 'index'])->name('legal-pages.index');
+        Route::get('legal-pages/{slug}/edit', [LegalPageController::class, 'edit'])
+            ->name('legal-pages.edit')
+            ->where('slug', 'terms-and-conditions|privacy-policy|security|complience');
+        Route::get('contact', [ContactSubmissionController::class, 'index'])->name('contact.index');
+        Route::get('contact/{contact}', [ContactSubmissionController::class, 'show'])->name('contact.show');
+        Route::post('contact/{contact}/unread', [ContactSubmissionController::class, 'markUnread'])->name('contact.unread');
+        Route::get('scam-reports', [AdminScamReportController::class, 'index'])->name('scam-reports.index');
+        Route::get('scam-reports/{scam_report}', [AdminScamReportController::class, 'show'])->name('scam-reports.show');
+        Route::post('scam-reports/{scam_report}/status', [AdminScamReportController::class, 'updateStatus'])->name('scam-reports.status');
+        Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+    });
 });

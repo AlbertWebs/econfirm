@@ -30,67 +30,21 @@
             <!-- Quick Help -->
             <div class="lg:col-span-2">
                 <h2 class="text-3xl font-bold text-gray-900 mb-6">Quick Help</h2>
-                
+
                 <div class="space-y-4">
-                    <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                        <h3 class="text-xl font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                            <i class="fas fa-question-circle text-green-600"></i>
-                            How do I create a transaction?
-                        </h3>
-                        <p class="text-gray-600 leading-relaxed">
-                            Creating a transaction is simple. Fill out the transaction form on our homepage with the required details including transaction amount, sender and receiver information, and transaction type. Once submitted, you'll receive a transaction ID to track your escrow.
-                        </p>
-                    </div>
-
-                    <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                        <h3 class="text-xl font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                            <i class="fas fa-money-bill-wave text-green-600"></i>
-                            How do I make a payment?
-                        </h3>
-                        <p class="text-gray-600 leading-relaxed">
-                            After creating a transaction, you'll receive payment instructions via SMS. You can pay using M-Pesa by following the prompts. Our system will automatically detect your payment and update the transaction status.
-                        </p>
-                    </div>
-
-                    <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                        <h3 class="text-xl font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                            <i class="fas fa-check-circle text-green-600"></i>
-                            How do I release funds?
-                        </h3>
-                        <p class="text-gray-600 leading-relaxed">
-                            Once you've received the goods or services as agreed, log into your dashboard and approve the transaction. The funds will be released to the receiver within minutes. Both parties must approve for the release to proceed.
-                        </p>
-                    </div>
-
-                    <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                        <h3 class="text-xl font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                            <i class="fas fa-shield-alt text-green-600"></i>
-                            Is my money safe?
-                        </h3>
-                        <p class="text-gray-600 leading-relaxed">
-                            Yes, your funds are held securely in an escrow account until both parties are satisfied. We use bank-grade security and are fully licensed. Funds are only released when all conditions are met.
-                        </p>
-                    </div>
-
-                    <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                        <h3 class="text-xl font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                            <i class="fas fa-clock text-green-600"></i>
-                            How long does a transaction take?
-                        </h3>
-                        <p class="text-gray-600 leading-relaxed">
-                            Payment processing is instant via M-Pesa. Once both parties approve the transaction, funds are released immediately. The entire process typically takes minutes, depending on how quickly both parties respond.
-                        </p>
-                    </div>
-
-                    <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                        <h3 class="text-xl font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                            <i class="fas fa-undo text-green-600"></i>
-                            Can I cancel a transaction?
-                        </h3>
-                        <p class="text-gray-600 leading-relaxed">
-                            Transactions can be cancelled if payment hasn't been made yet. Once payment is received, both parties must agree to cancel. Contact our support team if you need assistance with cancellation.
-                        </p>
-                    </div>
+                    @forelse (($quickHelpItems ?? collect()) as $qh)
+                        <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                @if(filled($qh->icon))
+                                    <i class="{{ $qh->icon }} text-green-600" aria-hidden="true"></i>
+                                @endif
+                                {{ $qh->title }}
+                            </h3>
+                            {!! $qh->body !!}
+                        </div>
+                    @empty
+                        <p class="text-gray-600">No quick help articles are published yet. Please check back soon.</p>
+                    @endforelse
                 </div>
             </div>
 

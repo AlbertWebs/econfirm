@@ -84,55 +84,17 @@
         <div class="mb-12">
             <h2 class="text-3xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h2>
             <div class="space-y-4">
-                <details class="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                    <summary class="cursor-pointer font-semibold text-lg text-gray-900 flex items-center justify-between">
-                        <span>What transaction types are supported?</span>
-                        <i class="fas fa-chevron-down text-green-600"></i>
-                    </summary>
-                    <p class="mt-4 text-gray-600 leading-relaxed">
-                        We support various transaction types including goods, services, real estate, vehicles, and business transactions. You can select the appropriate type when creating your transaction.
-                    </p>
-                </details>
-
-                <details class="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                    <summary class="cursor-pointer font-semibold text-lg text-gray-900 flex items-center justify-between">
-                        <span>What are the fees for using e-confirm?</span>
-                        <i class="fas fa-chevron-down text-green-600"></i>
-                    </summary>
-                    <p class="mt-4 text-gray-600 leading-relaxed">
-                        Our fees are transparent and competitive. Transaction fees are calculated based on the transaction amount and type. You'll see the exact fee before completing your transaction. Contact us for detailed fee information.
-                    </p>
-                </details>
-
-                <details class="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                    <summary class="cursor-pointer font-semibold text-lg text-gray-900 flex items-center justify-between">
-                        <span>How do I track my transaction?</span>
-                        <i class="fas fa-chevron-down text-green-600"></i>
-                    </summary>
-                    <p class="mt-4 text-gray-600 leading-relaxed">
-                        You can track your transaction using the transaction ID provided when you create it. Use the "Search Transaction" feature on our website or log into your dashboard to view all your transactions.
-                    </p>
-                </details>
-
-                <details class="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                    <summary class="cursor-pointer font-semibold text-lg text-gray-900 flex items-center justify-between">
-                        <span>What if there's a dispute?</span>
-                        <i class="fas fa-chevron-down text-green-600"></i>
-                    </summary>
-                    <p class="mt-4 text-gray-600 leading-relaxed">
-                        If there's a dispute, contact our support team immediately. We'll work with both parties to resolve the issue fairly. Funds remain in escrow until the dispute is resolved.
-                    </p>
-                </details>
-
-                <details class="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                    <summary class="cursor-pointer font-semibold text-lg text-gray-900 flex items-center justify-between">
-                        <span>Is my personal information secure?</span>
-                        <i class="fas fa-chevron-down text-green-600"></i>
-                    </summary>
-                    <p class="mt-4 text-gray-600 leading-relaxed">
-                        Yes, we use bank-grade encryption and security measures to protect your personal and financial information. Please review our Privacy Policy and Security pages for more details.
-                    </p>
-                </details>
+                @forelse (($faqItems ?? collect()) as $faq)
+                    <details class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                        <summary class="cursor-pointer font-semibold text-lg text-gray-900 flex items-center justify-between">
+                            <span>{{ $faq->title }}</span>
+                            <i class="fas fa-chevron-down text-green-600" aria-hidden="true"></i>
+                        </summary>
+                        {!! $faq->body !!}
+                    </details>
+                @empty
+                    <p class="text-gray-600">No FAQs are published yet. Please check back soon.</p>
+                @endforelse
             </div>
         </div>
 

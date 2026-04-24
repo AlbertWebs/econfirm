@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Dispute;
 use App\Models\LiveChat;
 use App\Models\Transaction;
 use App\Services\SmsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class LiveChatController extends Controller
 {
@@ -39,6 +40,14 @@ class LiveChatController extends Controller
         if (! $chat->admin_alerted_at) {
             $this->alertAdminBySms($chat, $transaction);
         }
+
+        Dispute::firstOrCreate(
+            ['live_chat_id' => $chat->id],
+            [
+                'transaction_id' => $transaction->id,
+                'status' => Dispute::STATUS_CREATED,
+            ]
+        );
 
         return redirect()->route('livechat.user', ['token' => $chat->public_token]);
     }
@@ -157,11 +166,11 @@ class LiveChatController extends Controller
         try {
             $adminPhone = '0723014032';
             $joinUrl = route('livechat.admin', ['token' => $chat->admin_token]);
-            $summary = "Txn {$transaction->transaction_id}, KES ".number_format((float) $transaction->transaction_amount, 2).", ".
+            $summary = "Txn {$transaction->transaction_id}, KES ".number_format((float) $transaction->transaction_amount, 2).', '.
                 ($transaction->transaction_type ?? 'escrow');
             $sms = "eConfirm LiveChat: New dispute chat started ({$summary}). Join: {$joinUrl}";
 
-            (new SmsService())->send($adminPhone, $sms, 'livechat-'.$chat->id.'-admin-alert');
+            (new SmsService)->send($adminPhone, $sms, 'livechat-'.$chat->id.'-admin-alert');
             $chat->admin_alerted_at = now();
             $chat->save();
         } catch (\Throwable $e) {
@@ -183,6 +192,7 @@ class LiveChatController extends Controller
         $key = $this->typingCacheKey($chatId, $role);
         if (! $active) {
             Cache::forget($key);
+
             return;
         }
 
@@ -194,4 +204,3 @@ class LiveChatController extends Controller
         return Cache::has($this->typingCacheKey($chatId, $role));
     }
 }
-

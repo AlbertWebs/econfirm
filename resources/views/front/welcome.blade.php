@@ -838,26 +838,6 @@ function transactionFormData() {
                 </template>
             </div>
         </div>
-        
-        <!-- CTA at bottom -->
-        <div class="mt-16 text-center"
-             x-data="{ inView: true }"
-             x-intersect="inView = true">
-            <div x-show="inView"
-                 x-cloak
-                 x-transition:enter="transition ease-out duration-700 delay-500"
-                 x-transition:enter-start="opacity-0 translate-y-8"
-                 x-transition:enter-end="opacity-100 translate-y-0"
-                 class="inline-block bg-white rounded-xl p-6 shadow-lg border border-gray-200">
-                <p class="text-gray-700 mb-4 font-medium">Ready to get started?</p>
-                <a href="#home" class="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                    Start Your Transaction
-                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                    </svg>
-                </a>
-            </div>
-        </div>
     </div>
 </section>
 
@@ -883,16 +863,16 @@ function transactionFormData() {
             <p class="text-lg sm:text-xl text-white/90 mb-8 max-w-2xl mx-auto">
                 Join thousands of satisfied clients who trust our escrow service for their important transactions.
             </p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <div class="grid grid-cols-2 gap-2.5 sm:gap-4 sm:flex sm:flex-row sm:justify-center w-full max-w-xl mx-auto items-stretch">
                 <a href="#home" 
-                   class="inline-flex items-center justify-center px-8 py-4 bg-white text-green-600 font-semibold rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                   class="inline-flex items-center justify-center text-center text-sm sm:text-base px-3 py-3.5 sm:px-8 sm:py-4 bg-white text-green-600 font-semibold rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 min-w-0">
                     Get Started Now
                 </a>
                 <a href="mailto:support@econfirm.co.ke" 
-                   class="inline-flex items-center justify-center px-8 py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white/10 transition-all duration-200">
+                   class="inline-flex items-center justify-center text-center text-sm sm:text-base px-3 py-3.5 sm:px-8 sm:py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white/10 transition-all duration-200 min-w-0">
                     Contact Support
                 </a>
-                </div>
+            </div>
             <p class="text-white/80 text-sm mt-6">No obligation. Cancel anytime.</p>
             </div>
         </div>

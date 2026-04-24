@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#18743c">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="eConfirm">
+    <meta name="apple-mobile-web-app-title" content="{{ site_setting('site_name') }}">
     <link rel="apple-touch-icon" href="{{ asset('uploads/favicon.png') }}">
     @if (file_exists(public_path('hot')) || file_exists(public_path('build/manifest.json')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -21,20 +21,46 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     @php
-        $defaultSeoTitle = 'Trusted Escrow Services for Secure M-Pesa Payments in Kenya | eConfirm';
-        $defaultSeoDescription = 'eConfirm provides secure, fast, and transparent escrow services for peer-to-peer M-Pesa payments in Kenya. Safeguard your transactions for goods, services, and contracts.';
         $siteUrl = rtrim(config('app.url', url('/')), '/');
         $defaultOgImage = $siteUrl . '/assets/images/social-share.jpg';
-        $seoTitle = trim($__env->yieldContent('seo_title')) ?: $defaultSeoTitle;
-        $seoDescription = trim($__env->yieldContent('seo_description')) ?: $defaultSeoDescription;
+        $seoTitle = trim($__env->yieldContent('seo_title')) ?: site_setting('default_seo_title');
+        $seoDescription = trim($__env->yieldContent('seo_description')) ?: site_setting('default_seo_description');
         $canonicalHref = trim($__env->yieldContent('canonical_url')) ?: url()->current();
         $ogImage = trim($__env->yieldContent('og_image')) ?: $defaultOgImage;
         $ogType = trim($__env->yieldContent('og_type')) ?: 'website';
+        $defaultSeoKeywords = site_setting('default_seo_keywords');
+        $metaAuthor = site_setting('meta_author');
+        $orgSameAs = array_values(array_filter([
+            site_setting('social_facebook_url'),
+            site_setting('social_linkedin_url'),
+            site_setting('social_instagram_url'),
+            site_setting('social_x_url'),
+        ]));
+        $orgJsonLd = [
+            '@context' => 'https://schema.org',
+            '@type' => 'Organization',
+            'name' => site_setting('site_name'),
+            'url' => $siteUrl,
+            'logo' => $siteUrl . '/uploads/logo.png',
+            'description' => site_setting('jsonld_organization_description'),
+        ];
+        if ($orgSameAs !== []) {
+            $orgJsonLd['sameAs'] = $orgSameAs;
+        }
+        if (filled(site_setting('contact_phone_e164'))) {
+            $orgJsonLd['contactPoint'] = [
+                '@type' => 'ContactPoint',
+                'telephone' => site_setting('contact_phone_e164'),
+                'contactType' => 'Customer Service',
+                'areaServed' => 'KE',
+                'availableLanguage' => ['English', 'Swahili'],
+            ];
+        }
     @endphp
     <title>{{ $seoTitle }}</title>
     <meta name="description" content="{{ $seoDescription }}">
-    <meta name="keywords" content="@yield('seo_keywords', 'escrow services Kenya, M-Pesa escrow, secure peer to peer payments, escrow for goods and services, payment protection Kenya, eConfirm escrow platform, online escrow Kenya, buyer seller protection, safe M-Pesa payments, digital escrow solution')">
-    <meta name="author" content="eConfirm">
+    <meta name="keywords" content="@yield('seo_keywords', e($defaultSeoKeywords))">
+    <meta name="author" content="{{ $metaAuthor }}">
     <meta name="robots" content="@yield('seo_robots', 'index, follow')">
     <meta name="language" content="en">
 
@@ -44,7 +70,7 @@
     <meta property="og:title" content="{{ $seoTitle }}">
     <meta property="og:description" content="{{ $seoDescription }}">
     <meta property="og:image" content="{{ $ogImage }}">
-    <meta property="og:site_name" content="eConfirm">
+    <meta property="og:site_name" content="{{ site_setting('site_name') }}">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
@@ -60,32 +86,7 @@
     <link rel="icon" href="{{ $siteUrl }}/assets/images/favicon.ico" type="image/x-icon">
 
     <!-- Schema.org JSON-LD Structured Data -->
-     @verbatim  
-    <script type="application/ld+json">
-    
-    {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "eConfirm",
-    "url": "{{ $siteUrl }}",
-    "logo": "{{ $siteUrl }}/uploads/logo.png",
-    "description": "eConfirm is Kenya's leading escrow platform for secure peer-to-peer payments via M-Pesa. Ideal for buyers and sellers of goods, services, or contracts.",
-    "sameAs": [
-        "https://www.facebook.com/econfirmke",
-        "https://www.linkedin.com/company/econfirmke",
-        "https://www.instagram.com/econfirmke/",
-        "https://x.com/econfirmke"
-    ],
-    "contactPoint": {
-        "@type": "ContactPoint",
-        "telephone": "+254XXXXXXXXX",
-        "contactType": "Customer Service",
-        "areaServed": "KE",
-        "availableLanguage": ["English", "Swahili"]
-    }
-    }
-    </script>
-    @endverbatim
+    <script type="application/ld+json">@json($orgJsonLd)</script>
     @stack('structured_data')
 
     @stack('head_extra')
@@ -466,9 +467,9 @@
          x-show="showInstallPrompt"
          x-cloak
          x-transition.opacity.duration.900ms
-         class="fixed inset-0 z-[70] pointer-events-none flex items-end justify-end p-2.5 pb-20 sm:p-4 sm:pb-20 lg:pb-6"
+         class="fixed inset-0 z-[70] pointer-events-none flex items-end justify-end p-1.5 pb-16 sm:p-2 sm:pb-16 lg:pb-4"
          role="presentation">
-        <div class="pointer-events-auto w-[min(15.8rem,calc(100vw-1.25rem))] sm:w-[min(19rem,calc(100vw-2rem))] lg:max-w-[20rem] bg-white rounded-lg sm:rounded-xl shadow-lg sm:shadow-2xl border border-green-200 sm:border-2 p-2.5 sm:p-4 lg:p-5 relative origin-bottom-right scale-[0.94] sm:scale-[0.97] lg:scale-100"
+        <div class="pointer-events-auto w-[min(9.75rem,calc(100vw-0.75rem))] max-w-[9.75rem] bg-white rounded-md shadow-md border border-green-200/90 p-1.5 pr-6 relative origin-bottom-right scale-90 sm:scale-95"
              role="dialog"
              aria-modal="false"
              aria-labelledby="pwa-install-title"
@@ -476,24 +477,22 @@
             <button type="button"
                     @click="dismissPrompt()"
                     aria-label="Dismiss install prompt"
-                    class="absolute top-2 right-2 sm:top-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-red-500 hover:bg-red-600 rounded-full transition-colors text-white shadow-md z-10">
-                <i class="fas fa-times text-xs sm:text-sm" aria-hidden="true"></i>
+                    class="absolute top-0.5 right-0.5 w-5 h-5 flex items-center justify-center bg-red-500 hover:bg-red-600 rounded-full text-white text-[9px] z-10 leading-none">
+                <i class="fas fa-times text-[8px]" aria-hidden="true"></i>
             </button>
-            <div class="flex items-start gap-2.5 sm:gap-4 pr-7 sm:pr-8">
-                <div class="flex-shrink-0">
-                    <img src="{{ asset('uploads/favicon.png') }}" alt="" class="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-md sm:rounded-lg" width="64" height="64" loading="lazy" decoding="async">
+            <div class="flex items-start gap-1.5">
+                <div class="flex-shrink-0 pt-0.5">
+                    <img src="{{ asset('uploads/favicon.png') }}" alt="" class="w-6 h-6 rounded" width="24" height="24" loading="lazy" decoding="async">
                 </div>
                 <div class="flex-1 min-w-0">
-                    <h3 class="text-[13px] sm:text-sm lg:text-base font-bold text-gray-900 mb-0.5 sm:mb-1 leading-snug" id="pwa-install-title">Install eConfirm App</h3>
-                    <p class="text-[10px] sm:text-xs lg:text-sm text-gray-600 mb-2 sm:mb-3 leading-relaxed">Get a better experience with our app. Install for quick access and offline support.</p>
-                    <div class="flex gap-1.5 sm:gap-2">
-                        <button type="button"
-                                @click="installApp()"
-                                class="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs lg:text-sm bg-green-600 text-white font-medium rounded-md sm:rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-1.5 sm:gap-2">
-                            <i class="fas fa-download text-[10px] sm:text-xs lg:text-sm shrink-0" aria-hidden="true"></i>
-                            Install Now
-                        </button>
-                    </div>
+                    <h3 class="text-[10px] font-semibold text-gray-900 mb-0.5 leading-tight" id="pwa-install-title">Install eConfirm App</h3>
+                    <p class="text-[8px] text-gray-600 mb-1.5 leading-snug">Get a better experience with our app. Install for quick access and offline support.</p>
+                    <button type="button"
+                            @click="installApp()"
+                            class="w-full px-1.5 py-1 text-[8px] bg-green-600 text-white font-medium rounded hover:bg-green-700 transition-colors inline-flex items-center justify-center gap-0.5">
+                        <i class="fas fa-download text-[7px] shrink-0" aria-hidden="true"></i>
+                        Install
+                    </button>
                 </div>
             </div>
         </div>

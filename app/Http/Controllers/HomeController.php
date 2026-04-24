@@ -2,31 +2,47 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Transaction;
-use App\Models\ScamReport;
-use App\Models\ScamReportLike;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use App\Services\MpesaService;
+use App\Models\ContactSubmission;
 use App\Models\MpesaStkPush;
 use App\Models\Otp;
-use App\Services\SmsService;
+use App\Models\Page;
+use App\Models\ScamReport;
+use App\Models\ScamReportLike;
+use App\Models\SupportHelpItem;
+use App\Models\Transaction;
 use App\Models\User;
+use App\Services\MpesaService;
+use App\Services\SmsService;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class HomeController extends Controller
 {
     public function index()
     {
-        return view('front.welcome');
+        return $this->homePageView('home', 'front.welcome');
     }
 
     public function indexV2()
     {
-        return view('front.welcome-v2');
+        return $this->homePageView('home-v2', 'front.welcome-v2');
+    }
+
+    /**
+     * Published CMS page replaces the default Blade homepage for the given slug (e.g. "home" for /, "home-v2" for /v2).
+     */
+    protected function homePageView(string $slug, string $fallbackView)
+    {
+        $page = Page::query()->where('slug', $slug)->where('is_published', true)->first();
+        if ($page) {
+            return view('front.home-cms', compact('page'));
+        }
+
+        return view($fallbackView);
     }
 
     public function portal()
@@ -38,7 +54,7 @@ class HomeController extends Controller
         $totalValue = 0;
 
         if ($phone) {
-            $variants = [$phone, '0' . substr($phone, 3), substr($phone, 3)];
+            $variants = [$phone, '0'.substr($phone, 3), substr($phone, 3)];
             $transactions = Transaction::query()
                 ->whereIn('sender_mobile', $variants)
                 ->orderByDesc('created_at')
@@ -74,7 +90,7 @@ class HomeController extends Controller
         }
 
         $otp = Otp::createForPhone($normalized, 10);
-        $sms = new SmsService();
+        $sms = new SmsService;
         $message = "Your eConfirm portal code is: {$otp->otp_code}. Valid for 10 minutes.";
         $result = $sms->send($normalized, $message, 'portal-otp-'.$normalized);
 
@@ -138,34 +154,65 @@ class HomeController extends Controller
         return view('front.features');
     }
 
-     //Legalities
+    // Legalities
     public function termsAndConditions()
     {
-        return view('front.terms-and-conditions');
+        return $this->pageFromCmsOrFallback('terms-and-conditions', 'front.terms-and-conditions');
     }
 
     public function privacyPolicy()
     {
-        return view('front.privacy-policy');
+        return $this->pageFromCmsOrFallback('privacy-policy', 'front.privacy-policy');
     }
 
     public function complience()
     {
-        return view('front.complience');
+        return $this->pageFromCmsOrFallback('complience', 'front.complience');
     }
+
     public function security()
     {
-        return view('front.security');
+        return $this->pageFromCmsOrFallback('security', 'front.security');
     }
 
     public function support()
     {
-        return view('front.support');
+        return $this->pageFromCmsOrFallback('support', 'front.support');
     }
 
     public function help()
     {
-        return view('front.help');
+        return $this->pageFromCmsOrFallback('help', 'front.help');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function supportHelpViewData(string $slug): array
+    {
+        return match ($slug) {
+            'support' => [
+                'quickHelpItems' => SupportHelpItem::query()->published()->quickHelp()->ordered()->get(),
+            ],
+            'help' => [
+                'faqItems' => SupportHelpItem::query()->published()->helpFaq()->ordered()->get(),
+            ],
+            default => [],
+        };
+    }
+
+    /**
+     * Render a CMS page when published; otherwise fall back to the legacy Blade view.
+     */
+    protected function pageFromCmsOrFallback(string $slug, string $fallbackView)
+    {
+        $page = Page::query()->where('slug', $slug)->where('is_published', true)->first();
+        $extra = $this->supportHelpViewData($slug);
+        if ($page) {
+            return view('front.page', array_merge(['page' => $page], $extra));
+        }
+
+        return view($fallbackView, $extra);
     }
 
     public function contact()
@@ -183,12 +230,14 @@ class HomeController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
-        // TODO: Send email or save to database
-        // For now, just return success
-        
+        ContactSubmission::create([
+            ...$validated,
+            'ip_address' => $request->ip(),
+        ]);
+
         return response()->json([
             'success' => true,
-            'message' => 'Thank you for contacting us! We will get back to you soon.'
+            'message' => 'Thank you for contacting us! We will get back to you soon.',
         ]);
     }
 
@@ -201,68 +250,68 @@ class HomeController extends Controller
                 'loc' => url('/'),
                 'lastmod' => now()->format('Y-m-d'),
                 'changefreq' => 'daily',
-                'priority' => '1.0'
+                'priority' => '1.0',
             ],
             [
                 'loc' => route('scam.watch'),
                 'lastmod' => now()->format('Y-m-d'),
                 'changefreq' => 'daily',
-                'priority' => '0.9'
+                'priority' => '0.9',
             ],
             [
                 'loc' => route('scam.watch.report'),
                 'lastmod' => now()->format('Y-m-d'),
                 'changefreq' => 'monthly',
-                'priority' => '0.85'
+                'priority' => '0.85',
             ],
             ...$scamWatchUrls,
             [
                 'loc' => route('support'),
                 'lastmod' => now()->format('Y-m-d'),
                 'changefreq' => 'weekly',
-                'priority' => '0.8'
+                'priority' => '0.8',
             ],
             [
                 'loc' => route('help'),
                 'lastmod' => now()->format('Y-m-d'),
                 'changefreq' => 'weekly',
-                'priority' => '0.8'
+                'priority' => '0.8',
             ],
             [
                 'loc' => route('contact'),
                 'lastmod' => now()->format('Y-m-d'),
                 'changefreq' => 'monthly',
-                'priority' => '0.8'
+                'priority' => '0.8',
             ],
             [
                 'loc' => route('terms.conditions'),
                 'lastmod' => now()->format('Y-m-d'),
                 'changefreq' => 'monthly',
-                'priority' => '0.7'
+                'priority' => '0.7',
             ],
             [
                 'loc' => route('privacy.policy'),
                 'lastmod' => now()->format('Y-m-d'),
                 'changefreq' => 'monthly',
-                'priority' => '0.7'
+                'priority' => '0.7',
             ],
             [
                 'loc' => route('security'),
                 'lastmod' => now()->format('Y-m-d'),
                 'changefreq' => 'monthly',
-                'priority' => '0.7'
+                'priority' => '0.7',
             ],
             [
                 'loc' => route('complience'),
                 'lastmod' => now()->format('Y-m-d'),
                 'changefreq' => 'monthly',
-                'priority' => '0.7'
+                'priority' => '0.7',
             ],
             [
                 'loc' => route('api-documentation'),
                 'lastmod' => now()->format('Y-m-d'),
                 'changefreq' => 'weekly',
-                'priority' => '0.6'
+                'priority' => '0.6',
             ],
         ];
 
@@ -440,7 +489,7 @@ class HomeController extends Controller
 
         // Check if this report already exists
         $existingReport = ScamReport::where('report_type', $validated['report_type'])
-            ->where(function($query) use ($validated) {
+            ->where(function ($query) use ($validated) {
                 if ($validated['report_type'] === 'website') {
                     $query->where('website', $validated['website']);
                 } elseif ($validated['report_type'] === 'phone') {
@@ -459,10 +508,10 @@ class HomeController extends Controller
             $validated['status'] = 'pending';
             ScamReport::create($validated);
         }
-        
+
         return response()->json([
             'success' => true,
-            'message' => 'Your report has been submitted successfully. It will be reviewed before being published.'
+            'message' => 'Your report has been submitted successfully. It will be reviewed before being published.',
         ]);
     }
 
@@ -470,50 +519,53 @@ class HomeController extends Controller
     {
         $report = ScamReport::findOrFail($id);
         $ipAddress = request()->ip();
-        
+
         // Check if user already liked this report
         $existingLike = ScamReportLike::where('scam_report_id', $id)
             ->where('ip_address', $ipAddress)
             ->first();
-        
+
         if ($existingLike) {
             return response()->json([
                 'success' => false,
                 'message' => 'You have already liked this report.',
-                'likes_count' => $report->likes()->count()
+                'likes_count' => $report->likes()->count(),
             ]);
         }
-        
+
         // Create new like
         ScamReportLike::create([
             'scam_report_id' => $id,
             'ip_address' => $ipAddress,
             'user_agent' => request()->userAgent(),
         ]);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Thank you for your feedback!',
-            'likes_count' => $report->fresh()->likes()->count()
+            'likes_count' => $report->fresh()->likes()->count(),
         ]);
     }
 
-    //generateUniqueTransactionId
+    // generateUniqueTransactionId
     private function generateUniqueTransactionId(): string
     {
         do {
-            $transactionId = 'E-' . strtoupper(bin2hex(random_bytes(3))); // Generates a 6-character random string
+            $transactionId = 'E-'.strtoupper(bin2hex(random_bytes(3))); // Generates a 6-character random string
         } while (Transaction::where('transaction_id', $transactionId)->exists());
 
         return $transactionId;
     }
-    //calculate tranaction fee calculateTransactionFee
+
+    // calculate tranaction fee calculateTransactionFee
     private function calculateTransactionFee(float $amount): float
     {
         // Example fee calculation: 1% of the transaction amount
         $feePercentage = 0.01; // 1%
+
         return round($amount * $feePercentage, 2);
     }
+
     public function submitTransaction(Request $request): JsonResponse
     {
         // Create code to generate unique transaction ID and check if it exists, if it exists, generate a new one the format is ESCROW-ENTRY-veryrandom5-digitnumber
@@ -550,8 +602,8 @@ class HomeController extends Controller
             'status' => 'pending',
         ]);
 
-        //Create user to user table with some of this data
-        
+        // Create user to user table with some of this data
+
         // Log the transaction creation
         \Log::info('Transaction created', [
             'transaction_id' => $transaction->transaction_id,
@@ -561,14 +613,13 @@ class HomeController extends Controller
             'receiver_mobile' => $transaction->receiver_mobile,
             'status' => $transaction->status,
         ]);
-        //i want to save the chackout_request_id and merchant_request_id to the transaction from mpesa service
+        // i want to save the chackout_request_id and merchant_request_id to the transaction from mpesa service
         $transaction->checkout_request_id = null; // Initialize as null
         $transaction->merchant_request_id = null; // Initialize as null
         $transaction->save();
 
-    
         // Use MpesaService for STK push
-        $mpesa = new MpesaService();
+        $mpesa = new MpesaService;
         $mpesaResponse = $mpesa->stkPush($transaction);
         // dd($mpesaResponse); // Debugging line, remove in production
 
@@ -579,7 +630,7 @@ class HomeController extends Controller
             $transaction->save();
 
             try {
-                (new SmsService())->notifyEscrowStkInitiated($transaction->fresh());
+                (new SmsService)->notifyEscrowStkInitiated($transaction->fresh());
             } catch (\Throwable $e) {
                 \Log::error('Escrow STK initiation SMS failed', [
                     'transaction_id' => $transaction->transaction_id,
@@ -646,7 +697,7 @@ class HomeController extends Controller
                 ]);
             }
             // Callback can be delayed/missed; fallback to Daraja STK query.
-            $query = (new MpesaService())->stkPushQuery($id);
+            $query = (new MpesaService)->stkPushQuery($id);
 
             if (($query['status'] ?? null) === 'Success') {
                 $stk->status = 'Success';
@@ -682,7 +733,7 @@ class HomeController extends Controller
             }
         } elseif (! $this->hasStkCallbackItemMetadata($stk->callback_metadata)) {
             // STK row already Success (e.g. from a prior poll) but no usable metadata yet — confirm with live query.
-            $query = (new MpesaService())->stkPushQuery($id);
+            $query = (new MpesaService)->stkPushQuery($id);
             if (($query['status'] ?? null) === 'Success') {
                 $allowFundWithoutCallbackItems = true;
             } else {
@@ -732,7 +783,7 @@ class HomeController extends Controller
             $transaction->save();
 
             try {
-                (new SmsService())->notifyEscrowFunded($transaction->fresh());
+                (new SmsService)->notifyEscrowFunded($transaction->fresh());
             } catch (\Throwable $e) {
                 \Log::error('Escrow funded SMS failed', [
                     'transaction_id' => $transaction->transaction_id,
@@ -771,7 +822,7 @@ class HomeController extends Controller
         return false;
     }
 
-    //createOTP
+    // createOTP
     public function createOTP(Request $request): JsonResponse
     {
         $transaction = Transaction::where('transaction_id', $request->input('transaction_id'))->first();
@@ -797,7 +848,7 @@ class HomeController extends Controller
         }
 
         try {
-            $smsService = new SmsService();
+            $smsService = new SmsService;
             $smsResult = $smsService->send(
                 $destination,
                 $message,
@@ -841,34 +892,34 @@ class HomeController extends Controller
         ]);
     }
 
-    //approveTransaction(id)
+    // approveTransaction(id)
     public function approveTransaction(Request $request, $id)
     {
-        //Check if it maches with OTP 
+        // Check if it maches with OTP
         $transaction = Transaction::where('transaction_id', $id)->first();
-        if (!$transaction) {
+        if (! $transaction) {
             return response()->json([
                 'success' => false,
                 'message' => 'Transaction not found.',
             ]);
         }
         $stkPush = MpesaStkPush::where('checkout_request_id', $transaction->checkout_request_id)->first();
-       //Return a view to approve the transaction
+
+        // Return a view to approve the transaction
         return view('process.approve-transaction', compact('transaction', 'stkPush'));
     }
 
-
     public function approveTransactionPost(Request $request, $id)
     {
-        //Validate OTP
+        // Validate OTP
         $ValidateOTP = Transaction::where('id', $id)->where('otp', $request->otp)->first();
-        if (!$ValidateOTP) {
+        if (! $ValidateOTP) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid OTP.',
             ]);
-        }else{
-            //Check if OTP is expired
+        } else {
+            // Check if OTP is expired
             $otpExpiryTime = 3; // in minutes
             $otpCreatedAt = Carbon::parse($ValidateOTP->updated_at);
             $otpExpiryAt = $otpCreatedAt->addMinutes($otpExpiryTime);
@@ -879,6 +930,7 @@ class HomeController extends Controller
                     'otp_created_at' => $otpCreatedAt,
                     'current_time' => now(),
                 ]);
+
                 return response()->json([
                     'success' => false,
                     'message' => 'OTP has expired. Please request a new OTP.',
@@ -888,7 +940,7 @@ class HomeController extends Controller
         }
         // Paybill path → B2B to Paybill/Till; M-Pesa path → B2C to recipient phone. SMS only after Daraja accepts the payout request.
         if ($ValidateOTP->payment_method === 'paybill') {
-            $mpesa = new MpesaService();
+            $mpesa = new MpesaService;
             $b2bResponse = $mpesa->b2b($ValidateOTP);
             if (! $b2bResponse['success']) {
                 return response()->json([
@@ -901,7 +953,7 @@ class HomeController extends Controller
             $ValidateOTP->save();
 
             try {
-                (new SmsService())->notifyPartiesAfterApprovedPayout($ValidateOTP->fresh(), true);
+                (new SmsService)->notifyPartiesAfterApprovedPayout($ValidateOTP->fresh(), true);
             } catch (\Throwable $e) {
                 \Log::error('Post-approval SMS failed (B2B)', [
                     'transaction_id' => $ValidateOTP->transaction_id,
@@ -915,7 +967,7 @@ class HomeController extends Controller
             ]);
         }
 
-        $mpesa = new MpesaService();
+        $mpesa = new MpesaService;
         $b2cResponse = $mpesa->b2c($ValidateOTP);
         if (! $b2cResponse['success']) {
             return response()->json([
@@ -928,7 +980,7 @@ class HomeController extends Controller
         $ValidateOTP->save();
 
         try {
-            (new SmsService())->notifyPartiesAfterApprovedPayout($ValidateOTP->fresh(), false);
+            (new SmsService)->notifyPartiesAfterApprovedPayout($ValidateOTP->fresh(), false);
         } catch (\Throwable $e) {
             \Log::error('Post-approval SMS failed (B2C)', [
                 'transaction_id' => $ValidateOTP->transaction_id,
@@ -942,33 +994,32 @@ class HomeController extends Controller
         ]);
     }
 
-
-    //approveTransaction
+    // approveTransaction
     public function rejectTransaction($id)
     {
         $transaction = Transaction::where('transaction_id', $id)->first();
-        if (!$transaction) {
+        if (! $transaction) {
             return response()->json([
                 'success' => false,
                 'message' => 'Transaction not found.',
             ]);
         }
-        //Return a view to reject the transaction
+
+        // Return a view to reject the transaction
         return view('process.reject-transaction', compact('transaction'));
     }
-
 
     // transaction
     public function transaction($id)
     {
         $transaction = Transaction::where('transaction_id', $id)->first();
-        if (!$transaction) {
+        if (! $transaction) {
             return response()->json([
                 'success' => false,
                 'message' => 'Transaction not found.',
             ]);
         }
-        //Get stk where checkout_request_id is the same as the transaction checkout_request_id
+        // Get stk where checkout_request_id is the same as the transaction checkout_request_id
         $stkPush = MpesaStkPush::where('checkout_request_id', $transaction->checkout_request_id)->first();
 
         $transactionSenderRegistered = false;
@@ -982,7 +1033,7 @@ class HomeController extends Controller
 
     }
 
-    //searchTransactions
+    // searchTransactions
     public function searchTransactions(Request $request): JsonResponse
     {
         $query = $request->input('id');
@@ -993,27 +1044,28 @@ class HomeController extends Controller
                 'success' => false,
                 'message' => 'No transactions found for the given Transaction ID.',
             ]);
-        }else{
-                return response()->json([
+        } else {
+            return response()->json([
                 'success' => true,
                 'data' => $transactions,
             ]);
         }
     }
 
-    public function getAPIDocumentation(){
+    public function getAPIDocumentation()
+    {
         return view('front.api-documentation');
     }
 
-    public function getEContract(){
+    public function getEContract()
+    {
         return view('front.contracts.escrow-agreement');
     }
 
     /**
      * Test SMS sending to a specific phone number
-     * 
-     * @param Request $request
-     * @param string|null $phone Phone number (optional, defaults to +254723014032)
+     *
+     * @param  string|null  $phone  Phone number (optional, defaults to +254723014032)
      * @return JsonResponse
      */
     public function testSms(Request $request, $phone = null)
@@ -1022,8 +1074,8 @@ class HomeController extends Controller
         $smsMessage = $request->input('message', 'Test SMS from eConfirm. This is a test message to verify SMS service integration.');
 
         try {
-            $smsService = new SmsService();
-            $result = $smsService->send($phoneNumber, $smsMessage, 'test-' . time());
+            $smsService = new SmsService;
+            $result = $smsService->send($phoneNumber, $smsMessage, 'test-'.time());
 
             if (isset($result['status']) && $result['status']) {
                 return response()->json([
@@ -1033,13 +1085,13 @@ class HomeController extends Controller
                         'phone' => $phoneNumber,
                         'message' => $smsMessage,
                         'response' => $result,
-                    ]
+                    ],
                 ]);
             } else {
                 return response()->json([
                     'success' => false,
                     'message' => $result['message'] ?? 'Failed to send SMS',
-                    'data' => $result
+                    'data' => $result,
                 ], 400);
             }
         } catch (\Exception $e) {
@@ -1050,7 +1102,7 @@ class HomeController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error sending SMS: ' . $e->getMessage()
+                'message' => 'Error sending SMS: '.$e->getMessage(),
             ], 500);
         }
     }

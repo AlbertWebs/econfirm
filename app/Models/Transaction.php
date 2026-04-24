@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Services\PhoneAccountProvisioningService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Transaction extends Model
 {
@@ -40,4 +41,9 @@ class Transaction extends Model
         'terms',
         'confirmation_code',
     ];
+
+    public function disputes(): HasMany
+    {
+        return $this->hasMany(Dispute::class);
+    }
 }

@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,10 +14,25 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->appendToGroup('web', \App\Http\Middleware\RecordSiteTraffic::class);
         $middleware->alias([
             'user-access' => \App\Http\Middleware\UserAccess::class,
             'api.auth' => \App\Http\Middleware\AuthenticateApi::class,
         ]);
+        $middleware->redirectGuestsTo(function (Request $request) {
+            if (($request->is('admin') || $request->is('admin/*')) && ! $request->is('admin/login')) {
+                return route('admin.login');
+            }
+
+            return Route::has('login') ? route('login') : url('/login');
+        });
+        $middleware->redirectUsersTo(function (Request $request) {
+            if ($request->is('admin') || $request->is('admin/*')) {
+                return route('admin.dashboard');
+            }
+
+            return route('user.dashboard');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

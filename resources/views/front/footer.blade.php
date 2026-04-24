@@ -8,12 +8,32 @@
             <div class="sm:col-span-2 lg:col-span-2">
                 <div class="mb-5">
                     <a href="{{ route('home') }}" class="inline-block rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 transition-opacity hover:opacity-90">
-                        <img src="{{ asset('uploads/logo-hoz.png') }}" alt="eConfirm — home" class="h-12 w-auto" width="180" height="48" loading="lazy" decoding="async">
+                        <img src="{{ asset('uploads/logo-hoz.png') }}" alt="{{ site_setting('logo_alt') }}" class="h-12 w-auto" width="180" height="48" loading="lazy" decoding="async">
                     </a>
                 </div>
-                <p class="text-sm text-gray-400 leading-relaxed max-w-md">
-                    eConfirm is a trusted digital platform for secure, transparent escrow. We hold funds as a neutral third party until agreed conditions are met—so you can buy, sell, or partner online with confidence.
-                </p>
+                <div class="text-sm text-gray-400 leading-relaxed max-w-md space-y-3">
+                    @if(filled(site_setting('footer_about_blurb')))
+                        <div class="prose prose-invert prose-sm max-w-none">{!! site_setting('footer_about_blurb') !!}</div>
+                    @endif
+                    @php
+                        $pubEmail = site_setting('contact_email');
+                        $pubPhone = site_setting('contact_phone_display');
+                        $pubAddr = site_setting('physical_address');
+                    @endphp
+                    @if(filled($pubEmail) || filled($pubPhone) || filled($pubAddr))
+                        <ul class="list-none space-y-1.5 text-gray-400">
+                            @if(filled($pubEmail))
+                                <li><a href="mailto:{{ $pubEmail }}" class="text-green-400/90 hover:text-green-300 underline-offset-2 hover:underline">{{ $pubEmail }}</a></li>
+                            @endif
+                            @if(filled($pubPhone))
+                                <li>{{ $pubPhone }}</li>
+                            @endif
+                            @if(filled($pubAddr))
+                                <li class="whitespace-pre-line text-gray-500">{{ $pubAddr }}</li>
+                            @endif
+                        </ul>
+                    @endif
+                </div>
             </div>
 
             <!-- Products Column -->
@@ -139,28 +159,41 @@
         </div>
 
         <!-- Social -->
+        @php
+            $fb = site_setting('social_facebook_url');
+            $sx = site_setting('social_x_url');
+            $ig = site_setting('social_instagram_url');
+            $li = site_setting('social_linkedin_url');
+            $brand = site_setting('site_name');
+        @endphp
+        @if(filled($fb) || filled($sx) || filled($ig) || filled($li))
         <div class="border-t border-gray-800/80 pt-8 mb-8">
             <p class="text-center text-xs text-gray-500 mb-4">Follow us</p>
             <div class="flex justify-center items-center gap-3">
-                <a href="https://www.facebook.com/profile.php?id=61576961756928"
+                @if(filled($fb))
+                <a href="{{ $fb }}"
                    target="_blank" rel="noopener noreferrer"
-                   aria-label="eConfirm on Facebook"
+                   aria-label="{{ $brand }} on Facebook"
                    class="w-11 h-11 flex items-center justify-center bg-gray-800/80 rounded-xl hover:bg-green-600 hover:scale-105 transition-all duration-200 group focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900">
                     <svg class="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
                     </svg>
                 </a>
-                <a href="https://x.com/econfirmke"
+                @endif
+                @if(filled($sx))
+                <a href="{{ $sx }}"
                    target="_blank" rel="noopener noreferrer"
-                   aria-label="eConfirm on X"
+                   aria-label="{{ $brand }} on X"
                    class="w-11 h-11 flex items-center justify-center bg-gray-800/80 rounded-xl hover:bg-green-600 hover:scale-105 transition-all duration-200 group focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900">
                     <svg class="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>
                     </svg>
                 </a>
-                <a href="https://www.instagram.com/econfirmke/"
+                @endif
+                @if(filled($ig))
+                <a href="{{ $ig }}"
                    target="_blank" rel="noopener noreferrer"
-                   aria-label="eConfirm on Instagram"
+                   aria-label="{{ $brand }} on Instagram"
                    class="w-11 h-11 flex items-center justify-center bg-gray-800/80 rounded-xl hover:bg-green-600 hover:scale-105 transition-all duration-200 group focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900">
                     <svg class="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
@@ -168,9 +201,11 @@
                         <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
                     </svg>
                 </a>
-                <a href="https://www.linkedin.com/company/econfirmke/"
+                @endif
+                @if(filled($li))
+                <a href="{{ $li }}"
                    target="_blank" rel="noopener noreferrer"
-                   aria-label="eConfirm on LinkedIn"
+                   aria-label="{{ $brand }} on LinkedIn"
                    class="w-11 h-11 flex items-center justify-center bg-gray-800/80 rounded-xl hover:bg-green-600 hover:scale-105 transition-all duration-200 group focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900">
                     <svg class="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
@@ -178,21 +213,25 @@
                         <circle cx="4" cy="4" r="2"/>
                     </svg>
                 </a>
+                @endif
             </div>
         </div>
+        @endif
 
         <!-- Footer bottom -->
         <div class="border-t border-gray-800/80 pt-8">
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
                 <p class="text-sm text-gray-500">
-                    &copy; {{ date('Y') }} Confirm Diligence Solutions Limited. All rights reserved.
+                    &copy; {{ date('Y') }} {{ site_setting('organization_legal_name') }}. All rights reserved.
                 </p>
+                @if(filled(site_setting('footer_tagline')))
                 <div class="flex items-center justify-center gap-2 text-sm text-gray-400 max-w-md sm:max-w-none sm:justify-end">
                     <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
                     </svg>
-                    <span>Licensed and regulated escrow service</span>
+                    <span>{{ site_setting('footer_tagline') }}</span>
                 </div>
+                @endif
             </div>
         </div>
     </div>

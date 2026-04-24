@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class LiveChat extends Model
 {
@@ -30,5 +31,9 @@ class LiveChat extends Model
     {
         return $this->hasMany(LiveChatMessage::class)->orderBy('id');
     }
-}
 
+    public function dispute(): HasOne
+    {
+        return $this->hasOne(Dispute::class);
+    }
+}

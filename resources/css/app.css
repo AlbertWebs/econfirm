@@ -6,3 +6,48 @@
 [x-cloak] {
     display: none !important;
 }
+
+/* If a global #preloader exists on admin (shared markup / mistake), keep it small — not full-screen. */
+.admin-shell #preloader {
+    position: fixed;
+    inset: auto 1rem 1rem auto;
+    top: auto;
+    left: auto;
+    right: 1rem;
+    bottom: 1rem;
+    width: 3rem;
+    height: 3rem;
+    max-width: 3rem;
+    max-height: 3rem;
+    min-height: 0;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 9999px;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.12);
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.admin-shell #preloader .loader,
+.admin-shell #preloader > div {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+    max-width: 1.5rem !important;
+    max-height: 1.5rem !important;
+    border-width: 2px !important;
+}
+
+@layer components {
+    /* Admin live chat bubbles (also applied from JS when polling new messages) */
+    .admin-chat-msg-user {
+        @apply mb-2 max-w-[88%] break-words rounded-xl bg-emerald-100 px-2.5 py-2 text-sm leading-snug text-slate-900 ml-auto;
+    }
+    .admin-chat-msg-admin {
+        @apply mb-2 max-w-[88%] break-words rounded-xl bg-indigo-100 px-2.5 py-2 text-sm leading-snug text-slate-900 mr-auto;
+    }
+    .admin-chat-msg-system {
+        @apply mb-2 max-w-[95%] break-words rounded-xl bg-slate-100 px-2.5 py-2 text-center text-sm leading-snug text-slate-600 mx-auto;
+    }
+}
