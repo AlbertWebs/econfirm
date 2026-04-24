@@ -35,6 +35,7 @@ class ScamReport extends Model
         'category',
         'category_other',
         'description',
+        'evidence',
         'email',
         'reporter_phone',
         'date_of_incident',
@@ -44,6 +45,7 @@ class ScamReport extends Model
 
     protected $casts = [
         'date_of_incident' => 'date',
+        'evidence' => 'array',
     ];
 
     protected static function booted(): void
@@ -126,5 +128,22 @@ class ScamReport extends Model
     public function getLikesCountAttribute()
     {
         return $this->likes()->count();
+    }
+
+    /**
+     * How to show an evidence file in the admin UI (image inline, PDF iframe, else download).
+     */
+    public function evidenceDisplayKindForPath(string $path): string
+    {
+        $ext = strtolower((string) pathinfo($path, PATHINFO_EXTENSION));
+
+        if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+            return 'image';
+        }
+        if ($ext === 'pdf') {
+            return 'pdf';
+        }
+
+        return 'document';
     }
 }

@@ -63,15 +63,20 @@
                             <td class="whitespace-nowrap px-4 py-3 text-slate-500 sm:px-5">{{ optional($r->created_at)->format('Y-m-d') }}</td>
                             <td class="px-4 py-3 sm:px-5">
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <a href="{{ route('admin.scam-reports.show', $r) }}" class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">View</a>
+                                    <a href="{{ route('admin.scam-reports.show', $r) }}" class="inline-flex min-h-10 min-w-0 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">View</a>
                                     @unless ($r->is_verified)
-                                        <form method="post" action="{{ route('admin.scam-reports.status', $r) }}" class="inline">
+                                        <form
+                                            method="post"
+                                            action="{{ route('admin.scam-reports.status', $r) }}"
+                                            class="inline"
+                                            onsubmit="return confirm('Approve this listing? It will be shown as verified on the public Scam Alert page.');"
+                                        >
                                             @csrf
                                             <input type="hidden" name="status" value="approved">
                                             <button
                                                 type="submit"
                                                 title="Publish this report as a verified Scam Alert listing"
-                                                class="inline-flex min-h-[2.25rem] items-center justify-center rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 sm:min-h-0"
+                                                class="inline-flex min-h-10 min-w-0 shrink-0 items-center justify-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold leading-normal text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1"
                                             >
                                                 Approve listing
                                             </button>

@@ -711,7 +711,12 @@ class HomeController extends Controller
             'email' => 'nullable|email|max:255',
             'reporter_phone' => 'nullable|string|max:40',
             'date_of_incident' => 'nullable|date',
+            'evidence_files' => 'nullable|array|max:5',
+            'evidence_files.*' => 'file|max:10240|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx',
         ]);
+
+        $evidenceUploads = (array) ($validated['evidence_files'] ?? []);
+        unset($validated['evidence_files']);
 
         if ($validated['category'] !== 'other') {
             $validated['category_other'] = null;
@@ -736,7 +741,17 @@ class HomeController extends Controller
         } else {
             // Await review; public listing still shows pending entries (see ScamReport::scopeVisible).
             $validated['status'] = 'pending';
-            ScamReport::create($validated);
+            $report = ScamReport::create($validated);
+
+            $evidencePaths = [];
+            foreach ($evidenceUploads as $file) {
+                if ($file && $file->isValid()) {
+                    $evidencePaths[] = $file->store("scam-reports/{$report->id}", 'local');
+                }
+            }
+            if ($evidencePaths !== []) {
+                $report->update(['evidence' => $evidencePaths]);
+            }
         }
 
         return response()->json([

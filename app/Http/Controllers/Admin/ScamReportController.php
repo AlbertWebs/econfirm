@@ -7,8 +7,10 @@ use App\Models\ScamReport;
 use App\Services\AdminActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ScamReportController extends Controller
 {
@@ -45,5 +47,27 @@ class ScamReportController extends Controller
         AdminActivityLogger::log('scam_report.status', ScamReport::class, $scam_report->id, ['status' => $data['status']]);
 
         return back()->with('status', 'Status updated.');
+    }
+
+    /**
+     * Stream a submitted evidence file (images / PDFs / docs) to authenticated admins only.
+     */
+    public function evidence(ScamReport $scam_report, int $index): StreamedResponse
+    {
+        $paths = $scam_report->evidence;
+        if (! is_array($paths) || ! isset($paths[$index])) {
+            abort(404);
+        }
+        $path = $paths[$index];
+        if (! is_string($path) || $path === '' || str_contains($path, '..')) {
+            abort(404);
+        }
+        if (! Storage::disk('local')->exists($path)) {
+            abort(404);
+        }
+
+        return Storage::disk('local')->response($path, basename($path), [
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 }

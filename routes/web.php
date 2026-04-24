@@ -188,6 +188,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('contact/{contact}', [ContactSubmissionController::class, 'show'])->name('contact.show');
         Route::post('contact/{contact}/unread', [ContactSubmissionController::class, 'markUnread'])->name('contact.unread');
         Route::get('scam-reports', [AdminScamReportController::class, 'index'])->name('scam-reports.index');
+        Route::get('scam-reports/{scam_report}/evidence/{index}', [AdminScamReportController::class, 'evidence'])
+            ->name('scam-reports.evidence')
+            ->whereNumber('index');
         Route::get('scam-reports/{scam_report}', [AdminScamReportController::class, 'show'])->name('scam-reports.show');
         Route::post('scam-reports/{scam_report}/status', [AdminScamReportController::class, 'updateStatus'])->name('scam-reports.status');
         Route::get('sms-logs', [SmsLogController::class, 'index'])->name('sms-logs.index');
