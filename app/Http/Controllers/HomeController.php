@@ -877,7 +877,7 @@ class HomeController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Transaction submitted and STK push initiated! Check your phone for pin confirmation.',
+                'message' => 'M-Pesa prompt sent. Approve the payment on your phone when you get the request, then wait a few seconds for confirmation here.',
                 'CheckoutRequestID' => $mpesaResponse['data']['CheckoutRequestID'] ?? null,
             ]);
         } else {

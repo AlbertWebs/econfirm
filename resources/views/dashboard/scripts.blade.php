@@ -113,7 +113,7 @@
                             mpesaResponse.style.display = 'block';
                             if (data.success) {
                                 
-                                mpesaResponse.textContent = 'STK push sent. Waiting for payment confirmation...';
+                                mpesaResponse.textContent = data.message || 'M-Pesa prompt sent. Approve the payment on your phone when you get the request, then wait a few seconds for confirmation here.';
                                 mpesaResponse.className = 'alert alert-success';
                                 // Check for CheckoutRequestID before polling
                                 const checkoutRequestId = data.CheckoutRequestID || (data.data && data.data.CheckoutRequestID);

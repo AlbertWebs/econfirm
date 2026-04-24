@@ -125,7 +125,10 @@ function transactionFormData() {
                 const data = await response.json();
                 
                 if (data.success) {
-                    this.mpesaResponse = { type: 'success', message: 'STK push sent. Waiting for payment confirmation...' };
+                    this.mpesaResponse = {
+                        type: 'success',
+                        message: data.message || 'M-Pesa prompt sent. Approve the payment on your phone when you get the request, then wait a few seconds for confirmation here.',
+                    };
                     const checkoutId = data.CheckoutRequestID || (data.data && data.data.CheckoutRequestID);
                     if (checkoutId) {
                         form.reset();
