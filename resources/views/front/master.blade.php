@@ -162,7 +162,13 @@
         }
     </style>
 </head>
-<body class="bg-white antialiased overflow-x-hidden" x-data="{ mobileMenuOpen: false, searchPopupOpen: false }">
+@php
+    $navProductConfig = config('nav_products', []);
+    $navProducts = $navProductConfig['items'] ?? [];
+    $navProductDropdown = $navProductConfig['dropdown'] ?? ['image' => 'uploads/logo-hoz.png', 'image_alt' => 'e-confirm', 'image_title' => ''];
+    $navProductLinkColumns = array_chunk($navProducts, max(1, (int) ceil(max(count($navProducts), 1) / 2)));
+@endphp
+<body class="bg-white antialiased overflow-x-hidden" x-data="{ mobileMenuOpen: false, searchPopupOpen: false, productsDropdownOpen: false, mobileProductsOpen: false }" @keydown.escape.window="productsDropdownOpen = false">
 <div id="preloader" class="fixed inset-0 z-50 flex items-center justify-center bg-white transition-opacity duration-400">
     <div class="w-16 h-16 border-4 border-gray-200 border-t-green-700 rounded-full animate-spin"></div>
 </div>
@@ -181,6 +187,55 @@
                 <nav class="hidden lg:flex items-center space-x-2">
                     <a href="{{ route('home') }}#home" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200">Get Started</a>
                     <a href="{{ route('home') }}#features" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200">Features</a>
+                    <div class="relative" @click.outside="productsDropdownOpen = false">
+                        <button type="button"
+                                @click="productsDropdownOpen = !productsDropdownOpen"
+                                :aria-expanded="productsDropdownOpen"
+                                aria-haspopup="true"
+                                aria-controls="nav-products-list"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200 flex items-center gap-1.5">
+                            Products
+                            <i class="fas fa-chevron-down text-[0.65rem] transition-transform duration-200" :class="productsDropdownOpen && 'rotate-180'"></i>
+                        </button>
+                        <div id="nav-products-list"
+                             x-show="productsDropdownOpen"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="opacity-0 -translate-y-0.5"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-cloak
+                             class="absolute left-0 top-full z-50 mt-1 w-[min(100vw-2rem,40rem)] max-h-[min(85vh,28rem)] overflow-hidden rounded-xl border border-gray-200/90 bg-white shadow-lg shadow-gray-200/50">
+                            <div class="grid grid-cols-3 min-h-0 min-w-0">
+                                @foreach ($navProductLinkColumns as $colIndex => $columnItems)
+                                    <ul class="list-none m-0 max-h-[min(85vh,28rem)] overflow-y-auto overscroll-contain py-2 border-gray-100 {{ $colIndex > 0 ? 'border-l' : '' }}" role="list">
+                                        @foreach ($columnItems as $item)
+                                            <li>
+                                                <a href="{{ route('escrow.product', $item['slug']) }}"
+                                                   @click="productsDropdownOpen = false"
+                                                   class="block px-3 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-800 transition-colors min-w-0">
+                                                    {{ $item['label'] }}
+                                                </a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @endforeach
+                                <div class="flex flex-col justify-center border-l border-gray-100 bg-gradient-to-br from-emerald-50/90 via-white to-green-50/50 p-3 sm:p-4 min-w-0 min-h-[10rem]">
+                                    <div class="flex min-h-0 flex-1 items-center justify-center">
+                                        <img src="{{ asset($navProductDropdown['image'] ?? 'uploads/logo-hoz.png') }}"
+                                             width="280"
+                                             height="180"
+                                             alt="{{ $navProductDropdown['image_alt'] ?? 'e-confirm' }}"
+                                             class="max-h-32 w-full object-contain object-center drop-shadow-sm">
+                                    </div>
+                                    @if (!empty($navProductDropdown['image_title']))
+                                        <p class="mt-2 text-center text-xs font-medium text-gray-600 leading-snug">
+                                            {{ $navProductDropdown['image_title'] }}
+                                        </p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <a href="{{ route('home') }}#how-it-works" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200">How It Works</a>
                     <a href="{{ route('scam.watch') }}" class="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 flex items-center gap-1.5 border border-red-200">
                         <i class="fas fa-shield-alt text-xs"></i> Confirm
@@ -224,6 +279,27 @@
             <nav x-show="mobileMenuOpen" x-transition class="lg:hidden pb-4 space-y-2 border-t border-gray-200 mt-2 pt-4" style="display: none;">
                 <a href="{{ route('home') }}#home" @click="mobileMenuOpen = false" class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-all duration-200">Get Started</a>
                 <a href="{{ route('home') }}#features" @click="mobileMenuOpen = false" class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-all duration-200">Features</a>
+                <div>
+                    <button type="button"
+                            @click="mobileProductsOpen = !mobileProductsOpen"
+                            :aria-expanded="mobileProductsOpen"
+                            class="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-all duration-200">
+                        <span>Products</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform" :class="mobileProductsOpen && 'rotate-180'"></i>
+                    </button>
+                    <div x-show="mobileProductsOpen"
+                         x-transition
+                         x-cloak
+                         class="pl-2 pt-1 space-y-0.5 border-l-2 border-green-100 ml-4 my-1">
+                        @foreach ($navProducts as $item)
+                            <a href="{{ route('escrow.product', $item['slug']) }}"
+                               @click="mobileMenuOpen = false; mobileProductsOpen = false"
+                               class="block px-3 py-2 text-sm text-gray-600 hover:text-green-800 hover:bg-green-50/80 rounded-lg">
+                                {{ $item['label'] }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
                 <a href="{{ route('home') }}#how-it-works" @click="mobileMenuOpen = false" class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-all duration-200">How It Works</a>
                 <a href="{{ route('scam.watch') }}" @click="mobileMenuOpen = false" class="block px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-all duration-200 flex items-center gap-2 border border-red-200">
                     <i class="fas fa-shield-alt text-xs"></i> Confirm
@@ -461,42 +537,6 @@
             });
         });
     </script>
-
-    {{-- PWA install: full-viewport fixed shell (out of document flow) + bottom-right card. Logic: resources/js/app.js --}}
-    <div x-data="pwaInstall"
-         x-show="showInstallPrompt"
-         x-cloak
-         x-transition.opacity.duration.900ms
-         class="fixed inset-0 z-[70] pointer-events-none flex items-end justify-end p-1.5 pb-16 sm:p-2 sm:pb-16 lg:pb-4"
-         role="presentation">
-        <div class="pointer-events-auto w-[min(9.75rem,calc(100vw-0.75rem))] max-w-[9.75rem] bg-white rounded-md shadow-md border border-green-200/90 p-1.5 pr-6 relative origin-bottom-right scale-90 sm:scale-95"
-             role="dialog"
-             aria-modal="false"
-             aria-labelledby="pwa-install-title"
-             @click.stop>
-            <button type="button"
-                    @click="dismissPrompt()"
-                    aria-label="Dismiss install prompt"
-                    class="absolute top-0.5 right-0.5 w-5 h-5 flex items-center justify-center bg-red-500 hover:bg-red-600 rounded-full text-white text-[9px] z-10 leading-none">
-                <i class="fas fa-times text-[8px]" aria-hidden="true"></i>
-            </button>
-            <div class="flex items-start gap-1.5">
-                <div class="flex-shrink-0 pt-0.5">
-                    <img src="{{ asset('uploads/favicon.png') }}" alt="" class="w-6 h-6 rounded" width="24" height="24" loading="lazy" decoding="async">
-                </div>
-                <div class="flex-1 min-w-0">
-                    <h3 class="text-[10px] font-semibold text-gray-900 mb-0.5 leading-tight" id="pwa-install-title">Install eConfirm App</h3>
-                    <p class="text-[8px] text-gray-600 mb-1.5 leading-snug">Get a better experience with our app. Install for quick access and offline support.</p>
-                    <button type="button"
-                            @click="installApp()"
-                            class="w-full px-1.5 py-1 text-[8px] bg-green-600 text-white font-medium rounded hover:bg-green-700 transition-colors inline-flex items-center justify-center gap-0.5">
-                        <i class="fas fa-download text-[7px] shrink-0" aria-hidden="true"></i>
-                        Install
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
 </body>
 </html>

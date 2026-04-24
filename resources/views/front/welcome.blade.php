@@ -35,6 +35,8 @@ function transactionFormData() {
         transactionTypeOpen: false,
         showCustomType: false,
         showPaybill: false,
+        transactionAmount: '',
+        amountFeeTooltipDismissed: false,
         submitting: false,
         mpesaResponse: null,
         checkoutRequestId: null,
@@ -49,6 +51,27 @@ function transactionFormData() {
             return this.transactionTypes.filter(function (t) {
                 return t.label.toLowerCase().includes(q) || t.value.toLowerCase().includes(q);
             });
+        },
+
+        get showAmountFeeTooltip() {
+            return String(this.transactionAmount ?? '').trim() !== '';
+        },
+
+        get showAmountFeeTooltipOpen() {
+            return this.showAmountFeeTooltip && !this.amountFeeTooltipDismissed;
+        },
+
+        dismissAmountFeeTooltip() {
+            this.amountFeeTooltipDismissed = true;
+        },
+
+        onTransactionAmountInput($event) {
+            const v = ($event && $event.target && $event.target.value !== undefined)
+                ? $event.target.value
+                : this.transactionAmount;
+            if (!String(v ?? '').trim()) {
+                this.amountFeeTooltipDismissed = false;
+            }
         },
 
         selectTransactionType(t) {
@@ -136,6 +159,8 @@ function transactionFormData() {
                         this.transactionTypeQuery = '';
                         this.transactionTypeOpen = false;
                         this.showCustomType = false;
+                        this.transactionAmount = '';
+                        this.amountFeeTooltipDismissed = false;
                         this.checkoutRequestId = checkoutId;
                         this.pollTransactionStatus();
                     }
@@ -257,7 +282,7 @@ function transactionFormData() {
 <div x-data="transactionFormData()">
 
        <!-- Hero: mobile shows form only; headline and CTAs from lg breakpoint up -->
-<section id="home" class="relative min-h-0 sm:min-h-0 lg:min-h-[85vh] flex items-center bg-gradient-to-br from-green-50 via-white to-emerald-50 overflow-hidden pt-4 pb-6 lg:pt-8 lg:pb-12">
+<section id="home" class="relative min-h-0 sm:min-h-0 lg:min-h-[75vh] flex items-center bg-gradient-to-br from-green-50 via-white to-emerald-50 overflow-x-hidden overflow-y-visible pt-2 pb-4 sm:pt-3 sm:pb-5 lg:pt-5 lg:pb-8 w-full min-w-0">
     <!-- Animated Background Elements -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div class="absolute -top-40 -left-40 w-96 h-96 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
@@ -265,10 +290,10 @@ function transactionFormData() {
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
     </div>
 
-    <div class="relative max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-12 w-full">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-16 items-center">
+    <div class="relative w-full min-w-0 max-w-[min(100%,90rem)] mx-auto px-2.5 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-6">
+        <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] gap-3 sm:gap-4 lg:gap-8 items-start lg:items-center min-w-0">
             <!-- Hero Content (hidden on small screens; form only on mobile) -->
-            <div class="hidden lg:block text-center lg:text-left space-y-8" 
+            <div class="hidden lg:block min-w-0 text-center lg:text-left space-y-5 xl:space-y-8" 
                  x-data="{ inView: true }"
                  x-intersect="inView = true">
                 <div x-show="inView" 
@@ -297,13 +322,13 @@ function transactionFormData() {
                 </div>
                 
                 <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
-                    <a href="#home" class="group inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105">
+                    <a href="#home" class="group inline-flex h-12 items-center justify-center px-8 text-sm font-semibold bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105">
                         <span>Get Started Now</span>
-                        <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 ml-2 shrink-0 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                         </svg>
                     </a>
-                    <a href="#how-it-works" class="inline-flex items-center justify-center px-8 py-4 bg-white border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all duration-300 shadow-sm hover:shadow-md">
+                    <a href="#how-it-works" class="inline-flex h-12 items-center justify-center px-8 text-sm font-semibold bg-white border-2 border-gray-200 text-gray-700 rounded-xl hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all duration-300 shadow-sm hover:shadow-md box-border">
                         Learn More
                     </a>
                     </div>
@@ -344,8 +369,12 @@ function transactionFormData() {
                 </div>
             </div>
             
-            <!-- Hero Form -->
-            <div class="w-full"
+@php
+    $formLabel = 'block text-xs font-semibold text-gray-800 mb-1.5 tracking-tight';
+    $formControl = 'w-full min-w-0 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 border border-gray-200 bg-white rounded-xl shadow-sm hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-[color,box-shadow,border-color] duration-150';
+@endphp
+            <!-- Hero Form: narrow on small screens; full width of column from lg up -->
+            <div class="w-full min-w-0 max-w-[19rem] sm:max-w-sm md:max-w-md mx-auto lg:max-w-none lg:w-full lg:mx-0"
                  x-data="{ inView: true }"
                  x-intersect="inView = true">
                 <div x-show="inView"
@@ -353,24 +382,28 @@ function transactionFormData() {
                      x-transition:enter="transition ease-out duration-700 delay-200"
                      x-transition:enter-start="opacity-0 translate-y-8"
                      x-transition:enter-end="opacity-100 translate-y-0"
-                     class="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 lg:p-10 border border-gray-100 relative overflow-hidden">
+                     class="bg-white/95 backdrop-blur-sm rounded-2xl p-3.5 sm:p-5 md:p-6 border border-gray-200/90 shadow-[0_12px_40px_-12px_rgba(15,118,110,0.15)] ring-1 ring-gray-100/80 relative w-full min-w-0 max-w-full overflow-visible">
                     <!-- Decorative gradient overlay -->
-                    <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-green-100/50 to-emerald-100/30 rounded-full blur-3xl -mr-32 -mt-32"></div>
-                    <div class="relative">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="absolute top-0 right-0 w-32 h-32 sm:w-52 sm:h-52 bg-gradient-to-br from-emerald-100/50 to-green-50/30 rounded-full blur-2xl -mr-12 -mt-12 sm:-mr-28 sm:-mt-28 pointer-events-none"></div>
+                    <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-green-100/30 to-transparent rounded-full blur-2xl -ml-8 -mb-8 pointer-events-none"></div>
+                    <div class="relative min-w-0">
+                        <div class="flex items-center gap-3 mb-1 pb-4 border-b border-gray-100/90">
+                            <div class="w-9 h-9 sm:w-10 sm:h-10 shrink-0 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md shadow-green-600/20 ring-2 ring-white">
+                                <svg class="w-4 h-4 sm:w-[1.1rem] sm:h-[1.1rem] text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                 </svg>
                             </div>
-                            <h3 class="text-2xl lg:text-3xl font-bold text-gray-900">Start a Secure Transaction</h3>
-                </div>
+                            <h3 class="min-w-0 text-base sm:text-lg font-bold text-gray-900 leading-snug">Start a Secure Transaction</h3>
+                        </div>
                 
-                    <form @submit.prevent="submitForm($event)" class="space-y-5">
-                        <div class="relative">
-                            <label for="transaction-type-search" class="block text-sm font-medium text-gray-700 mb-2">Transaction Type</label>
+                    <form @submit.prevent="submitForm($event)" class="mt-4 sm:mt-5 space-y-3.5 sm:space-y-4 w-full min-w-0 text-sm">
+                        <div class="relative min-w-0">
+                            <label for="transaction-type-search" class="{{ $formLabel }}">Transaction Type</label>
                             <input type="hidden" name="transaction-type" id="transaction-type" x-model="selectedTransactionValue">
-                            <div class="relative">
+                            <div class="relative group">
+                                <span class="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-600 transition-colors" aria-hidden="true">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                </span>
                                 <input type="text"
                                        id="transaction-type-search"
                                        x-model="transactionTypeQuery"
@@ -379,25 +412,25 @@ function transactionFormData() {
                                        @blur="syncTransactionTypeOnBlur(); closeTransactionTypeDropdown()"
                                        autocomplete="off"
                                        placeholder="Search or select transaction type…"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                                       class="{{ $formControl }} pl-10"
                                        role="combobox"
                                        aria-autocomplete="list"
                                        :aria-expanded="transactionTypeOpen">
                                 <ul x-show="transactionTypeOpen && filteredTransactionTypes.length > 0"
                                     x-transition
                                     x-cloak
-                                    class="absolute z-50 w-full mt-1 max-h-56 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg py-1"
+                                    class="absolute z-50 left-0 right-0 top-full mt-1.5 w-full min-w-0 max-h-48 sm:max-h-56 overflow-y-auto overflow-x-hidden rounded-xl border border-gray-200/90 bg-white py-1.5 shadow-xl shadow-gray-200/50 ring-1 ring-black/5"
                                     role="listbox">
                                     <template x-for="t in filteredTransactionTypes" :key="t.value">
                                         <li role="option"
                                             @mousedown.prevent="selectTransactionType(t)"
-                                            class="px-3 py-2.5 text-sm text-gray-800 cursor-pointer hover:bg-green-50 border-b border-gray-50 last:border-0"
+                                            class="px-3 py-2 mx-0.5 text-xs sm:text-sm text-gray-800 cursor-pointer rounded-lg hover:bg-emerald-50 active:bg-emerald-100/80 break-words"
                                             x-text="t.label"></li>
                                     </template>
                                 </ul>
                                 <p x-show="transactionTypeOpen && transactionTypeQuery && filteredTransactionTypes.length === 0"
                                    x-cloak
-                                   class="absolute z-50 w-full mt-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                                   class="absolute z-50 w-full mt-1.5 rounded-lg border border-amber-200/90 bg-amber-50/95 px-3 py-2 text-xs text-amber-900 shadow-sm">
                                     No matching types. Try different keywords.
                                 </p>
                             </div>
@@ -411,36 +444,70 @@ function transactionFormData() {
                              x-transition:leave-start="opacity-100 translate-y-0"
                              x-transition:leave-end="opacity-0 -translate-y-2"
                              style="display: none;">
-                            <label for="custom-transaction-type" class="block text-sm font-medium text-gray-700 mb-2">Specify Transaction Type</label>
+                            <label for="custom-transaction-type" class="{{ $formLabel }}">Specify Transaction Type</label>
                             <input type="text" 
                                    id="custom-transaction-type" 
                                    name="custom-transaction-type" 
                                    placeholder="Enter custom transaction type"
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition">
+                                   class="{{ $formControl }}">
                             </div>
                             
-                        <div class="grid sm:grid-cols-2 gap-4">
-                            <div>
-                                <label for="payment-method" class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 min-w-0">
+                            <div class="min-w-0">
+                                <label for="payment-method" class="{{ $formLabel }}">Payment Method</label>
+                                <div class="relative">
                                 <select @change="showPaybill = $event.target.value === 'paybill'"
                                         id="payment-method" 
                                         name="payment-method"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition">
+                                        class="{{ $formControl }} appearance-none pr-9 cursor-pointer bg-white">
                                         <option value="mpesa">M-Pesa Number</option>
                                         <option value="paybill">Paybill/Buy Goods</option>
                                     </select>
+                                <span class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </span>
                                 </div>
-                            <div>
-                                <label for="transaction-amount" class="block text-sm font-medium text-gray-700 mb-2">Transaction Amount</label>
-                                <div class="relative">
-                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">KES</span>
+                                </div>
+                            <div class="min-w-0 self-start">
+                                <label for="transaction-amount" class="{{ $formLabel }}">Transaction Amount</label>
+                                <!-- Fee hint above the field; positioned relative to input wrapper so grid stretch does not break placement -->
+                                <div class="relative z-20">
+                                    <span class="absolute left-3 top-1/2 z-10 -translate-y-1/2 text-gray-500 font-semibold text-xs tabular-nums">KES</span>
                                     <input type="number" 
                                            id="transaction-amount" 
                                            name="transaction-amount" 
+                                           x-model="transactionAmount"
+                                           @input="onTransactionAmountInput()"
+                                           :aria-describedby="showAmountFeeTooltipOpen ? 'amount-fee-tooltip' : null"
+                                           inputmode="decimal"
                                            placeholder="Amount"
-                                           class="w-full pl-16 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition">
+                                           class="{{ $formControl }} pl-14 tabular-nums">
+                                    <div id="amount-fee-tooltip"
+                                         role="tooltip"
+                                         x-show="showAmountFeeTooltipOpen"
+                                         x-transition:enter="transition ease-out duration-200"
+                                         x-transition:enter-start="opacity-0 -translate-y-1.5 scale-[0.98]"
+                                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                         x-transition:leave="transition ease-in duration-150"
+                                         x-transition:leave-start="opacity-100 translate-y-0"
+                                         x-transition:leave-end="opacity-0 -translate-y-1"
+                                         x-cloak
+                                         class="absolute left-0 right-0 bottom-full z-30 mb-1.5 rounded-lg border border-emerald-200/90 bg-white pl-3 pr-8 py-2.5 text-[11px] sm:text-xs text-gray-700 leading-snug shadow-lg shadow-emerald-900/10 ring-1 ring-black/5">
+                                        <button type="button"
+                                                @click.stop="dismissAmountFeeTooltip()"
+                                                class="absolute top-1 right-1 z-20 flex h-6 w-6 items-center justify-center rounded-md text-gray-500 hover:text-gray-800 hover:bg-gray-100/90 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                                                aria-label="Close fee information">
+                                            <i class="fas fa-times text-[10px]" aria-hidden="true"></i>
+                                        </button>
+                                        <span class="absolute -bottom-1.5 left-4 h-3 w-3 rotate-45 border-b border-r border-emerald-200/90 bg-white" aria-hidden="true"></span>
+                                        <span class="relative z-10 flex gap-2 pr-0.5">
+                                            <span class="text-emerald-600 shrink-0 mt-0.5" aria-hidden="true">
+                                                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                                            </span>
+                                            <span>Escrow principal. A 1% platform fee is added; your M-Pesa prompt shows the total to pay.</span>
+                                        </span>
+                                    </div>
                                 </div>
-                                <p class="mt-1.5 text-xs text-gray-500">Escrow principal. A 1% platform fee is added — your M-Pesa prompt shows the total to pay.</p>
                             </div>
                                 </div>
                         
@@ -452,54 +519,56 @@ function transactionFormData() {
                              x-transition:leave-start="opacity-100 translate-y-0"
                              x-transition:leave-end="opacity-0 -translate-y-2"
                              style="display: none;">
-                            <label for="paybill-till-number" class="block text-sm font-medium text-gray-700 mb-2">Buy Goods or Paybill Number</label>
+                            <label for="paybill-till-number" class="{{ $formLabel }}">Buy Goods or Paybill Number</label>
                             <input type="text" 
                                    id="paybill-till-number" 
                                    name="paybill-till-number" 
                                    value="{{ old('paybill-till-number') }}"
                                    placeholder="Buy Goods or Paybill Number"
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition">
+                                   class="{{ $formControl }}">
                             </div> 
                             
-                        <div class="grid sm:grid-cols-2 gap-4">
-                            <div>
-                                <label for="sender-mobile" class="block text-sm font-medium text-gray-700 mb-2">Your Mobile Number</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 min-w-0">
+                            <div class="min-w-0">
+                                <label for="sender-mobile" class="{{ $formLabel }}">Your Mobile Number</label>
                                 <input type="tel" 
                                        id="sender-mobile" 
                                        name="sender-mobile" 
+                                       inputmode="tel" autocomplete="tel"
                                        placeholder="07XXXXXXXX or +2547XXXXXXXX"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition">
+                                       class="{{ $formControl }}">
                                 </div>
-                            <div>
-                                <label for="receiver-mobile" class="block text-sm font-medium text-gray-700 mb-2">Recipient Mobile Number</label>
+                            <div class="min-w-0">
+                                <label for="receiver-mobile" class="{{ $formLabel }}">Recipient Mobile Number</label>
                                 <input type="tel" 
                                        id="receiver-mobile" 
                                        name="receiver-mobile" 
+                                       inputmode="tel" autocomplete="tel"
                                        placeholder="07XXXXXXXX or +2547XXXXXXXX"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition">
+                                       class="{{ $formControl }}">
                             </div>
                             </div>
                             
-                        <div>
-                            <label for="transaction-details" class="block text-sm font-medium text-gray-700 mb-2">Transaction Details</label>
+                        <div class="min-w-0">
+                            <label for="transaction-details" class="{{ $formLabel }}">Transaction Details</label>
                             <textarea id="transaction-details" 
                                       name="transaction-details" 
-                                      rows="3" 
-                                      placeholder="Describe your transaction..."
-                                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition resize-none"></textarea>
+                                      rows="3"
+                                      placeholder="What are you buying, expected delivery, and any key terms…"
+                                      class="{{ $formControl }} resize-y min-h-[4.5rem] sm:min-h-20"></textarea>
                             </div>
 
                         <button type="submit" 
                                 :disabled="submitting"
-                                class="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:-translate-y-1 hover:scale-[1.02] flex items-center justify-center gap-2 group">
-                            <span x-show="!submitting" class="flex items-center gap-2">
+                                class="w-full mt-0.5 h-12 px-4 text-sm font-semibold bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg shadow-emerald-600/25 hover:shadow-xl hover:shadow-emerald-600/30 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 group shrink-0">
+                            <span x-show="!submitting" class="flex items-center gap-1.5 sm:gap-2">
                                 Fund Your Escrow
-                                <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 shrink-0 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                                 </svg>
                             </span>
-                            <span x-show="submitting" class="flex items-center gap-2">
-                                <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                            <span x-show="submitting" class="flex items-center gap-1.5 text-xs sm:text-sm">
+                                <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
@@ -516,7 +585,7 @@ function transactionFormData() {
                                 'bg-red-50 text-red-800 border-red-200': mpesaResponse?.type === 'error',
                                 'bg-yellow-50 text-yellow-800 border-yellow-200': mpesaResponse?.type === 'warning'
                              }"
-                             class="p-3 rounded-lg border text-sm text-center"
+                             class="p-3 sm:p-3.5 rounded-xl border text-xs sm:text-sm text-left leading-relaxed shadow-sm"
                              style="display: none;"
                              x-text="mpesaResponse?.message">
                         </div>
@@ -524,7 +593,7 @@ function transactionFormData() {
                             <button type="button"
                                     @click="checkPaymentStatusNow()"
                                     :disabled="manualStatusChecking"
-                                    class="mt-2 px-4 py-2 text-sm font-medium text-green-800 bg-green-100 border border-green-200 rounded-lg hover:bg-green-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                                    class="mt-1 w-full sm:w-auto px-4 py-2 text-sm font-medium text-emerald-900 bg-emerald-50 border border-emerald-200/90 rounded-xl hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                                 <span x-show="!manualStatusChecking">Check payment status now</span>
                                 <span x-show="manualStatusChecking" class="inline-flex items-center gap-2">
                                     <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
@@ -536,11 +605,11 @@ function transactionFormData() {
                             </button>
                         </div>
                         
-                        <p class="text-xs text-center text-gray-500 leading-relaxed">
-                            By submitting this form, you agree to our 
-                            <a href="{{route('terms.conditions')}}" target="_blank" class="text-green-600 hover:text-green-700 underline font-medium transition-colors">Terms of Service</a> 
-                            and 
-                            <a href="{{route('privacy.policy')}}" target="_blank" class="text-green-600 hover:text-green-700 underline font-medium transition-colors">Privacy Policy</a>.
+                        <p class="text-[11px] sm:text-xs text-center text-gray-500 leading-relaxed pt-0.5">
+                            By submitting, you agree to our
+                            <a href="{{route('terms.conditions')}}" target="_blank" rel="noopener noreferrer" class="text-emerald-700 hover:text-emerald-800 font-medium underline decoration-emerald-300 underline-offset-2 hover:decoration-emerald-500 transition-colors">Terms of Service</a>
+                            and
+                            <a href="{{route('privacy.policy')}}" target="_blank" rel="noopener noreferrer" class="text-emerald-700 hover:text-emerald-800 font-medium underline decoration-emerald-300 underline-offset-2 hover:decoration-emerald-500 transition-colors">Privacy Policy</a>.
                             </p>
                         </form>
                     </div>
