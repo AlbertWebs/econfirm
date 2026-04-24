@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Instrument+Sans:wght@500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <link href="{{ asset('theme/dashboard.css') }}?v=7" rel="stylesheet">
+    <link href="{{ asset('theme/dashboard.css') }}?v=9" rel="stylesheet">
     <link rel="icon" type="image/png" href="{{ asset('uploads/favicon.png') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#0f6b3a">
@@ -20,33 +20,80 @@
 
     <div class="db-dev-app" id="db-dev-app">
         <aside class="db-dev-sidebar" id="db-dev-sidebar" aria-label="Developer hub navigation">
-            <div class="db-dev-sidebar__brand">
-                <a href="{{ route('api.home') }}" class="db-dev-sidebar__logo text-decoration-none text-white">
-                    <span class="db-dev-sidebar__logo-mark" aria-hidden="true"><i class="fas fa-code"></i></span>
-                    <span>
-                        <span class="db-dev-sidebar__logo-title">API hub</span>
-                        <span class="db-dev-sidebar__logo-sub">e-confirm</span>
-                    </span>
+            <div class="db-dev-sidebar__header">
+                <a href="{{ route('api.home') }}" class="db-dev-sidebar__brand text-decoration-none">
+                    <span class="db-dev-sidebar__brand-icon" aria-hidden="true"><i class="fas fa-code"></i></span>
+                    <div class="db-dev-sidebar__brand-text">
+                        <span class="db-dev-sidebar__brand-title">API hub</span>
+                        <span class="db-dev-sidebar__brand-sub">e-confirm · developer</span>
+                    </div>
                 </a>
+                <div class="db-dev-sidebar__header-actions">
+                    <button type="button" class="db-dev-sidebar__icon-btn d-lg-none" id="db-dev-sidebar-close" aria-label="Close menu">
+                        <i class="fas fa-xmark" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
 
             <nav id="db-dev-sidebar-nav" class="db-dev-sidebar__nav nav flex-column" aria-label="Page sections">
-                <a class="nav-link db-dev-navlink" href="#dev-section-overview"><i class="fas fa-gauge-high fa-fw me-2" aria-hidden="true"></i>Overview</a>
-                <a class="nav-link db-dev-navlink" href="#dev-section-api-usage"><i class="fas fa-chart-column fa-fw me-2" aria-hidden="true"></i>API usage</a>
-                <a class="nav-link db-dev-navlink" href="#dev-section-endpoints"><i class="fas fa-link fa-fw me-2" aria-hidden="true"></i>Endpoints</a>
-                <a class="nav-link db-dev-navlink" href="#dev-section-api-key"><i class="fas fa-key fa-fw me-2" aria-hidden="true"></i>API key</a>
-                <a class="nav-link db-dev-navlink" href="#dev-section-examples"><i class="fas fa-terminal fa-fw me-2" aria-hidden="true"></i>Code examples</a>
-                <a class="nav-link db-dev-navlink" href="#dev-section-postman"><i class="fas fa-paper-plane fa-fw me-2" aria-hidden="true"></i>Postman</a>
-                <a class="nav-link db-dev-navlink" href="#dev-section-mpesa"><i class="fas fa-mobile-screen-button fa-fw me-2" aria-hidden="true"></i>M-Pesa URLs</a>
-                <a class="nav-link db-dev-navlink" href="#dev-section-transactions"><i class="fas fa-table fa-fw me-2" aria-hidden="true"></i>Transactions</a>
+                <ul class="db-dev-sidebar__nav-list list-unstyled mb-0 py-1 px-1" role="list">
+                    <li>
+                        <a class="nav-link db-dev-navlink" href="#dev-section-overview">
+                            <span class="db-dev-navlink__icon" aria-hidden="true"><i class="fas fa-gauge-high"></i></span>
+                            <span class="db-dev-navlink__label">Overview</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link db-dev-navlink" href="#dev-section-api-usage">
+                            <span class="db-dev-navlink__icon" aria-hidden="true"><i class="fas fa-chart-column"></i></span>
+                            <span class="db-dev-navlink__label">API usage</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link db-dev-navlink" href="#dev-section-endpoints">
+                            <span class="db-dev-navlink__icon" aria-hidden="true"><i class="fas fa-link"></i></span>
+                            <span class="db-dev-navlink__label">Endpoints</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link db-dev-navlink" href="#dev-section-api-key">
+                            <span class="db-dev-navlink__icon" aria-hidden="true"><i class="fas fa-key"></i></span>
+                            <span class="db-dev-navlink__label">API key</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link db-dev-navlink" href="#dev-section-examples">
+                            <span class="db-dev-navlink__icon" aria-hidden="true"><i class="fas fa-terminal"></i></span>
+                            <span class="db-dev-navlink__label">Code examples</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link db-dev-navlink" href="#dev-section-postman">
+                            <span class="db-dev-navlink__icon" aria-hidden="true"><i class="fas fa-paper-plane"></i></span>
+                            <span class="db-dev-navlink__label">Postman</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link db-dev-navlink" href="#dev-section-mpesa">
+                            <span class="db-dev-navlink__icon" aria-hidden="true"><i class="fas fa-mobile-screen-button"></i></span>
+                            <span class="db-dev-navlink__label">M-Pesa URLs</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link db-dev-navlink" href="#dev-section-transactions">
+                            <span class="db-dev-navlink__icon" aria-hidden="true"><i class="fas fa-table"></i></span>
+                            <span class="db-dev-navlink__label">Transactions</span>
+                        </a>
+                    </li>
+                </ul>
             </nav>
 
-            <div class="db-dev-sidebar__footer mt-auto">
-                <a href="{{ route('api-documentation') }}" class="db-dev-sidebar__mini"><i class="fas fa-book me-2" aria-hidden="true"></i>Public API docs</a>
+            <div class="db-dev-sidebar__footer">
+                <a href="{{ route('api-documentation') }}" class="db-dev-sidebar__footer-link"><i class="fas fa-book me-2" aria-hidden="true"></i>Public API docs</a>
                 @if (Route::has('user.dashboard'))
-                    <a href="{{ route('user.dashboard') }}" class="db-dev-sidebar__mini"><i class="fas fa-arrow-up-right-from-square me-2" aria-hidden="true"></i>Customer portal</a>
+                    <a href="{{ route('user.dashboard') }}" class="db-dev-sidebar__footer-link"><i class="fas fa-arrow-up-right-from-square me-2" aria-hidden="true"></i>Customer portal</a>
                 @endif
-                <a href="{{ route('home') }}" class="db-dev-sidebar__mini"><i class="fas fa-house me-2" aria-hidden="true"></i>Site home</a>
+                <a href="{{ route('home') }}" class="db-dev-sidebar__footer-link"><i class="fas fa-house me-2" aria-hidden="true"></i>Site home</a>
             </div>
         </aside>
 
@@ -121,6 +168,8 @@
             toggle && toggle.addEventListener('click', function () {
                 setOpen(!app.classList.contains('db-dev-app--sidebar-open'));
             });
+            var closeBtn = document.getElementById('db-dev-sidebar-close');
+            closeBtn && closeBtn.addEventListener('click', closeSidebar);
             backdrop && backdrop.addEventListener('click', closeSidebar);
             mq.addEventListener('change', function (e) {
                 if (e.matches) closeSidebar();
