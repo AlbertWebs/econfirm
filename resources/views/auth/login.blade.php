@@ -365,6 +365,12 @@
                                         <i class="fas fa-sign-in-alt me-2" aria-hidden="true"></i>
                                         <span class="js-login-submit-text">{{ __('Sign in') }}</span>
                                     </button>
+                                    @if (Route::has('register'))
+                                        <p class="text-center small text-muted mt-3 mb-0">
+                                            {{ __("Don't have an account?") }}
+                                            <a href="{{ route('register') }}" class="forgot-link text-decoration-none">{{ __('Sign up') }}</a>
+                                        </p>
+                                    @endif
                                 </form>
                             </div>
 
@@ -405,6 +411,12 @@
                                         <i class="fas fa-paper-plane me-2" aria-hidden="true"></i>
                                         <span class="js-login-submit-text">{{ __('Send verification code') }}</span>
                                     </button>
+                                    @if (Route::has('register'))
+                                        <p class="text-center small text-muted mt-3 mb-0">
+                                            {{ __("Need an account first?") }}
+                                            <a href="{{ route('register') }}" class="forgot-link text-decoration-none">{{ __('Sign up') }}</a>
+                                        </p>
+                                    @endif
                                 </form>
 
                                 @if (session('login_otp_phone'))

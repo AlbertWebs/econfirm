@@ -32,6 +32,22 @@ Route::get('/portal', [HomeController::class, 'portal'])->name('portal');
 Route::post('/portal/phone/send-otp', [HomeController::class, 'portalSendOtp'])->name('portal.phone.send-otp');
 Route::post('/portal/phone/verify-otp', [HomeController::class, 'portalVerifyOtp'])->name('portal.phone.verify-otp');
 Route::get('/features', [HomeController::class, 'features'])->name('features');
+Route::get('/escrow/{product}', [HomeController::class, 'productEscrow'])->name('escrow.product')->whereIn('product', [
+    'real-estate',
+    'vehicle',
+    'business',
+    'ecommerce',
+    'services',
+    'freelancer',
+    'rental',
+    'import-export',
+    'digital-asset',
+    'construction',
+    'equipment-machinery',
+    'tender-contract',
+    'education-school-fees',
+    'marketplace',
+]);
 Route::get('/get-transaction/{id}', [HomeController::class, 'transaction'])->name('transaction.index');
 Route::get('/approve-transaction/{id}', [HomeController::class, 'approveTransaction'])->name('approve.transaction');
 Route::post('/submit-transaction', [HomeController::class, 'submitTransaction'])->name('submit.transaction');

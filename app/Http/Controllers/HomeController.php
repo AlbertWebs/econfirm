@@ -155,6 +155,164 @@ class HomeController extends Controller
         return view('front.features');
     }
 
+    public function productEscrow(string $product)
+    {
+        $products = $this->productLandingPages();
+        if (! array_key_exists($product, $products)) {
+            abort(404);
+        }
+
+        $page = $products[$product];
+
+        return view('front.product-escrow', [
+            'productKey' => $product,
+            'productName' => $page['name'],
+            'industryKeyword' => $page['industry_keyword'],
+            'seoTitle' => $page['seo_title'],
+            'seoDescription' => $page['seo_description'],
+            'benefits' => $page['benefits'],
+            'faqs' => $page['faqs'],
+            'canonicalUrl' => route('escrow.product', ['product' => $product]),
+        ]);
+    }
+
+    /**
+     * @return array<string, array{name:string,industry_keyword:string,seo_title:string,seo_description:string,benefits:list<string>,faqs:list<array{q:string,a:string}>}>
+     */
+    protected function productLandingPages(): array
+    {
+        $commonBenefits = [
+            'Secure M-Pesa escrow flow where funds move only after agreed milestones.',
+            'Transaction timeline and evidence trail to reduce fraud disputes.',
+            'Dedicated support for sender and receiver when verification is needed.',
+        ];
+        $commonFaqs = [
+            [
+                'q' => 'How does eConfirm M-Pesa escrow work?',
+                'a' => 'Buyer/sender funds the escrow, both parties track status, and release happens only when delivery terms are met.',
+            ],
+            [
+                'q' => 'Can I use this for marketplace deals like Jiji escrow style transactions?',
+                'a' => 'Yes. eConfirm is designed for person-to-person and marketplace transactions where trust and payment protection are needed.',
+            ],
+        ];
+
+        return [
+            'real-estate' => [
+                'name' => 'Real Estate Escrow',
+                'industry_keyword' => 'property transactions',
+                'seo_title' => 'Real Estate Escrow Kenya | eConfirm M-Pesa Escrow for Property Deals',
+                'seo_description' => 'Use eConfirm real estate escrow to protect buyers, sellers, and agents in property transactions with secure M-Pesa escrow release conditions.',
+                'benefits' => [...$commonBenefits, 'Protect deposit and final payment steps for land, rentals, and home purchases.'],
+                'faqs' => $commonFaqs,
+            ],
+            'vehicle' => [
+                'name' => 'Vehicle Escrow',
+                'industry_keyword' => 'vehicle sales',
+                'seo_title' => 'Vehicle Escrow Kenya | Safe Car Sale Payments with eConfirm',
+                'seo_description' => 'Use eConfirm vehicle escrow for safer car, bike, and fleet transfers with secure M-Pesa escrow and fraud protection checks.',
+                'benefits' => [...$commonBenefits, 'Ideal for logbook handover workflows in private and dealer vehicle sales.'],
+                'faqs' => $commonFaqs,
+            ],
+            'business' => [
+                'name' => 'Business Escrow',
+                'industry_keyword' => 'business payments',
+                'seo_title' => 'Business Escrow Services Kenya | eConfirm B2B M-Pesa Escrow',
+                'seo_description' => 'Reduce business payment risk using eConfirm escrow for supplier invoices, stock delivery, and service milestones.',
+                'benefits' => [...$commonBenefits, 'Works for SME supplier agreements and staged B2B deliveries.'],
+                'faqs' => $commonFaqs,
+            ],
+            'ecommerce' => [
+                'name' => 'E-commerce Escrow',
+                'industry_keyword' => 'online shopping',
+                'seo_title' => 'E-commerce Escrow Kenya | Buyer Protection with eConfirm',
+                'seo_description' => 'eConfirm e-commerce escrow secures online store purchases and social commerce orders using M-Pesa escrow protection.',
+                'benefits' => [...$commonBenefits, 'Useful for Instagram, Facebook, and marketplace-style order protection.'],
+                'faqs' => $commonFaqs,
+            ],
+            'services' => [
+                'name' => 'Services Escrow',
+                'industry_keyword' => 'service contracts',
+                'seo_title' => 'Services Escrow | Secure Service Payments via eConfirm',
+                'seo_description' => 'Pay safely for professional services with eConfirm escrow. Release funds after completion and verification.',
+                'benefits' => [...$commonBenefits, 'Supports milestone-based service delivery and approval.'],
+                'faqs' => $commonFaqs,
+            ],
+            'freelancer' => [
+                'name' => 'Freelancer Escrow',
+                'industry_keyword' => 'freelance projects',
+                'seo_title' => 'Freelancer Escrow Kenya | Secure Gig Payments with eConfirm',
+                'seo_description' => 'Use eConfirm freelancer escrow to protect clients and freelancers on design, development, and remote projects.',
+                'benefits' => [...$commonBenefits, 'Prevents non-payment and unfinished delivery risks in freelance jobs.'],
+                'faqs' => $commonFaqs,
+            ],
+            'rental' => [
+                'name' => 'Rental Escrow',
+                'industry_keyword' => 'rental agreements',
+                'seo_title' => 'Rental Escrow Kenya | Safer Deposit and Rent Transactions',
+                'seo_description' => 'eConfirm rental escrow protects landlords and tenants for deposits and staged rent-related agreements.',
+                'benefits' => [...$commonBenefits, 'Clear terms for deposit release after property or asset handover.'],
+                'faqs' => $commonFaqs,
+            ],
+            'import-export' => [
+                'name' => 'Import & Export Escrow',
+                'industry_keyword' => 'trade shipments',
+                'seo_title' => 'Import Export Escrow | Trade Payment Protection with eConfirm',
+                'seo_description' => 'Use eConfirm escrow to reduce risk in import/export deals and shipment milestone payments.',
+                'benefits' => [...$commonBenefits, 'Protects buyers and sellers across shipment and documentation milestones.'],
+                'faqs' => $commonFaqs,
+            ],
+            'digital-asset' => [
+                'name' => 'Digital Asset Escrow',
+                'industry_keyword' => 'digital asset deals',
+                'seo_title' => 'Digital Asset Escrow | Domains, Accounts and Digital Goods',
+                'seo_description' => 'Secure digital asset transfers with eConfirm escrow for domains, accounts, software licenses, and other digital goods.',
+                'benefits' => [...$commonBenefits, 'Release funds only after access credentials and ownership transfer are confirmed.'],
+                'faqs' => $commonFaqs,
+            ],
+            'construction' => [
+                'name' => 'Construction Escrow',
+                'industry_keyword' => 'construction projects',
+                'seo_title' => 'Construction Escrow Kenya | Milestone Payment Security',
+                'seo_description' => 'Manage contractor and supplier risks using eConfirm construction escrow for milestone-based payment release.',
+                'benefits' => [...$commonBenefits, 'Great for staged project payments tied to inspection milestones.'],
+                'faqs' => $commonFaqs,
+            ],
+            'equipment-machinery' => [
+                'name' => 'Equipment / Machinery Escrow',
+                'industry_keyword' => 'equipment purchases',
+                'seo_title' => 'Equipment Escrow Kenya | Machinery Payment Protection',
+                'seo_description' => 'Use eConfirm escrow for equipment and machinery transactions with safer payment release after verification.',
+                'benefits' => [...$commonBenefits, 'Reduces risk in high-value machinery and industrial equipment purchases.'],
+                'faqs' => $commonFaqs,
+            ],
+            'tender-contract' => [
+                'name' => 'Tender / Contract Escrow',
+                'industry_keyword' => 'tender contracts',
+                'seo_title' => 'Tender Contract Escrow | Contract Payment Assurance with eConfirm',
+                'seo_description' => 'Secure tender and contract-based payments with eConfirm escrow and clear release criteria.',
+                'benefits' => [...$commonBenefits, 'Provides neutral payment control for contract milestone commitments.'],
+                'faqs' => $commonFaqs,
+            ],
+            'education-school-fees' => [
+                'name' => 'Education / School Fees Escrow',
+                'industry_keyword' => 'education payments',
+                'seo_title' => 'School Fees Escrow Kenya | Protected Education Payments',
+                'seo_description' => 'Use eConfirm escrow for education-related fees and institutional payments requiring trusted release controls.',
+                'benefits' => [...$commonBenefits, 'Improves transparency in managed education fee disbursements.'],
+                'faqs' => $commonFaqs,
+            ],
+            'marketplace' => [
+                'name' => 'Marketplace Escrow',
+                'industry_keyword' => 'marketplace deals',
+                'seo_title' => 'Marketplace Escrow Kenya | Jiji Escrow Style Protection by eConfirm',
+                'seo_description' => 'Use eConfirm marketplace escrow for safer online buyer-seller transactions, including Jiji-style deals with M-Pesa escrow.',
+                'benefits' => [...$commonBenefits, 'Built for peer-to-peer marketplace transactions where trust is limited.'],
+                'faqs' => $commonFaqs,
+            ],
+        ];
+    }
+
     // Legalities
     public function termsAndConditions()
     {

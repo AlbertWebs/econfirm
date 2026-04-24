@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
         $this->call(AdminSeeder::class);
         $this->call(SiteSettingsSeeder::class);
         $this->call(SupportHelpItemSeeder::class);
+        $this->call(ServicePagesSeeder::class);
 
         // User::factory(10)->create();
 
