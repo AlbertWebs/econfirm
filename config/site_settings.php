@@ -28,7 +28,7 @@ return [
             'label' => 'Footer about text (HTML allowed)',
             'group' => 'general',
             'rules' => ['nullable', 'string', 'max:5000'],
-            'default' => 'eConfirm is a trusted digital platform for secure, transparent escrow. We hold funds as a neutral third party until agreed conditions are met—so you can buy, sell, or partner online with confidence.',
+            'default' => 'eConfirm is a trusted digital platform for secure, transparent escrow. We hold funds as a neutral third party until agreed conditions are met so you can buy, sell, or partner online with confidence.',
         ],
         'logo_alt' => [
             'label' => 'Logo alt text',
