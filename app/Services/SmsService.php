@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\SmsLog;
 use App\Models\Transaction;
 
 class SmsService
@@ -125,7 +126,10 @@ class SmsService
 
         if ($err) {
             \Log::error('SMS cURL Error', ['error' => $err, 'phone' => $phone]);
-            return ['status' => false, 'message' => "cURL Error: $err"];
+            $result = ['status' => false, 'message' => "cURL Error: $err"];
+            $this->recordSmsLog($phone, $message, $correlator, $payload, $result, null);
+
+            return $result;
         }
 
         $responseData = json_decode($response, true);
@@ -147,8 +151,13 @@ class SmsService
                         'message' => $result['message'] ?? 'Unknown error',
                     ]);
                 }
+
+                $this->recordSmsLog($phone, $message, $correlator, $payload, $result, $httpCode);
+
                 return $result;
             }
+            $this->recordSmsLog($phone, $message, $correlator, $payload, $responseData, $httpCode);
+
             return $responseData;
         }
 
@@ -159,11 +168,45 @@ class SmsService
             'phone' => $phone,
         ]);
 
-        return [
+        $result = [
             'status' => false,
             'message' => $responseData['message'] ?? 'Failed to send SMS',
             'http_code' => $httpCode,
         ];
+        $this->recordSmsLog($phone, $message, $correlator, $payload, $result, $httpCode);
+
+        return $result;
+    }
+
+    protected function recordSmsLog(
+        string $phone,
+        string $message,
+        ?string $correlator,
+        array $payload,
+        array $result,
+        ?int $httpCode
+    ): void {
+        try {
+            SmsLog::query()->create([
+                'recipient' => $phone,
+                'sender' => $this->senderId,
+                'correlator' => $correlator,
+                'message' => $message,
+                'is_success' => self::resultIndicatesSuccess($result),
+                'provider_message' => (string) ($result['message'] ?? ''),
+                'provider_unique_id' => $result['data']['uniqueId'] ?? null,
+                'http_code' => $httpCode,
+                'ip_address' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+                'request_payload' => $payload,
+                'response_payload' => $result,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('SMS log persistence failed', [
+                'phone' => $phone,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

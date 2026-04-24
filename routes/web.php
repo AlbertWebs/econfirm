@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\LiveChatController as AdminLiveChatController;
 use App\Http\Controllers\Admin\MpesaTransactionsController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\ScamReportController as AdminScamReportController;
+use App\Http\Controllers\Admin\SmsLogController;
 use App\Http\Controllers\Admin\SiteSettingsController;
 use App\Http\Controllers\Admin\SupportHelpItemController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
@@ -163,6 +164,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('scam-reports', [AdminScamReportController::class, 'index'])->name('scam-reports.index');
         Route::get('scam-reports/{scam_report}', [AdminScamReportController::class, 'show'])->name('scam-reports.show');
         Route::post('scam-reports/{scam_report}/status', [AdminScamReportController::class, 'updateStatus'])->name('scam-reports.status');
+        Route::get('sms-logs', [SmsLogController::class, 'index'])->name('sms-logs.index');
         Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     });
 });

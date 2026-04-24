@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\MpesaStkPush;
+use App\Models\SmsLog;
 use App\Models\Transaction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TransactionController extends Controller
@@ -56,11 +57,19 @@ class TransactionController extends Controller
         $transactionId = $transaction->transaction_id;
 
         try {
-            $transaction->delete();
+            DB::transaction(function () use ($transaction, $transactionId) {
+                SmsLog::query()->where('correlator', 'like', $transactionId.'%')->delete();
+
+                // These should cascade via FK, but delete explicitly to support older DBs missing cascades.
+                DB::table('disputes')->where('transaction_id', $transaction->id)->delete();
+                DB::table('live_chats')->where('transaction_id', $transaction->id)->delete();
+
+                $transaction->delete();
+            });
         } catch (QueryException) {
             return redirect()
                 ->route('admin.transactions.index')
-                ->with('error', 'Could not delete transaction '.$transactionId.'. It is referenced by related records.');
+                ->with('error', 'Could not delete transaction '.$transactionId.'. Some related records are still protected.');
         }
 
         return redirect()

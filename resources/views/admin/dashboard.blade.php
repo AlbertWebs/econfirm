@@ -113,12 +113,20 @@
                 <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Volume this month</p>
                 <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900">KES {{ number_format($volumeMonth, 2) }}</p>
             </div>
-            <a
-                href="{{ route('admin.transactions.index') }}"
-                class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
-            >
-                View all escrows
-            </a>
+            <div class="flex flex-wrap items-center gap-2">
+                <a
+                    href="{{ route('admin.transactions.index') }}"
+                    class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                >
+                    View all escrows
+                </a>
+                <a
+                    href="{{ route('admin.sms-logs.index') }}"
+                    class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                >
+                    View SMS logs
+                </a>
+            </div>
         </div>
     </x-admin.card>
 
