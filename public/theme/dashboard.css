@@ -835,6 +835,8 @@ body.db-dev-hub--nav-open {
     min-height: 100vh;
     min-height: 100dvh;
     background: transparent;
+    position: relative;
+    z-index: 1;
 }
 
 .db-dev-topbar {
@@ -951,18 +953,22 @@ body.db-dev-hub--nav-open {
         transform: translateX(-102%);
         transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
         padding-top: env(safe-area-inset-top);
+        /* Off-canvas panels can still capture taps in some browsers unless disabled here. */
+        pointer-events: none;
     }
 
     .db-dev-app--sidebar-open .db-dev-sidebar {
         transform: translateX(0);
+        pointer-events: auto;
     }
 
+    /* Only mount the overlay when the drawer is open (avoids invisible layers blocking clicks). */
     .db-dev-backdrop {
-        display: block;
-        pointer-events: none;
+        display: none;
     }
 
     .db-dev-app--sidebar-open .db-dev-backdrop {
+        display: block;
         opacity: 1;
         pointer-events: auto;
     }

@@ -216,18 +216,18 @@
                                     <i class="fas fa-sign-in-alt me-2" aria-hidden="true"></i>
                                     <span class="js-login-submit-text">{{ __('Sign in') }}</span>
                                 </button>
-
-                                <p class="text-center small text-muted mb-0">
-                                    <a href="{{ route('login') }}" class="forgot-link text-decoration-none">{{ __('Customer sign in') }}</a>
-                                    @if (Route::has('developer.register'))
-                                        <span class="text-muted"> · </span>
-                                        <a href="{{ route('developer.register') }}" class="forgot-link text-decoration-none">{{ __('Sign up') }}</a>
-                                    @elseif (Route::has('register'))
-                                        <span class="text-muted"> · </span>
-                                        <a href="{{ route('register') }}" class="forgot-link text-decoration-none">{{ __('Sign up') }}</a>
-                                    @endif
-                                </p>
                             </form>
+
+                            <p class="text-center small text-muted mb-0 px-1">
+                                <a href="{{ route('login') }}" class="forgot-link text-decoration-none">{{ __('Customer sign in') }}</a>
+                                @if (Route::has('developer.register'))
+                                    <span class="text-muted"> · </span>
+                                    <a href="{{ route('developer.register') }}" class="forgot-link text-decoration-none">{{ __('Sign up') }}</a>
+                                @elseif (Route::has('register'))
+                                    <span class="text-muted"> · </span>
+                                    <a href="{{ route('register') }}" class="forgot-link text-decoration-none">{{ __('Sign up') }}</a>
+                                @endif
+                            </p>
                         </div>
                     </div>
                 </div>
