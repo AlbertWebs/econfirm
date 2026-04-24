@@ -65,6 +65,18 @@ class TransactionController extends Controller
                     SmsLog::query()->where('correlator', 'like', $transactionId.'%')->delete();
                 }
 
+                // Keep M-Pesa audit records, but detach escrow linkage where present.
+                if (Schema::hasTable('mpesa_b2c') && Schema::hasColumn('mpesa_b2c', 'source_transaction_id')) {
+                    DB::table('mpesa_b2c')
+                        ->where('source_transaction_id', $transactionId)
+                        ->update(['source_transaction_id' => null]);
+                }
+                if (Schema::hasTable('mpesa_b2b') && Schema::hasColumn('mpesa_b2b', 'source_transaction_id')) {
+                    DB::table('mpesa_b2b')
+                        ->where('source_transaction_id', $transactionId)
+                        ->update(['source_transaction_id' => null]);
+                }
+
                 // Explicitly clean up chat/dispute descendants for DBs missing full FK cascades.
                 if (Schema::hasTable('live_chats')) {
                     $chatIds = DB::table('live_chats')
@@ -88,6 +100,17 @@ class TransactionController extends Controller
                     DB::table('live_chats')->where('transaction_id', $transaction->id)->delete();
                 }
 
+                // Final safety net: clear any remaining FK dependents to transactions.id.
+                $this->deleteFkDependentsForTransaction($transaction->id, [
+                    'transactions',
+                    'mpesa_b2c',
+                    'mpesa_b2b',
+                    'mpesa_c2b_transactions',
+                    'mpesa_b2b_callbacks',
+                    'mpesa_b2c_callbacks',
+                    'mpesa_stk_pushes',
+                ]);
+
                 $transaction->delete();
             });
         } catch (QueryException $e) {
@@ -106,6 +129,43 @@ class TransactionController extends Controller
         return redirect()
             ->route('admin.transactions.index')
             ->with('status', 'Transaction '.$transactionId.' deleted.');
+    }
+
+    protected function deleteFkDependentsForTransaction(int $transactionPk, array $excludeTables = []): void
+    {
+        $connection = DB::connection();
+        if ($connection->getDriverName() !== 'mysql') {
+            return;
+        }
+
+        $database = $connection->getDatabaseName();
+        $rows = $connection->select(
+            "
+            SELECT TABLE_NAME AS table_name, COLUMN_NAME AS column_name
+            FROM information_schema.KEY_COLUMN_USAGE
+            WHERE REFERENCED_TABLE_SCHEMA = ?
+              AND REFERENCED_TABLE_NAME = 'transactions'
+              AND REFERENCED_COLUMN_NAME = 'id'
+            ",
+            [$database]
+        );
+
+        $excluded = array_map('strtolower', $excludeTables);
+        foreach ($rows as $row) {
+            $table = (string) ($row->table_name ?? '');
+            $column = (string) ($row->column_name ?? '');
+            if ($table === '' || $column === '') {
+                continue;
+            }
+            if (in_array(strtolower($table), $excluded, true)) {
+                continue;
+            }
+            if (! Schema::hasTable($table) || ! Schema::hasColumn($table, $column)) {
+                continue;
+            }
+
+            DB::table($table)->where($column, $transactionPk)->delete();
+        }
     }
 
     public function export(Request $request): StreamedResponse
