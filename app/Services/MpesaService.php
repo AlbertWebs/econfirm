@@ -438,6 +438,16 @@ class MpesaService
                 $desc = $body['Body']['ResultDesc'] ?? $desc;
             }
         }
+        $bodyInner = is_array($body['Body'] ?? null) ? $body['Body'] : null;
+        if ($bodyInner !== null && isset($bodyInner['stkCallback']) && is_array($bodyInner['stkCallback'])) {
+            $stkCb = $bodyInner['stkCallback'];
+            if ($code === null) {
+                $code = $stkCb['ResultCode'] ?? null;
+            }
+            if ($desc === null || $desc === '') {
+                $desc = $stkCb['ResultDesc'] ?? $desc;
+            }
+        }
 
         return [
             (int) ($code ?? 1),

@@ -41,25 +41,25 @@ return [
             'label' => 'Public contact email',
             'group' => 'contact',
             'rules' => ['nullable', 'email', 'max:255'],
-            'default' => '',
+            'default' => 'support@econfirm.co.ke',
         ],
         'contact_phone_display' => [
             'label' => 'Contact phone (display)',
             'group' => 'contact',
             'rules' => ['nullable', 'string', 'max:80'],
-            'default' => '',
+            'default' => '0748 349995',
         ],
         'contact_phone_e164' => [
             'label' => 'Contact phone (E.164 for schema, e.g. +254712345678)',
             'group' => 'contact',
             'rules' => ['nullable', 'string', 'max:32'],
-            'default' => '+254700000000',
+            'default' => '+254748349995',
         ],
         'physical_address' => [
             'label' => 'Physical / mailing address',
             'group' => 'contact',
             'rules' => ['nullable', 'string', 'max:1000'],
-            'default' => '',
+            'default' => "Prestige Plaza, Jambo Apt, Suite A18\nNgong Road, Nairobi",
         ],
 
         'social_facebook_url' => [

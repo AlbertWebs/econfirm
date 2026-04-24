@@ -1,5 +1,12 @@
 @extends('front.master')
 
+@php
+    $pubEmail = site_setting('contact_email') ?: 'support@econfirm.co.ke';
+    $pubPhoneDisplay = site_setting('contact_phone_display') ?: '0748 349995';
+    $pubPhoneE164 = site_setting('contact_phone_e164') ?: '+254748349995';
+    $pubAddress = site_setting('physical_address') ?: "Prestige Plaza, Jambo Apt, Suite A18\nNgong Road, Nairobi";
+@endphp
+
 @section('content')
 <!-- Contact Hero Section -->
 <section class="relative py-16 lg:py-20 bg-gradient-to-br from-purple-50 via-white to-pink-50 overflow-hidden">
@@ -70,6 +77,14 @@
                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"></textarea>
                     </div>
 
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Security check *</label>
+                        <p class="text-sm text-gray-600 mb-2">What is <strong class="tabular-nums">{{ $contactMathA }}</strong> + <strong class="tabular-nums">{{ $contactMathB }}</strong>?</p>
+                        <input type="number" name="math_answer" inputmode="numeric" autocomplete="off" required min="0" max="99" step="1"
+                               class="w-full max-w-xs px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
+                               placeholder="Your answer">
+                    </div>
+
                     <button type="submit" 
                             :disabled="submitting"
                             class="w-full px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
@@ -96,8 +111,8 @@
                         </div>
                         <div>
                             <h3 class="font-semibold text-gray-900 mb-1">Email</h3>
-                            <a href="mailto:support@econfirm.co.ke" class="text-purple-600 hover:text-purple-700">
-                                support@econfirm.co.ke
+                            <a href="mailto:{{ $pubEmail }}" class="text-purple-600 hover:text-purple-700 break-all">
+                                {{ $pubEmail }}
                             </a>
                         </div>
                     </div>
@@ -108,8 +123,8 @@
                         </div>
                         <div>
                             <h3 class="font-semibold text-gray-900 mb-1">Phone</h3>
-                            <a href="tel:+254XXXXXXXXX" class="text-green-600 hover:text-green-700">
-                                +254 XXX XXX XXX
+                            <a href="tel:{{ preg_replace('/\s+/', '', $pubPhoneE164) }}" class="text-green-600 hover:text-green-700">
+                                {{ $pubPhoneDisplay }}
                             </a>
                         </div>
                     </div>
@@ -120,9 +135,9 @@
                         </div>
                         <div>
                             <h3 class="font-semibold text-gray-900 mb-1">Address</h3>
-                            <p class="text-gray-600">
-                                Nairobi, Kenya<br>
-                                Confirm Diligence Solutions Limited
+                            <p class="text-gray-600 leading-relaxed">
+                                {!! nl2br(e($pubAddress)) !!}<br>
+                                <span class="text-gray-500 text-sm mt-1 inline-block">{{ site_setting('organization_legal_name') ?: 'Confirm Diligence Solutions Limited' }}</span>
                             </p>
                         </div>
                     </div>
@@ -177,35 +192,49 @@
 <script>
 function submitContactForm(formElement, alpineData) {
     if (alpineData.submitting) return;
-    
+
     alpineData.submitting = true;
-    
+
+    const mathEl = formElement.querySelector('[name="math_answer"]');
+    const rawMath = mathEl ? mathEl.value.trim() : '';
+    const mathParsed = rawMath === '' ? null : parseInt(rawMath, 10);
     const formData = {
         name: formElement.querySelector('[name="name"]').value,
         email: formElement.querySelector('[name="email"]').value,
         phone: formElement.querySelector('[name="phone"]').value,
         subject: formElement.querySelector('[name="subject"]').value,
-        message: formElement.querySelector('[name="message"]').value
+        message: formElement.querySelector('[name="message"]').value,
+        math_answer: Number.isFinite(mathParsed) ? mathParsed : null
     };
-    
-    fetch('/contact', {
+
+    fetch(@json(route('submit.contact')), {
         method: 'POST',
         headers: {
             'X-Requested-With': 'XMLHttpRequest',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
         },
         body: JSON.stringify(formData)
     })
-    .then(res => res.json())
-    .then(data => {
+    .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
         alpineData.submitting = false;
-        if (data.success) {
-            alert('Thank you! Your message has been sent successfully.');
-            formElement.reset();
-        } else {
-            alert(data.message || 'Failed to send message. Please try again.');
+        if (res.status === 429) {
+            alert(data.message || 'Too many submissions. Please wait a minute and try again.');
+            return;
         }
+        if (res.ok && data.success) {
+            alert(data.message || 'Thank you! Your message has been sent successfully.');
+            window.location.reload();
+            return;
+        }
+        let msg = data.message || 'Failed to send message. Please try again.';
+        if (data.errors) {
+            const first = Object.values(data.errors).flat()[0];
+            if (first) msg = first;
+        }
+        alert(msg);
     })
     .catch(() => {
         alpineData.submitting = false;

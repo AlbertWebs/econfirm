@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\SupportHelpItemController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PhoneOtpLoginController;
 use App\Http\Controllers\Auth\PhoneOtpRegisterController;
 use App\Http\Controllers\ContractController;
@@ -62,7 +63,9 @@ Route::get('/security', [HomeController::class, 'security'])->name('security');
 Route::get('/support', [HomeController::class, 'support'])->name('support');
 Route::get('/help', [HomeController::class, 'help'])->name('help');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
-Route::post('/contact', [HomeController::class, 'submitContact'])->name('submit.contact');
+Route::post('/contact', [HomeController::class, 'submitContact'])
+    ->middleware('throttle:8,1')
+    ->name('submit.contact');
 Route::get('/sitemap.xml', [HomeController::class, 'sitemap'])->name('sitemap');
 Route::get('/scam-watch', [HomeController::class, 'scamWatch'])->name('scam.watch');
 Route::get('/scam-watch/report', [HomeController::class, 'scamWatchReportForm'])->name('scam.watch.report');
@@ -104,6 +107,11 @@ Route::post('/custom-login', [DashboardController::class, 'customLogin'])->name(
 Auth::routes();
 
 Route::middleware('guest')->group(function () {
+    Route::get('/developer/login', [LoginController::class, 'showDeveloperLoginForm'])->name('developer.login');
+    Route::post('/developer/login', [LoginController::class, 'developerLogin'])
+        ->middleware('throttle:12,1')
+        ->name('developer.login.submit');
+
     Route::post('/login/phone/send-otp', [PhoneOtpLoginController::class, 'sendOtp'])
         ->middleware('throttle:5,1')
         ->name('login.phone.send-otp');

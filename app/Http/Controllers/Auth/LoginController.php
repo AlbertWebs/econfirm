@@ -47,35 +47,49 @@ class LoginController extends Controller
      * @return RedirectResponse
      */
     public function login(Request $request): RedirectResponse
-    {   
+    {
+        return $this->authenticateWithEmailPassword($request, 'login');
+    }
+
+    public function showDeveloperLoginForm()
+    {
+        return view('auth.developer-login');
+    }
+
+    public function developerLogin(Request $request): RedirectResponse
+    {
+        return $this->authenticateWithEmailPassword($request, 'developer.login');
+    }
+
+    protected function authenticateWithEmailPassword(Request $request, string $failureRouteName): RedirectResponse
+    {
         $input = $request->all();
-     
+
         $this->validate($request, [
             'email' => 'required|email',
             'password' => 'required',
         ]);
-     
-        if(auth()->attempt(array('email' => $input['email'], 'password' => $input['password'])))
-        
-        {
-            $user = auth()->user();
-            $rawType = (string) ($user->getRawOriginal('type') ?? '');
-            $displayType = strtolower((string) ($user->type ?? ''));
 
-            $isAdmin = $rawType === '1' || $displayType === 'admin';
-            $isApi = $rawType === '2' || in_array($displayType, ['api', 'manager'], true);
-
-            if ($isAdmin) {
-                return redirect()->route('admin.dashboard');
-            }else if ($isApi) {
-                return redirect()->route('api.home');
-            }else{
-                return redirect()->route('user.dashboard');
-            }
-        }else{
-            return redirect()->route('login')
-                ->with('error','Email-Address And Password Are Wrong.');
+        if (! auth()->attempt(['email' => $input['email'], 'password' => $input['password']])) {
+            return redirect()->route($failureRouteName)
+                ->withInput($request->only('email'))
+                ->with('error', 'Email-Address And Password Are Wrong.');
         }
-          
+
+        $user = auth()->user();
+        $rawType = (string) ($user->getRawOriginal('type') ?? '');
+        $displayType = strtolower((string) ($user->type ?? ''));
+
+        $isAdmin = $rawType === '1' || $displayType === 'admin';
+        $isApi = $rawType === '2' || in_array($displayType, ['api', 'manager'], true);
+
+        if ($isAdmin) {
+            return redirect()->route('admin.dashboard');
+        }
+        if ($isApi) {
+            return redirect()->route('api.home');
+        }
+
+        return redirect()->route('user.dashboard');
     }
 }

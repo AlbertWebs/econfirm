@@ -341,7 +341,8 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(res => res.json())
             .then(data => {
-                if (data.status === 'completed' || data.status === 'Success') {
+                const st = String(data.status || '').toLowerCase();
+                if (st === 'completed' || st === 'success') {
                     clearInterval(poll);
                     if (mpesaResponse) {
                         mpesaResponse.textContent = 'Payment received! Redirecting...';
@@ -350,10 +351,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     setTimeout(() => {
                         window.location.href = `/get-transaction/${data.transaction_id}`; //only work with transaction_id
                     }, 1500);
-                } else if (data.status === 'Failed') {
+                } else if (st === 'failed') {
                     clearInterval(poll);
                     if (mpesaResponse) {
-                        mpesaResponse.textContent = 'Payment failed. Please try again.';
+                        mpesaResponse.textContent = data.message || 'Payment failed. Please try again.';
                         mpesaResponse.className = 'alert alert-danger';
                     }
                 } else if (attempts >= maxAttempts) {
@@ -362,6 +363,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         mpesaResponse.textContent = 'Payment confirmation timed out. Please check your transaction status later.';
                         mpesaResponse.className = 'alert alert-warning';
                     }
+                } else if (mpesaResponse && data.message) {
+                    mpesaResponse.textContent = data.message;
+                    mpesaResponse.className = 'alert alert-info';
                 }
             })
             .catch(() => {

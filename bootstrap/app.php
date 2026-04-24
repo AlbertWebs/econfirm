@@ -24,6 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 return route('admin.login');
             }
 
+            if (($request->is('developer') || $request->is('developer/*')) && ! $request->is('developer/login')) {
+                return Route::has('developer.login') ? route('developer.login') : url('/developer/login');
+            }
+
             return Route::has('login') ? route('login') : url('/login');
         });
         $middleware->redirectUsersTo(function (Request $request) {

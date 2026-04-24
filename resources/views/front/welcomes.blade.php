@@ -242,28 +242,14 @@
                 </div>
                  <div class="section-header animate-on-scroll mb-4">
                 <div class="section-badge">Simple Integration</div>
-                    <h2>Easy Integration for Your Website or App</h2>
-                    <p>Seamlessly add escrow payments to your project with our flexible API and SDKs.</p>
+                    <h2>Easy integration for your website or app</h2>
+                    <p class="mt-3 mx-auto text-muted" style="max-width: 36rem;">
+                        Connect e-confirm to your own checkout or back office using our REST API—create escrows, check status, and release funds when you are ready. Use the documentation for endpoints and examples, or the developer area to manage your API key.
+                    </p>
                 </div>
-                <div class="cta-buttons">
-                    <button class="btn btn-outline btn-lg"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" alt="HTML5" class="integration-logo"></button>
-                    <button class="btn btn-outline btn-lg"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg" alt="Next.js" class="integration-logo"></button>
-                    <button class="btn btn-outline btn-lg"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" alt="React" class="integration-logo"></button>
-                    <button class="btn btn-outline btn-lg"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuejs/vuejs-original.svg" alt="Vue" class="integration-logo"></button>
-                    <button class="btn btn-outline btn-lg"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/angularjs/angularjs-original.svg" alt="Angular" class="integration-logo"></button>
-                    <button class="btn btn-outline btn-lg"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/svelte/svelte-original.svg" alt="Svelte" class="integration-logo"></button>
-                    {{-- <button class="btn btn-outline btn-lg"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/astro/astro-original.svg" alt="Astro" class="integration-logo"></button> --}}
-                    <button class="btn btn-outline btn-lg"><img src="{{url('/')}}/uploads/icon/cdnlogo.com_laravel.svg" alt="Laravel" class="integration-logo"></button>
-                    <button class="btn btn-outline btn-lg"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" alt="JavaScript" class="integration-logo"></button>
-                    {{-- <button class="btn btn-outline btn-lg"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" alt="Python" class="integration-logo"></button> --}}
-                    <button class="btn btn-outline btn-lg"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg" alt="Java" class="integration-logo"></button>
-                    <button class="btn btn-outline btn-lg"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg" alt="PHP" class="integration-logo"></button>
-                    <button class="btn btn-outline btn-lg"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/ruby/ruby-original.svg" alt="Ruby" class="integration-logo"></button>
-                 
-                </div>
-                <br>
                  <div class="cta-buttons">
-                    <button class="text-center btn btn-primary btn-lg">Documentation</button>
+                    <a href="{{ route('api-documentation') }}" class="text-center btn btn-primary btn-lg">View full documentation</a>
+                    <a href="{{ auth()->check() ? route('api.home') : route('developer.login') }}" class="text-center btn btn-outline btn-lg">API developer — keys &amp; URLs</a>
                 </div>
             </div>
         </div>

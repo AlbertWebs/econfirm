@@ -246,12 +246,10 @@ function transactionFormData() {
                         self._clearStatusTimer();
                         self.mpesaResponse = { type: 'error', message: data.message || 'Payment session not found. Please retry the transaction.' };
                     } else if (st === 'pending') {
-                        if (attempts % 2 === 0) {
-                            self.mpesaResponse = {
-                                type: 'success',
-                                message: data.message || 'Waiting for M-Pesa… (PIN entered? This can take up to a minute.)'
-                            };
-                        }
+                        self.mpesaResponse = {
+                            type: 'success',
+                            message: data.message || 'Waiting for M-Pesa… (PIN entered? This can take up to a minute.)'
+                        };
                         scheduleNext();
                     } else if (attempts >= maxAttempts) {
                         self._clearStatusTimer();
@@ -749,67 +747,31 @@ function transactionFormData() {
 <!-- Integration Section -->
 <section id="integration" class="py-20 lg:py-28 bg-gradient-to-br from-green-50 to-emerald-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12"
-             x-data="{ inView: true }"
-             x-intersect="inView = true">
-            <div x-show="inView"
-                 x-cloak
-                 x-transition:enter="transition ease-out duration-700"
-                 x-transition:enter-start="opacity-0 translate-y-8"
-                 x-transition:enter-end="opacity-100 translate-y-0">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-2xl mb-4">
-                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-                    </svg>
-                </div>
-             
-                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-                    Easy Integration for Your Website or App
-                </h2>
-                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                    Seamlessly add escrow payments to your project with our flexible API and SDKs.
-                </p>
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-2xl mb-4">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                </svg>
             </div>
+            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">
+                Easy integration for your website or app
+            </h2>
+            <p class="mt-4 max-w-2xl mx-auto text-base sm:text-lg text-gray-600 leading-relaxed">
+                Connect e-confirm to your own checkout or back office using our REST API—create escrows, check status, and release funds when you are ready. Use the documentation for endpoints and examples, or the developer area to manage your API key.
+            </p>
         </div>
-        
-        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 xl:flex xl:flex-wrap xl:justify-center gap-3 sm:gap-4 mb-8 max-w-4xl mx-auto"
-             style="display: grid !important;"
-             x-data="{ 
-                inView: true,
-                laravelIcon: '{{ asset('uploads/icon/cdnlogo.com_laravel.svg') }}',
-                techs: [
-                    { name: 'React', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg' },
-                    { name: 'Vue', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuejs/vuejs-original.svg' },
-                    { name: 'Angular', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/angularjs/angularjs-original.svg' },
-                    { name: 'Laravel', icon: '{{ asset('uploads/icon/cdnlogo.com_laravel.svg') }}' },
-                    { name: 'JavaScript', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg' },
-                    { name: 'Java', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg' },
-                    { name: 'PHP', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg' },
-                    { name: 'Ruby', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/ruby/ruby-original.svg' }
-                ]
-             }"
-             x-intersect="inView = true">
-            <template x-for="(tech, index) in techs" :key="index">
-                <div x-show="inView"
-                     x-cloak
-                     x-transition:enter="transition ease-out duration-500"
-                     x-transition:enter-start="opacity-0 scale-90"
-                     x-transition:enter-end="opacity-100 scale-100"
-                     :style="`transition-delay: ${index * 50}ms`"
-                     class="bg-white p-3 sm:p-4 rounded-xl border border-gray-200 hover:border-green-300 hover:shadow-lg transition-all duration-300 flex items-center justify-center"
-                     style="width: 100%;">
-                    <img :src="tech.icon" :alt="tech.name" class="w-10 h-10 sm:w-12 sm:h-12 object-contain">
-                </div>
-            </template>
-                </div>
-        
-        <div class="text-center">
-            <a href="{{ route('api-documentation') }}" 
-               class="inline-flex items-center justify-center px-8 py-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                View Documentation
+
+        <div class="text-center flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+            <a href="{{ route('api-documentation') }}"
+               class="inline-flex items-center justify-center px-8 py-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 w-full sm:w-auto">
+                View full documentation
+            </a>
+            <a href="{{ auth()->check() ? route('api.home') : route('developer.login') }}"
+               class="inline-flex items-center justify-center px-8 py-4 border-2 border-green-600 text-green-800 font-semibold rounded-lg hover:bg-green-50 transition-all duration-200 w-full sm:w-auto">
+                API developer — keys &amp; URLs
             </a>
         </div>
-                </div>
+    </div>
 </section>
 
 <!-- How It Works Section -->

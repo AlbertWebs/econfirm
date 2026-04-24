@@ -400,7 +400,7 @@
               </div>
               
               <h3>Developer portal</h3>
-              <p>Sign in to <a href="{{ route('login') }}">your account</a> and open the <a href="{{ route('api.home') }}">API developer</a> page to create or rotate your key and copy ready-made URLs.</p>
+              <p>Sign in at <a href="{{ route('developer.login') }}">/developer/login</a> and open the <a href="{{ route('api.home') }}">API developer</a> page to create or rotate your key and copy ready-made URLs.</p>
               
               <h3>Create Escrow Transaction</h3>
               <p>Creates a new escrow transaction between a buyer and seller.</p>
@@ -654,8 +654,8 @@
                             <h5 class="card-title mb-0">Phone Support</h5>
                           </div>
                           <p class="card-text">Speak directly with our support team</p>
-                          <a href="tel:+254 723000000" class="btn btn-outline-primary">
-                            +254 72 300 0000
+                          <a href="{{ $contactPhoneHref }}" class="btn btn-outline-primary">
+                            {{ $contactPhoneDisplay }}
                           </a>
                         </div>
                       </div>

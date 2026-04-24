@@ -19,6 +19,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -399,18 +400,56 @@ class HomeController extends Controller
 
     public function contact()
     {
-        return view('front.contact');
+        $a = random_int(1, 12);
+        $b = random_int(1, 12);
+        session([
+            'contact_math_sum' => $a + $b,
+        ]);
+
+        return view('front.contact', [
+            'contactMathA' => $a,
+            'contactMathB' => $b,
+        ]);
     }
 
     public function submitContact(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'subject' => 'required|string|max:255',
-            'message' => 'required|string|max:5000',
-        ]);
+        $expected = session('contact_math_sum');
+        if ($expected === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your form session expired. Please refresh the page and try again.',
+            ], 422);
+        }
+
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|max:255',
+                'phone' => 'nullable|string|max:40',
+                'subject' => 'required|string|max:255',
+                'message' => 'required|string|max:5000',
+                'math_answer' => 'required|integer',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'errors' => $e->errors(),
+            ], 422);
+        }
+
+        if ((int) $validated['math_answer'] !== (int) $expected) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The security check answer is incorrect. Please try again.',
+                'errors' => ['math_answer' => ['The sum does not match.']],
+            ], 422);
+        }
+
+        session()->forget('contact_math_sum');
+
+        unset($validated['math_answer']);
 
         ContactSubmission::create([
             ...$validated,
@@ -1338,8 +1377,17 @@ class HomeController extends Controller
         $apiV1Url = econfirm_api_v1_url();
         $apiRootUrl = econfirm_api_root_url();
         $docsPageUrl = url('/api/documentation');
+        $contactPhoneDisplay = (string) site_setting('contact_phone_display', '0748 349995');
+        $contactPhoneE164 = (string) site_setting('contact_phone_e164', '+254748349995');
+        $contactPhoneHref = 'tel:'.preg_replace('/[^\d+]/', '', $contactPhoneE164);
 
-        return view('front.api-documentation', compact('apiV1Url', 'apiRootUrl', 'docsPageUrl'));
+        return view('front.api-documentation', compact(
+            'apiV1Url',
+            'apiRootUrl',
+            'docsPageUrl',
+            'contactPhoneDisplay',
+            'contactPhoneHref',
+        ));
     }
 
     public function getEContract()

@@ -708,9 +708,9 @@
                         <line x1="12" y1="22.08" x2="12" y2="12"/>
                     </svg>
                 </div>
-                <h3 class="feature-title-v2">API Integration</h3>
+                <h3 class="feature-title-v2">API integration</h3>
                 <p class="feature-description-v2">
-                    Seamlessly integrate escrow services into your platform with our robust API.
+                    REST API (Bearer key, JSON): Escrow v1 at {{ econfirm_api_v1_url() }} — create transactions, poll status, release. Health: GET {{ econfirm_api_root_url() }}/ping. Docs &amp; keys on site.
                 </p>
             </div>
         </div>
