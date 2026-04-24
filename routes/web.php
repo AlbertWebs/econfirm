@@ -113,10 +113,17 @@ Route::middleware('guest')->group(function () {
         ->middleware('throttle:12,1')
         ->name('developer.login.submit');
 
-    Route::get('/developer/register', [RegisterController::class, 'showDeveloperRegistrationForm'])->name('developer.register');
-    Route::post('/developer/register', [RegisterController::class, 'registerDeveloper'])
+    // Under /register/* so hosting rules that treat /register normally still reach Laravel (some stacks mishandle /developer/register).
+    Route::get('/register/developer', [RegisterController::class, 'showDeveloperRegistrationForm'])->name('developer.register');
+    Route::post('/register/developer', [RegisterController::class, 'registerDeveloper'])
         ->middleware('throttle:12,1')
         ->name('developer.register.submit');
+
+    Route::get('/developer/register', function () {
+        return redirect()->route('developer.register', [], 301);
+    });
+    Route::post('/developer/register', [RegisterController::class, 'registerDeveloper'])
+        ->middleware('throttle:12,1');
 
     Route::post('/login/phone/send-otp', [PhoneOtpLoginController::class, 'sendOtp'])
         ->middleware('throttle:5,1')
