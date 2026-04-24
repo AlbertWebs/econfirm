@@ -7,6 +7,7 @@ use App\Models\MpesaStkPush;
 use App\Models\Otp;
 use App\Models\Page;
 use App\Models\ScamReport;
+use App\Models\ScamReportComment;
 use App\Models\ScamReportLike;
 use App\Models\SupportHelpItem;
 use App\Models\Transaction;
@@ -354,6 +355,9 @@ class HomeController extends Controller
         }
 
         $report->loadCount('likes');
+        $report->loadCount([
+            'comments as comments_count' => fn ($q) => $q->where('is_hidden', false),
+        ]);
 
         $related = ScamReport::withCount('likes')
             ->visible()
@@ -364,6 +368,19 @@ class HomeController extends Controller
             ->limit(8)
             ->get();
 
+        $comments = ScamReportComment::query()
+            ->where('scam_report_id', $report->id)
+            ->whereNull('parent_id')
+            ->where('is_hidden', false)
+            ->with([
+                'children' => fn ($q) => $q
+                    ->where('is_hidden', false)
+                    ->orderBy('created_at', 'asc'),
+            ])
+            ->orderByDesc('created_at')
+            ->paginate(20)
+            ->withQueryString();
+
         $canonicalUrl = route('scam.watch.show', ['report' => $report, 'slug' => $expected]);
         $pageTitle = $this->scamReportPageTitle($report);
         $metaDescription = $this->scamReportMetaDescription($report);
@@ -371,10 +388,44 @@ class HomeController extends Controller
         return view('front.scam-watch-report', compact(
             'report',
             'related',
+            'comments',
             'canonicalUrl',
             'pageTitle',
             'metaDescription'
         ));
+    }
+
+    public function postScamReportComment(Request $request, ScamReport $report)
+    {
+        $validated = $request->validate([
+            'author_name' => 'nullable|string|max:80',
+            'author_email' => 'nullable|email|max:255',
+            'body' => 'required|string|min:2|max:2000',
+            'parent_id' => 'nullable|integer|exists:scam_report_comments,id',
+        ]);
+
+        $parentId = $validated['parent_id'] ?? null;
+        if ($parentId !== null) {
+            $parent = ScamReportComment::query()->findOrFail($parentId);
+            if ((int) $parent->scam_report_id !== (int) $report->id) {
+                return back()
+                    ->withErrors(['body' => 'Invalid comment thread selected.'])
+                    ->withInput();
+            }
+        }
+
+        ScamReportComment::query()->create([
+            'scam_report_id' => $report->id,
+            'parent_id' => $parentId,
+            'author_name' => filled($validated['author_name'] ?? null) ? trim((string) $validated['author_name']) : null,
+            'author_email' => filled($validated['author_email'] ?? null) ? trim((string) $validated['author_email']) : null,
+            'body' => trim((string) $validated['body']),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'is_hidden' => false,
+        ]);
+
+        return back()->with('status', 'Comment posted.');
     }
 
     public function scamWatchCategory(string $category)

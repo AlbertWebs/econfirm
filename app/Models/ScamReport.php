@@ -118,6 +118,11 @@ class ScamReport extends Model
         return $this->hasMany(ScamReportLike::class);
     }
 
+    public function comments()
+    {
+        return $this->hasMany(ScamReportComment::class);
+    }
+
     public function getLikesCountAttribute()
     {
         return $this->likes()->count();

@@ -172,6 +172,104 @@
     </div>
 </section>
 
+<section id="comments" class="py-12 bg-gray-50 border-y border-gray-200">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-end justify-between gap-4 mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">Discussion</h2>
+                <p class="text-sm text-gray-600 mt-1">
+                    Share context that may help others stay safe.
+                    @if(($report->comments_count ?? 0) > 0)
+                        {{ $report->comments_count }} {{ Str::plural('comment', (int) $report->comments_count) }} so far.
+                    @endif
+                </p>
+            </div>
+            <a href="#new-comment" class="text-sm font-semibold text-red-600 hover:underline">Add comment</a>
+        </div>
+
+        <div id="new-comment" class="rounded-xl border border-gray-200 bg-white p-5 sm:p-6 mb-8">
+            <h3 class="text-base font-semibold text-gray-900 mb-4">Post a comment</h3>
+            <form method="POST" action="{{ route('scam.watch.comments.store', ['report' => $report]) }}" class="space-y-4">
+                @csrf
+                <div class="grid sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="author_name" class="block text-sm font-medium text-gray-700 mb-1">Name (optional)</label>
+                        <input id="author_name" name="author_name" type="text" maxlength="80" value="{{ old('author_name') }}" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none" placeholder="Anonymous">
+                    </div>
+                    <div>
+                        <label for="author_email" class="block text-sm font-medium text-gray-700 mb-1">Email (optional, not shown)</label>
+                        <input id="author_email" name="author_email" type="email" maxlength="255" value="{{ old('author_email') }}" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none" placeholder="you@example.com">
+                    </div>
+                </div>
+                <div>
+                    <label for="body" class="block text-sm font-medium text-gray-700 mb-1">Comment</label>
+                    <textarea id="body" name="body" rows="4" maxlength="2000" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none" placeholder="What happened? Any warning signs others should watch for?">{{ old('body') }}</textarea>
+                    @error('body')
+                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+                <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 transition-colors">
+                    <i class="fas fa-paper-plane text-xs"></i>
+                    Post comment
+                </button>
+            </form>
+        </div>
+
+        <div class="space-y-4">
+            @forelse($comments as $comment)
+                <article class="rounded-xl border border-gray-200 bg-white p-5">
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                        <p class="font-semibold text-gray-900">{{ $comment->author_name ?: 'Anonymous' }}</p>
+                        <span class="text-gray-400">•</span>
+                        <time class="text-gray-500" datetime="{{ $comment->created_at->toIso8601String() }}">{{ $comment->created_at->diffForHumans() }}</time>
+                    </div>
+                    <p class="mt-3 whitespace-pre-wrap text-sm leading-7 text-gray-700">{{ $comment->body }}</p>
+
+                    <details class="mt-3">
+                        <summary class="cursor-pointer text-xs font-semibold text-red-600 hover:underline">Reply</summary>
+                        <form method="POST" action="{{ route('scam.watch.comments.store', ['report' => $report]) }}" class="mt-3 space-y-3 rounded-lg bg-gray-50 p-3">
+                            @csrf
+                            <input type="hidden" name="parent_id" value="{{ $comment->id }}">
+                            <div class="grid sm:grid-cols-2 gap-2">
+                                <input name="author_name" type="text" maxlength="80" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none" placeholder="Your name (optional)">
+                                <input name="author_email" type="email" maxlength="255" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none" placeholder="Email (optional)">
+                            </div>
+                            <textarea name="body" rows="3" maxlength="2000" required class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none" placeholder="Add a reply"></textarea>
+                            <button type="submit" class="rounded-md bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700 transition-colors">Post reply</button>
+                        </form>
+                    </details>
+
+                    @if($comment->children->isNotEmpty())
+                        <div class="mt-4 space-y-3 border-l-2 border-gray-100 pl-4">
+                            @foreach($comment->children as $reply)
+                                <div class="rounded-lg bg-gray-50 p-3">
+                                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                                        <p class="font-semibold text-gray-900">{{ $reply->author_name ?: 'Anonymous' }}</p>
+                                        <span class="text-gray-400">•</span>
+                                        <time class="text-gray-500" datetime="{{ $reply->created_at->toIso8601String() }}">{{ $reply->created_at->diffForHumans() }}</time>
+                                    </div>
+                                    <p class="mt-2 whitespace-pre-wrap text-sm leading-6 text-gray-700">{{ $reply->body }}</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </article>
+            @empty
+                <div class="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center">
+                    <p class="text-gray-700 font-medium">No comments yet.</p>
+                    <p class="mt-1 text-sm text-gray-500">Start the thread and help others with context.</p>
+                </div>
+            @endforelse
+        </div>
+
+        @if($comments->hasPages())
+            <div class="mt-6">
+                {{ $comments->links() }}
+            </div>
+        @endif
+    </div>
+</section>
+
 @if($related->isNotEmpty())
 <section class="py-12 lg:py-16 bg-gray-50 border-t border-gray-200">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
