@@ -167,14 +167,15 @@
             </div>
         </x-admin.card>
 
-        {{-- Evidence --}}
-        @if ($evidenceCount > 0)
-            <x-admin.card>
-                <div class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-                    <h2 class="text-base font-semibold text-slate-900">Evidence</h2>
-                    <span class="text-xs font-medium text-slate-500">{{ $evidenceCount }} file{{ $evidenceCount === 1 ? '' : 's' }} · admin only</span>
-                </div>
-                <p class="mt-1 text-sm text-slate-600">Images and PDFs preview here; other formats open on download.</p>
+        {{-- Evidence: view + admin upload --}}
+        <x-admin.card>
+            <div class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+                <h2 class="text-base font-semibold text-slate-900">Evidence</h2>
+                <span class="text-xs font-medium text-slate-500">{{ $evidenceCount }} file{{ $evidenceCount === 1 ? '' : 's' }} · admin only</span>
+            </div>
+            <p class="mt-1 text-sm text-slate-600">Images and PDFs preview here; other formats open on download.</p>
+
+            @if ($evidenceCount > 0)
                 <ul class="mt-5 space-y-4">
                     @foreach ($report->evidence as $i => $path)
                         @if (! is_string($path) || $path === '')
@@ -218,17 +219,55 @@
                         </li>
                     @endforeach
                 </ul>
-            </x-admin.card>
-        @else
-            <x-admin.card>
-                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h2 class="text-base font-semibold text-slate-900">Evidence</h2>
-                        <p class="mt-0.5 text-sm text-slate-600">No files were attached to this report.</p>
+            @else
+                <p class="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-600">No files yet. Upload screenshots or documents below.</p>
+            @endif
+
+            <div class="mt-6 border-t border-slate-200 pt-6">
+                <h3 class="text-sm font-semibold text-slate-900">Add files</h3>
+                <p class="mt-0.5 text-sm text-slate-600">JPG, PNG, GIF, WebP, PDF, or Word — up to 10&nbsp;MB each, 5 per upload, 20 per report.</p>
+                <form
+                    method="post"
+                    action="{{ route('admin.scam-reports.evidence.store', $report) }}"
+                    enctype="multipart/form-data"
+                    class="mt-4 flex max-w-2xl flex-col gap-3 sm:flex-row sm:items-end"
+                >
+                    @csrf
+                    <div class="min-w-0 flex-1">
+                        <label for="evidence_files" class="sr-only">Evidence files</label>
+                        <input
+                            id="evidence_files"
+                            type="file"
+                            name="evidence_files[]"
+                            multiple
+                            required
+                            accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                            class="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-emerald-900 hover:file:bg-emerald-100"
+                        >
                     </div>
-                </div>
-            </x-admin.card>
-        @endif
+                    <button
+                        type="submit"
+                        class="inline-flex shrink-0 items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+                    >
+                        Upload
+                    </button>
+                </form>
+                @php
+                    $evFileErr = $errors->first('evidence_files');
+                    if (empty($evFileErr)) {
+                        for ($i = 0; $i < 5; $i++) {
+                            $evFileErr = $errors->first('evidence_files.'.$i);
+                            if (filled($evFileErr)) {
+                                break;
+                            }
+                        }
+                    }
+                @endphp
+                @if (filled($evFileErr))
+                    <p class="mt-2 text-sm font-medium text-red-600">{{ $evFileErr }}</p>
+                @endif
+            </div>
+        </x-admin.card>
 
         {{-- Status control --}}
         <form method="post" action="{{ route('admin.scam-reports.status', $report) }}">

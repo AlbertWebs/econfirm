@@ -191,6 +191,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('scam-reports/{scam_report}/evidence/{index}', [AdminScamReportController::class, 'evidence'])
             ->name('scam-reports.evidence')
             ->whereNumber('index');
+        Route::post('scam-reports/{scam_report}/evidence', [AdminScamReportController::class, 'appendEvidence'])
+            ->name('scam-reports.evidence.store');
         Route::get('scam-reports/{scam_report}', [AdminScamReportController::class, 'show'])->name('scam-reports.show');
         Route::post('scam-reports/{scam_report}/status', [AdminScamReportController::class, 'updateStatus'])->name('scam-reports.status');
         Route::get('sms-logs', [SmsLogController::class, 'index'])->name('sms-logs.index');
