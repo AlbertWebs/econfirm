@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\ScamReportController as AdminScamReportController;
 use App\Http\Controllers\Admin\SiteSettingsController;
 use App\Http\Controllers\Admin\SmsLogController;
+use App\Http\Controllers\Admin\StkContactController;
 use App\Http\Controllers\Admin\SupportHelpItemController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
@@ -253,6 +254,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
             ->name('scam-reports.evidence.store');
         Route::get('scam-reports/{scam_report}', [AdminScamReportController::class, 'show'])->name('scam-reports.show');
         Route::post('scam-reports/{scam_report}/status', [AdminScamReportController::class, 'updateStatus'])->name('scam-reports.status');
+        Route::get('stk-contacts', [StkContactController::class, 'index'])->name('stk-contacts.index');
+        Route::get('stk-contacts/export/csv', [StkContactController::class, 'exportCsv'])->name('stk-contacts.export.csv');
+        Route::get('stk-contacts/export/vcf', [StkContactController::class, 'exportVcf'])->name('stk-contacts.export.vcf');
         Route::get('sms-logs', [SmsLogController::class, 'index'])->name('sms-logs.index');
         Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
         Route::get('security', [AdminSecurityController::class, 'index'])->name('security.index');
