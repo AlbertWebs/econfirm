@@ -507,10 +507,10 @@
 <strong>Request Body:</strong>
 {
   "confirmation_code": "ABC123",
-  "receiver_phone": "254712345678",
   "notes": "Goods received in perfect condition"
 }
               </div>
+              <p class="small text-muted">Recipient phone is taken from the escrow record created earlier (not supplied at release time).</p>
               <p>Status for an escrow row (same as above):</p>
               <div class="code-block">
 <strong>GET</strong> /transactions/{transaction_id}

@@ -164,7 +164,7 @@ class DeveloperController extends Controller
      */
     protected function buildCodeSamples(string $apiRoot, string $apiV1, string $bearer, string $sampleTxn): array
     {
-        $createJson = '{"buyer_email":"buyer@example.com","seller_email":"seller@example.com","amount":1500.5,"currency":"KES","description":"API escrow","terms":"Deliver on receipt of funds."}';
+        $createJson = '{"buyer_email":"buyer@example.com","seller_email":"seller@example.com","receiver_phone":"254712345678","amount":1500.5,"currency":"KES","description":"API escrow","terms":"Deliver on receipt of funds."}';
         $releaseJson = '{"confirmation_code":"YOUR_CONFIRMATION_CODE","notes":"Optional note"}';
 
         $stkJson = '{"transaction_id":"'.$sampleTxn.'","payer_phone":"254712345678"}';
@@ -192,6 +192,7 @@ const created = await fetch(\`\${v1}/transactions\`, {
   body: JSON.stringify({
     buyer_email: "buyer@example.com",
     seller_email: "seller@example.com",
+    receiver_phone: "254712345678",
     amount: 1500.5,
     currency: "KES",
     description: "API escrow",
@@ -347,7 +348,7 @@ GO;
             ['key' => 'Content-Type', 'value' => 'application/json', 'type' => 'text'],
         ]);
 
-        $item = function (string $name, string $method, string $path, array $headers = [], ?array $body = null): array {
+        $item = function (string $name, string $method, string $path, array $headers = [], ?array $body = null, ?string $description = null): array {
             $req = [
                 'method' => $method,
                 'header' => $headers,
@@ -359,6 +360,9 @@ GO;
                     'raw' => json_encode($body, JSON_UNESCAPED_SLASHES),
                 ];
             }
+            if ($description !== null && $description !== '') {
+                $req['description'] = $description;
+            }
 
             return [
                 'name' => $name,
@@ -369,6 +373,7 @@ GO;
         $createBody = [
             'buyer_email' => 'buyer@example.com',
             'seller_email' => 'seller@example.com',
+            'receiver_phone' => '254712345678',
             'amount' => 1500.5,
             'currency' => 'KES',
             'description' => 'API escrow',
@@ -379,7 +384,7 @@ GO;
             'info' => [
                 '_postman_id' => Str::uuid()->toString(),
                 'name' => 'eConfirm Escrow API',
-                'description' => 'Health check + Escrow v1 + payment gateway. Set `apiRoot` (e.g. '.$apiRoot.') and `apiKey` (your ek_ key).',
+                'description' => 'Health check + Escrow v1 + VeliPay-managed payment gateway. Set `apiRoot` (e.g. '.$apiRoot.') and `apiKey` (your ek_ key).',
                 'schema' => 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
             ],
             'variable' => [
@@ -397,12 +402,12 @@ GO;
                         $item('POST /api/v1/transactions/{transaction_id}/release', 'POST', '/v1/transactions/{{transactionId}}/release', $jsonHeader, [
                             'confirmation_code' => 'YOUR_CONFIRMATION_CODE',
                             'notes' => '',
-                        ]),
-                        $item('POST /api/v1/transactions/{transaction_id}/reversal', 'POST', '/v1/transactions/{{transactionId}}/reversal', $jsonHeader, [
-                            'mpesa_transaction_id' => 'LXXXXXXXX',
+                        ], 'Initiates payout through VeliPay business withdraw to the receiver phone stored on escrow creation.'),
+                        $item('POST /api/v1/transactions/{transaction_id}/reversal (deprecated: 410)', 'POST', '/v1/transactions/{{transactionId}}/reversal', $jsonHeader, [
+                            'provider_transaction_id' => 'TXNXXXXXXXX',
                             'amount' => 100,
                             'remarks' => 'Reversal',
-                        ]),
+                        ], 'Deprecated compatibility route; currently returns 410 Gone.'),
                     ],
                 ],
                 [
@@ -411,18 +416,23 @@ GO;
                         $item('POST /api/v1/payments/stk-push', 'POST', '/v1/payments/stk-push', $jsonHeader, [
                             'transaction_id' => '{{transactionId}}',
                             'payer_phone' => '254712345678',
-                        ]),
-                        $item('POST /api/v1/payments/c2b', 'POST', '/v1/payments/c2b', $jsonHeader, [
+                        ], 'Primary funding endpoint (VeliPay STK).'),
+                    ],
+                ],
+                [
+                    'name' => 'Legacy compatibility (deprecated)',
+                    'item' => [
+                        $item('POST /api/v1/payments/c2b (deprecated: 410)', 'POST', '/v1/payments/c2b', $jsonHeader, [
                             'amount' => 10,
                             'msisdn' => '254712345678',
                             'bill_reference' => '{{transactionId}}',
-                        ]),
-                        $item('POST /api/v1/payments/b2c', 'POST', '/v1/payments/b2c', $jsonHeader, [
+                        ], 'Deprecated compatibility route; currently returns 410 Gone.'),
+                        $item('POST /api/v1/payments/b2c (deprecated: 410)', 'POST', '/v1/payments/b2c', $jsonHeader, [
                             'transaction_id' => '{{transactionId}}',
-                        ]),
-                        $item('POST /api/v1/payments/b2b', 'POST', '/v1/payments/b2b', $jsonHeader, [
+                        ], 'Deprecated compatibility route; currently returns 410 Gone.'),
+                        $item('POST /api/v1/payments/b2b (deprecated: 410)', 'POST', '/v1/payments/b2b', $jsonHeader, [
                             'transaction_id' => '{{transactionId}}',
-                        ]),
+                        ], 'Deprecated compatibility route; currently returns 410 Gone.'),
                     ],
                 ],
             ],

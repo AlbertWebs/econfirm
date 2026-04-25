@@ -23,6 +23,7 @@ class EscrowApiController extends Controller
         $validator = Validator::make($request->all(), [
             'buyer_email' => 'required|email',
             'seller_email' => 'required|email',
+            'receiver_phone' => ['nullable', 'string', 'max:20', 'regex:/^(?:\+?254|0)(?:7|1)\d{8}$/'],
             'amount' => 'required|numeric|min:0.01',
             'currency' => 'nullable|string|size:3',
             'description' => 'required|string|max:1000',
@@ -42,6 +43,11 @@ class EscrowApiController extends Controller
 
         $apiUser = $request->api_user;
 
+        $receiverPhone = trim((string) $request->input('receiver_phone', ''));
+        if ($receiverPhone !== '') {
+            $receiverPhone = \App\Services\SmsService::normalizeKenyaTo254($receiverPhone);
+        }
+
         // Create transaction
         $transaction = Transaction::create([
             'api_user_id' => $apiUser->id,
@@ -54,7 +60,7 @@ class EscrowApiController extends Controller
             'transaction_details' => $request->description,
             'terms' => $request->terms,
             'sender_mobile' => '', // Will be updated when buyer funds
-            'receiver_mobile' => '', // Will be updated when seller confirms
+            'receiver_mobile' => $receiverPhone, // Preferred payout recipient
             'payment_method' => 'api',
             'status' => 'pending',
         ]);
@@ -143,7 +149,6 @@ class EscrowApiController extends Controller
         $validator = Validator::make($request->all(), [
             'confirmation_code' => 'required|string',
             'notes' => 'nullable|string|max:1000',
-            'receiver_phone' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -184,9 +189,11 @@ class EscrowApiController extends Controller
             ], 400);
         }
 
-        if ($transaction->receiver_mobile === '' && $request->filled('receiver_phone')) {
-            $transaction->receiver_mobile = preg_replace('/[\s+]/', '', (string) $request->input('receiver_phone'));
-            $transaction->save();
+        if (trim((string) $transaction->receiver_mobile) === '') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Recipient phone is missing on this escrow. Set it at escrow creation time before release.',
+            ], 422);
         }
 
         $velipay = new VelipayService;
