@@ -1169,7 +1169,7 @@ class HomeController extends Controller
             ]);
         }
 
-        $ValidateOTP->status = 'Completed';
+        $ValidateOTP->status = 'payout_initiated';
         $ValidateOTP->save();
 
         try {

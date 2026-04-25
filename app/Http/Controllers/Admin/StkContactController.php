@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\MpesaStkPush;
+use App\Models\VelipayPayment;
 use App\Services\AdminActivityLogger;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -14,7 +14,7 @@ class StkContactController extends Controller
     {
         $q = trim((string) $request->get('q', ''));
 
-        $query = MpesaStkPush::query()
+        $query = VelipayPayment::query()
             ->selectRaw('phone, COUNT(*) as attempts, MAX(created_at) as last_attempt_at')
             ->whereNotNull('phone')
             ->whereRaw("TRIM(phone) <> ''")
@@ -26,7 +26,7 @@ class StkContactController extends Controller
         }
 
         $contacts = $query->paginate(50)->withQueryString();
-        $totalUnique = MpesaStkPush::query()
+        $totalUnique = VelipayPayment::query()
             ->whereNotNull('phone')
             ->whereRaw("TRIM(phone) <> ''")
             ->distinct('phone')
@@ -38,7 +38,7 @@ class StkContactController extends Controller
     public function exportCsv(Request $request): StreamedResponse
     {
         $rows = $this->buildRows($request);
-        AdminActivityLogger::log('stk_contacts.export_csv', MpesaStkPush::class, null, ['rows' => count($rows)]);
+        AdminActivityLogger::log('stk_contacts.export_csv', VelipayPayment::class, null, ['rows' => count($rows)]);
 
         return response()->streamDownload(function () use ($rows) {
             $out = fopen('php://output', 'w');
@@ -53,7 +53,7 @@ class StkContactController extends Controller
     public function exportVcf(Request $request): StreamedResponse
     {
         $rows = $this->buildRows($request);
-        AdminActivityLogger::log('stk_contacts.export_vcf', MpesaStkPush::class, null, ['rows' => count($rows)]);
+        AdminActivityLogger::log('stk_contacts.export_vcf', VelipayPayment::class, null, ['rows' => count($rows)]);
 
         return response()->streamDownload(function () use ($rows) {
             $i = 1;
@@ -77,7 +77,7 @@ class StkContactController extends Controller
     {
         $q = trim((string) $request->get('q', ''));
 
-        $query = MpesaStkPush::query()
+        $query = VelipayPayment::query()
             ->selectRaw('phone, COUNT(*) as attempts, MAX(created_at) as last_attempt_at')
             ->whereNotNull('phone')
             ->whereRaw("TRIM(phone) <> ''")

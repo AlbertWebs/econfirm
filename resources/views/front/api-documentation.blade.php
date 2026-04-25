@@ -456,9 +456,9 @@
 }
               </div>
 
-              <h3>Payments (M-Pesa through our platform only)</h3>
+              <h3>Payments (VeliPay through our platform only)</h3>
               <div class="alert alert-warning border-0">
-                <strong>Important:</strong> All M-PESA interactions are managed internally by our system. External developers must not connect directly to Safaricom M-PESA APIs (including Daraja). Use only the endpoints below with your API key; authentication, validation, rate limits, and audit logging run on our servers before any M-Pesa call.
+                <strong>Important:</strong> All collections and releases are handled by our backend through VeliPay. Use only the endpoints below with your API key; authentication, validation, rate limits, and audit logging run on our servers.
               </div>
               <p>After you create an escrow with <code>POST /transactions</code>, fund it with STK Push:</p>
               <div class="code-block">
@@ -470,7 +470,7 @@
   "payer_phone": "254712345678"
 }
               </div>
-              <p>Optional sandbox C2B simulate (disabled in production unless explicitly enabled by the operator):</p>
+              <p>Legacy compatibility endpoints (deprecated):</p>
               <div class="code-block">
 <strong>POST</strong> /payments/c2b
 
@@ -481,7 +481,7 @@
   "bill_reference": "txn_xxxxxxxx"
 }
               </div>
-              <p>B2C / B2B disbursements are initiated only through our backend after you reference your escrow row:</p>
+              <p>These legacy routes return <code>410 Gone</code> and are kept only for backward compatibility:</p>
               <div class="code-block">
 <strong>POST</strong> /payments/b2c
 { "transaction_id": "txn_xxxxxxxx" }
@@ -489,15 +489,26 @@
 <strong>POST</strong> /payments/b2b
 { "transaction_id": "txn_xxxxxxxx" }
               </div>
-              <p>Transaction reversal (server forwards to M-Pesa; async result callbacks are handled on our infrastructure):</p>
+              <p>Transaction reversal route is also deprecated and returns <code>410 Gone</code>:</p>
               <div class="code-block">
 <strong>POST</strong> /transactions/{transaction_id}/reversal
 
 <strong>Request Body:</strong>
 {
-  "mpesa_transaction_id": "LXXXXXXXX",
+  "provider_transaction_id": "TXNXXXXXXXX",
   "amount": 100,
   "remarks": "Duplicate payment"
+}
+              </div>
+              <p>Release escrowed funds:</p>
+              <div class="code-block">
+<strong>POST</strong> /transactions/{transaction_id}/release
+
+<strong>Request Body:</strong>
+{
+  "confirmation_code": "ABC123",
+  "receiver_phone": "254712345678",
+  "notes": "Goods received in perfect condition"
 }
               </div>
               <p>Status for an escrow row (same as above):</p>

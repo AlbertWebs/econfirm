@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\PaymentGatewayAuditLog;
+use App\Services\VelipayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -142,6 +143,7 @@ class EscrowApiController extends Controller
         $validator = Validator::make($request->all(), [
             'confirmation_code' => 'required|string',
             'notes' => 'nullable|string|max:1000',
+            'receiver_phone' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -166,12 +168,12 @@ class EscrowApiController extends Controller
             ], 404);
         }
 
-        // Check if transaction is in a valid state for release
-        if (! in_array($transaction->status, ['funded', 'in_progress', 'pending'], true)) {
+        // Release is only valid after escrow has been funded.
+        if (! in_array($transaction->status, ['Escrow Funded', 'funded'], true)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Transaction cannot be released. Current status: '.$transaction->status,
-            ], 400);
+            ], 422);
         }
 
         // Verify confirmation code matches
@@ -182,9 +184,28 @@ class EscrowApiController extends Controller
             ], 400);
         }
 
-        // Update transaction status
+        if ($transaction->receiver_mobile === '' && $request->filled('receiver_phone')) {
+            $transaction->receiver_mobile = preg_replace('/[\s+]/', '', (string) $request->input('receiver_phone'));
+            $transaction->save();
+        }
+
+        $velipay = new VelipayService;
+        $releaseResponse = $velipay->withdrawToPhone($transaction);
+        if (! ($releaseResponse['success'] ?? false)) {
+            PaymentGatewayAuditLog::record('escrow.release_failed', $request, [
+                'transaction_id' => $transaction->transaction_id,
+                'error' => $releaseResponse['message'] ?? null,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $releaseResponse['message'] ?? 'Payout could not be started.',
+            ], 502);
+        }
+
+        // Mark initiation; completion is confirmed by VeliPay payout webhooks.
         $transaction->update([
-            'status' => 'complete',
+            'status' => 'payout_initiated',
             'confirmation_code' => $request->confirmation_code,
             'transaction_details' => $transaction->transaction_details.
                 ($request->notes ? "\n\nRelease Notes: ".$request->notes : ''),
@@ -196,7 +217,7 @@ class EscrowApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Funds released successfully',
+            'message' => 'Release initiated successfully',
             'data' => [
                 'id' => $transaction->transaction_id,
                 'status' => $transaction->status,

@@ -243,7 +243,7 @@ class SmsService
     }
 
     /**
-     * SMS after M-Pesa confirms escrow is funded — includes link to view / approve on the portal.
+     * SMS after VeliPay confirms escrow is funded — includes link to view / approve on the portal.
      */
     public function notifyEscrowFunded(Transaction $transaction): void
     {
@@ -259,11 +259,11 @@ class SmsService
 
         $senderMsg = "eConfirm: Escrow {$id} is funded. Review & approve next steps: {$url}";
 
-        if (($transaction->payment_method ?? 'mpesa') === 'mpesa') {
-            $receiverMsg = "eConfirm: Escrow {$id} — KES {$amt} secured. View details & approve: {$url}";
-        } else {
+        if (($transaction->payment_method ?? 'velipay') === 'paybill') {
             $pb = $transaction->paybill_till_number ?? '';
             $receiverMsg = "eConfirm: Escrow {$id} — payout via Paybill/Till {$pb}. Details: {$url}";
+        } else {
+            $receiverMsg = "eConfirm: Escrow {$id} — KES {$amt} secured. View details & approve: {$url}";
         }
 
         $this->send($transaction->sender_mobile, $senderMsg, $id.'-funded-sender');
@@ -271,9 +271,9 @@ class SmsService
     }
 
     /**
-     * Sent only after Daraja B2B or B2C call succeeds (payout initiated).
+     * Sent only after payout initiation succeeds.
      *
-     * @param  bool  $isB2bToPaybill  true when payment_method is paybill (B2B to Paybill/Till); false for M-Pesa B2C to phone.
+     * @param  bool  $isB2bToPaybill  true when payment_method is paybill; false for phone wallet payout.
      */
     public function notifyPartiesAfterApprovedPayout(Transaction $transaction, bool $isB2bToPaybill): void
     {
@@ -297,7 +297,7 @@ class SmsService
             $senderMsg = $phoneForSms !== ''
                 ? "eConfirm: You approved escrow {$ref}. We've started sending KES {$amt} to the recipient ({$phoneForSms})."
                 : "eConfirm: You approved escrow {$ref}. We've started sending KES {$amt} to the recipient.";
-            $receiverMsg = "eConfirm: Your payment has been approved. Your money is headed to your M-Pesa.";
+            $receiverMsg = "eConfirm: Your payment has been approved. Your money is headed to your phone wallet.";
         }
 
         $this->send($transaction->sender_mobile, $senderMsg, $ref.'-payout-sender');
