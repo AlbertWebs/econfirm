@@ -3,15 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transaction;
-use App\Models\MpesaStkPush;
+use App\Models\VelipayPayment;
 use App\Models\User;
 use App\Models\Otp;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Services\EscrowStkFundingService;
-use App\Services\MpesaService;
+use App\Services\EscrowVelipayFundingService;
 use App\Services\SmsService;
 use App\Services\StkRequestIpLimiter;
+use App\Services\VelipayService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
@@ -86,7 +86,7 @@ class MobileApiController extends Controller
             'sender_mobile' => 'required|string|regex:/^\+?254[0-9]{9}$/',
             'receiver_mobile' => 'required|string|regex:/^\+?254[0-9]{9}$/',
             'transaction_details' => 'nullable|string|max:1000',
-            'payment_method' => 'required|string|in:mpesa,paybill',
+            'payment_method' => 'required|string|in:velipay,paybill',
             'paybill_till_number' => 'required_if:payment_method,paybill|string|nullable',
         ]);
 
@@ -179,14 +179,15 @@ class MobileApiController extends Controller
                 ], 429);
             }
 
-            // Initialize M-Pesa STK Push
-            $mpesa = new MpesaService();
-            $mpesaResponse = $mpesa->stkPush($transaction, $clientIp);
+            // Initialize VeliPay STK Push
+            $velipay = new VelipayService();
+            $velipayResponse = $velipay->stkPush($transaction, $clientIp);
 
-            if ($mpesaResponse['success']) {
+            if ($velipayResponse['success']) {
+                $paymentId = (string) (($velipayResponse['data']['paymentId'] ?? '') ?: '');
                 $transaction->status = 'stk_initiated';
-                $transaction->checkout_request_id = $mpesaResponse['data']['CheckoutRequestID'] ?? null;
-                $transaction->merchant_request_id = $mpesaResponse['data']['MerchantRequestID'] ?? null;
+                $transaction->checkout_request_id = $paymentId !== '' ? $paymentId : null;
+                $transaction->merchant_request_id = null;
                 $transaction->save();
 
                 try {
@@ -200,7 +201,7 @@ class MobileApiController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Payment request sent. Please check your phone for M-Pesa prompt.',
+                    'message' => 'Payment request sent. Please check your phone for the prompt.',
                     'data' => [
                         'checkout_request_id' => $transaction->checkout_request_id,
                         'status' => $transaction->status,
@@ -210,13 +211,13 @@ class MobileApiController extends Controller
                 $transaction->status = 'stk_failed';
                 $transaction->save();
 
-                Log::error('Mobile API: transaction saved but STK push failed', [
+                Log::error('Mobile API: transaction saved but VeliPay STK push failed', [
                     'transaction_id' => $transaction->transaction_id,
-                    'mpesa_message' => $mpesaResponse['message'] ?? null,
-                    'mpesa_data' => $mpesaResponse['data'] ?? null,
+                    'velipay_message' => $velipayResponse['message'] ?? null,
+                    'velipay_data' => $velipayResponse['data'] ?? null,
                 ]);
 
-                $detail = $mpesaResponse['message'] ?? 'Unknown M-Pesa error';
+                $detail = $velipayResponse['message'] ?? 'Unknown payment error';
 
                 return response()->json([
                     'success' => false,
@@ -255,9 +256,9 @@ class MobileApiController extends Controller
         }
 
         try {
-            $stkPush = MpesaStkPush::where('checkout_request_id', $request->checkout_request_id)->first();
+            $payment = VelipayPayment::where('velipay_payment_id', $request->checkout_request_id)->first();
 
-            if (!$stkPush) {
+            if (!$payment) {
                 return response()->json([
                     'success' => false,
                     'status' => 'pending',
@@ -265,8 +266,8 @@ class MobileApiController extends Controller
                 ]);
             }
 
-            if ($stkPush->status === 'Success') {
-                $transaction = EscrowStkFundingService::markFundedIfNotAlready($stkPush);
+            if (in_array(strtolower((string) $payment->status), ['paid', 'settled', 'success'], true)) {
+                $transaction = EscrowVelipayFundingService::markFundedByPayment($payment);
 
                 return response()->json([
                     'success' => true,
@@ -277,7 +278,7 @@ class MobileApiController extends Controller
                         'status' => 'Escrow Funded',
                     ]
                 ]);
-            } else if ($stkPush->status === 'Failed' || $stkPush->status === 'Cancelled') {
+            } else if (in_array(strtolower((string) $payment->status), ['failed', 'cancelled'], true)) {
                 return response()->json([
                     'success' => false,
                     'status' => 'failed',
@@ -664,5 +665,3 @@ class MobileApiController extends Controller
         }
     }
 }
-
-

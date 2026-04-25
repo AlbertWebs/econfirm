@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\MpesaStkPush;
 use App\Models\SmsLog;
 use App\Models\Transaction;
+use App\Models\VelipayPayment;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -39,21 +39,15 @@ class TransactionController extends Controller
 
     public function show(Transaction $transaction)
     {
-        $stkRows = collect();
+        $paymentRows = collect();
         if (! empty($transaction->checkout_request_id)) {
-            $stkRows = MpesaStkPush::query()
-                ->where('checkout_request_id', $transaction->checkout_request_id)
-                ->orderByDesc('id')
-                ->get();
-        }
-        if ($stkRows->isEmpty() && ! empty($transaction->transaction_id)) {
-            $stkRows = MpesaStkPush::query()
-                ->where('reference', $transaction->transaction_id)
+            $paymentRows = VelipayPayment::query()
+                ->where('velipay_payment_id', $transaction->checkout_request_id)
                 ->orderByDesc('id')
                 ->get();
         }
 
-        return view('admin.transactions.show', compact('transaction', 'stkRows'));
+        return view('admin.transactions.show', compact('transaction', 'paymentRows'));
     }
 
     public function destroy(Transaction $transaction)
@@ -76,34 +70,12 @@ class TransactionController extends Controller
                     );
                 }
 
-                // Keep M-Pesa audit records, but detach escrow linkage where present.
-                if (Schema::hasTable('mpesa_b2c') && Schema::hasColumn('mpesa_b2c', 'source_transaction_id')) {
-                    $this->runWithReprepareRetry(
-                        fn () => DB::table('mpesa_b2c')
-                            ->where('source_transaction_id', $transactionId)
-                            ->update(['source_transaction_id' => null])
-                    );
-                }
-                if (Schema::hasTable('mpesa_b2b') && Schema::hasColumn('mpesa_b2b', 'source_transaction_id')) {
-                    $this->runWithReprepareRetry(
-                        fn () => DB::table('mpesa_b2b')
-                            ->where('source_transaction_id', $transactionId)
-                            ->update(['source_transaction_id' => null])
-                    );
-                }
-
                 // Live chat + disputes: use PDO::exec only (this MySQL host returns 1615 on prepared statements).
                 $this->deleteLiveChatAndDisputeStackForTransaction((int) $transaction->id);
 
                 // Final safety net: clear any remaining FK dependents to transactions.id.
                 $this->deleteFkDependentsForTransaction($transaction->id, [
                     'transactions',
-                    'mpesa_b2c',
-                    'mpesa_b2b',
-                    'mpesa_c2b_transactions',
-                    'mpesa_b2b_callbacks',
-                    'mpesa_b2c_callbacks',
-                    'mpesa_stk_pushes',
                     // Cleaned above — never hit these again with the query builder (1615).
                     'live_chats',
                     'live_chat_messages',

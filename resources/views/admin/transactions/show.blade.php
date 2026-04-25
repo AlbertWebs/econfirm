@@ -145,9 +145,9 @@
         <x-admin.card class="lg:col-span-2 border border-slate-200 shadow-sm" :flush="true">
             <x-slot:header>
                 <div class="flex items-center justify-between gap-3">
-                    <span>M-Pesa STK activity</span>
+                    <span>VeliPay payment activity</span>
                     <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                        {{ $stkRows->count() }} {{ \Illuminate\Support\Str::plural('record', $stkRows->count()) }}
+                        {{ $paymentRows->count() }} {{ \Illuminate\Support\Str::plural('record', $paymentRows->count()) }}
                     </span>
                 </div>
             </x-slot:header>
@@ -159,11 +159,11 @@
                             <th class="px-4 py-2 text-left text-xs font-semibold uppercase text-slate-600">Phone</th>
                             <th class="px-4 py-2 text-left text-xs font-semibold uppercase text-slate-600">Amount</th>
                             <th class="px-4 py-2 text-left text-xs font-semibold uppercase text-slate-600">Status</th>
-                            <th class="px-4 py-2 text-left text-xs font-semibold uppercase text-slate-600">CheckoutRequestID</th>
+                            <th class="px-4 py-2 text-left text-xs font-semibold uppercase text-slate-600">Payment ID</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        @forelse ($stkRows as $s)
+                        @forelse ($paymentRows as $s)
                             <tr class="hover:bg-slate-50/80">
                                 <td class="whitespace-nowrap px-4 py-2">{{ $s->id }}</td>
                                 <td class="whitespace-nowrap px-4 py-2">{{ $s->phone }}</td>
@@ -171,12 +171,12 @@
                                 <td class="whitespace-nowrap px-4 py-2">
                                     <span class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">{{ $s->status }}</span>
                                 </td>
-                                <td class="max-w-xs break-all px-4 py-2 font-mono text-xs">{{ $s->checkout_request_id }}</td>
+                                <td class="max-w-xs break-all px-4 py-2 font-mono text-xs">{{ $s->velipay_payment_id }}</td>
                             </tr>
                         @empty
                             <tr>
                                 <td colspan="5">
-                                    <x-admin.empty-state>No matching STK rows.</x-admin.empty-state>
+                                    <x-admin.empty-state>No matching VeliPay rows.</x-admin.empty-state>
                                 </td>
                             </tr>
                         @endforelse

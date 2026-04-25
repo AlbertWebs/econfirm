@@ -48,7 +48,7 @@
                     'items' => [
                         ['route' => 'admin.transactions.index', 'pattern' => 'admin.transactions.*', 'label' => 'Escrow transactions', 'icon' => 'lock'],
                         ['route' => 'admin.business.index', 'pattern' => 'admin.business.*', 'label' => 'Business', 'icon' => 'chart-bar'],
-                        ['route' => 'admin.mpesa-transactions.index', 'pattern' => 'admin.mpesa-transactions.*', 'label' => 'M-PESA transactions', 'icon' => 'wallet'],
+                        ['route' => 'admin.velipay-payments.index', 'pattern' => 'admin.velipay-payments.*', 'label' => 'VeliPay communications', 'icon' => 'wallet'],
                     ],
                 ],
                 [
@@ -193,7 +193,7 @@
                     ['route' => 'admin.transactions.index', 'label' => 'Escrow transactions', 'icon' => 'lock'],
                     ['route' => 'admin.transactions.export', 'label' => 'Export escrows (CSV)', 'icon' => 'arrow-down-tray'],
                     ['route' => 'admin.business.index', 'label' => 'Business', 'icon' => 'chart-bar'],
-                    ['route' => 'admin.mpesa-transactions.index', 'label' => 'M-PESA transactions', 'icon' => 'wallet'],
+                    ['route' => 'admin.velipay-payments.index', 'label' => 'VeliPay communications', 'icon' => 'wallet'],
                 ],
                 'People & inbox' => [
                     ['route' => 'admin.users.index', 'label' => 'Users', 'icon' => 'users'],

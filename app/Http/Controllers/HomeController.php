@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\ContactSubmission;
-use App\Models\MpesaStkPush;
 use App\Models\Otp;
 use App\Models\Page;
 use App\Models\ScamReport;
@@ -12,10 +11,11 @@ use App\Models\ScamReportLike;
 use App\Models\SupportHelpItem;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Services\EscrowStkFundingService;
-use App\Services\MpesaService;
+use App\Models\VelipayPayment;
+use App\Services\EscrowVelipayFundingService;
 use App\Services\SmsService;
 use App\Services\StkRequestIpLimiter;
+use App\Services\VelipayService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -926,7 +926,7 @@ class HomeController extends Controller
             'receiver_mobile' => $transaction->receiver_mobile,
             'status' => $transaction->status,
         ]);
-        // i want to save the chackout_request_id and merchant_request_id to the transaction from mpesa service
+        // Keep IDs nullable before payment initiation.
         $transaction->checkout_request_id = null; // Initialize as null
         $transaction->merchant_request_id = null; // Initialize as null
         $transaction->save();
@@ -939,15 +939,15 @@ class HomeController extends Controller
             ], 429);
         }
 
-        // Use MpesaService for STK push
-        $mpesa = new MpesaService;
-        $mpesaResponse = $mpesa->stkPush($transaction, $clientIp);
-        // dd($mpesaResponse); // Debugging line, remove in production
+        // Use VeliPay for STK push
+        $velipay = new VelipayService;
+        $velipayResponse = $velipay->stkPush($transaction, $clientIp);
 
-        if ($mpesaResponse['success']) {
+        if ($velipayResponse['success']) {
+            $paymentId = (string) (($velipayResponse['data']['paymentId'] ?? '') ?: '');
             $transaction->status = 'stk_initiated';
-            $transaction->checkout_request_id = $mpesaResponse['data']['CheckoutRequestID'] ?? null;
-            $transaction->merchant_request_id = $mpesaResponse['data']['MerchantRequestID'] ?? null;
+            $transaction->checkout_request_id = $paymentId !== '' ? $paymentId : null;
+            $transaction->merchant_request_id = null;
             $transaction->save();
 
             try {
@@ -961,34 +961,34 @@ class HomeController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'STK sent. Check your phone and enter your M-PESA PIN.',
-                'CheckoutRequestID' => $mpesaResponse['data']['CheckoutRequestID'] ?? null,
+                'message' => 'Payment prompt sent. Check your phone and authorize the request.',
+                'CheckoutRequestID' => $paymentId !== '' ? $paymentId : null,
             ]);
         } else {
             $transaction->status = 'stk_failed';
             $transaction->save();
 
-            \Log::error('Transaction saved but STK push failed', [
+            \Log::error('Transaction saved but VeliPay STK push failed', [
                 'transaction_id' => $transaction->transaction_id,
-                'mpesa_success' => $mpesaResponse['success'] ?? null,
-                'mpesa_message' => $mpesaResponse['message'] ?? null,
-                'mpesa_data' => $mpesaResponse['data'] ?? null,
+                'velipay_success' => $velipayResponse['success'] ?? null,
+                'velipay_message' => $velipayResponse['message'] ?? null,
+                'velipay_data' => $velipayResponse['data'] ?? null,
             ]);
 
-            $detail = $mpesaResponse['message'] ?? 'Unknown M-Pesa error';
+            $detail = $velipayResponse['message'] ?? 'Unknown payment error';
 
             return response()->json([
                 'success' => false,
-                'message' => 'Transaction saved, but STK push failed: '.$detail,
+                'message' => 'Transaction saved, but payment initiation failed: '.$detail,
             ]);
         }
     }
 
     public function transactionStatus($id)
     {
-        $stk = MpesaStkPush::where('checkout_request_id', $id)->first();
+        $payment = VelipayPayment::where('velipay_payment_id', $id)->first();
 
-        if (! $stk) {
+        if (! $payment) {
             return response()->json([
                 'success' => false,
                 'status' => 'unknown',
@@ -996,7 +996,7 @@ class HomeController extends Controller
             ], 404);
         }
 
-        if ($stk->status === 'Failed') {
+        if (in_array(strtolower((string) $payment->status), ['failed', 'cancelled'], true)) {
             return response()->json([
                 'success' => false,
                 'status' => 'Failed',
@@ -1004,92 +1004,22 @@ class HomeController extends Controller
             ]);
         }
 
-        $allowFundWithoutCallbackItems = false;
-
-        if ($stk->status !== 'Success') {
-            // Querying STK too soon after the push often returns ResultDesc "still under processing"
-            // and scares users who have not seen the phone prompt yet. Defer the first real query briefly.
-            $minAgeBeforeStkQuerySeconds = 5;
-            if ($stk->created_at && abs((int) $stk->created_at->diffInSeconds(now())) < $minAgeBeforeStkQuerySeconds) {
-                return response()->json([
-                    'success' => true,
-                    'status' => 'Pending',
-                    'message' => 'STK sent. Check your phone and enter your M-PESA PIN.',
-                ]);
-            }
-            // Callback can be delayed/missed; fallback to Daraja STK query.
-            $query = (new MpesaService)->stkPushQuery($id);
-
-            if (($query['status'] ?? null) === 'Success') {
-                $stk->status = 'Success';
-                $stk->result_desc = $query['message'] ?? $stk->result_desc;
-                $stk->save();
-                $allowFundWithoutCallbackItems = true;
-            } elseif (($query['status'] ?? null) === 'Failed') {
-                $failMessage = (string) ($query['message'] ?? '');
-                if (MpesaService::stkQueryResultDescLooksInProgress($failMessage)) {
-                    return response()->json([
-                        'success' => true,
-                        'status' => 'Pending',
-                        'message' => MpesaService::friendlyStkQueryPendingMessage($failMessage),
-                    ]);
-                }
-                $stk->status = 'Failed';
-                $stk->result_desc = $failMessage !== '' ? $failMessage : $stk->result_desc;
-                $stk->save();
-
-                return response()->json([
-                    'success' => false,
-                    'status' => 'Failed',
-                    'message' => $failMessage !== '' ? $failMessage : 'Payment was declined or cancelled.',
-                ]);
-            } else {
-                $pendingText = $query['message'] ?? 'Awaiting M-Pesa confirmation (after you enter your PIN, this usually takes a few seconds).';
-
-                return response()->json([
-                    'success' => true,
-                    'status' => 'Pending',
-                    'message' => MpesaService::friendlyStkQueryPendingMessage($pendingText),
-                ]);
-            }
-        } elseif (! EscrowStkFundingService::callbackMetadataHasUsableItems($stk->callback_metadata)) {
-            // STK row already Success (e.g. from a prior poll) but no usable metadata yet — confirm with live query.
-            $query = (new MpesaService)->stkPushQuery($id);
-            if (($query['status'] ?? null) === 'Success') {
-                $allowFundWithoutCallbackItems = true;
-            } else {
-                $pendingText = $query['message'] ?? 'Payment detected. Finalizing on our side…';
-
-                return response()->json([
-                    'success' => true,
-                    'status' => 'Pending',
-                    'message' => MpesaService::friendlyStkQueryPendingMessage($pendingText),
-                ]);
-            }
-        }
-
-        if (! EscrowStkFundingService::callbackMetadataHasUsableItems($stk->callback_metadata) && ! $allowFundWithoutCallbackItems) {
+        if (! in_array(strtolower((string) $payment->status), ['paid', 'settled', 'success'], true)) {
             return response()->json([
                 'success' => true,
                 'status' => 'Pending',
-                'message' => 'Payment detected. Waiting for M-Pesa callback sync to finalize escrow funding.',
+                'message' => 'Awaiting payment confirmation. If you already approved on phone, give it a moment and retry.',
             ]);
         }
 
-        if ($allowFundWithoutCallbackItems) {
-            \Log::info('Escrow fund gate: using STK query confirmation (callback items missing or delayed)', [
-                'checkout_request_id' => $id,
-            ]);
-        }
-
-        $transaction = EscrowStkFundingService::markFundedIfNotAlready($stk);
+        $transaction = EscrowVelipayFundingService::markFundedByPayment($payment);
 
         if (! $transaction) {
             return response()->json([
                 'success' => true,
                 'status' => 'Success',
                 'transaction_id' => null,
-                'message' => 'Payment received; transaction record is missing. Contact support with your CheckoutRequestID.',
+                'message' => 'Payment received; transaction record is missing. Contact support with your payment ID.',
             ]);
         }
 
@@ -1182,7 +1112,7 @@ class HomeController extends Controller
                 'message' => 'Transaction not found.',
             ]);
         }
-        $stkPush = MpesaStkPush::where('checkout_request_id', $transaction->checkout_request_id)->first();
+        $stkPush = VelipayPayment::where('velipay_payment_id', $transaction->checkout_request_id)->first();
 
         // Return a view to approve the transaction
         return view('process.approve-transaction', compact('transaction', 'stkPush'));
@@ -1230,43 +1160,12 @@ class HomeController extends Controller
             ], 422);
         }
 
-        $paymentMethod = strtolower(trim((string) ($ValidateOTP->payment_method ?? '')));
-
-        // Paybill path → B2B to Paybill/Till; everything else (mpesa, m-pesa, empty) → B2C to recipient phone.
-        if ($paymentMethod === 'paybill') {
-            $mpesa = new MpesaService;
-            $b2bResponse = $mpesa->b2b($ValidateOTP);
-            if (! $b2bResponse['success']) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $b2bResponse['message'] ?? 'Payout to Paybill/Till could not be started. Try again or contact support.',
-                ]);
-            }
-
-            $ValidateOTP->status = 'Completed';
-            $ValidateOTP->save();
-
-            try {
-                (new SmsService)->notifyPartiesAfterApprovedPayout($ValidateOTP->fresh(), true);
-            } catch (\Throwable $e) {
-                \Log::error('Post-approval SMS failed (B2B)', [
-                    'transaction_id' => $ValidateOTP->transaction_id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Transaction approved. Payout to Paybill/Till has been initiated.',
-            ]);
-        }
-
-        $mpesa = new MpesaService;
-        $b2cResponse = $mpesa->b2c($ValidateOTP);
-        if (! $b2cResponse['success']) {
+        $velipay = new VelipayService;
+        $releaseResponse = $velipay->withdrawToPhone($ValidateOTP);
+        if (! $releaseResponse['success']) {
             return response()->json([
                 'success' => false,
-                'message' => $b2cResponse['message'] ?? 'Payout to M-Pesa could not be started. Try again or contact support.',
+                'message' => $releaseResponse['message'] ?? 'Payout could not be started. Try again or contact support.',
             ]);
         }
 
@@ -1276,7 +1175,7 @@ class HomeController extends Controller
         try {
             (new SmsService)->notifyPartiesAfterApprovedPayout($ValidateOTP->fresh(), false);
         } catch (\Throwable $e) {
-            \Log::error('Post-approval SMS failed (B2C)', [
+            \Log::error('Post-approval SMS failed', [
                 'transaction_id' => $ValidateOTP->transaction_id,
                 'error' => $e->getMessage(),
             ]);
@@ -1284,7 +1183,7 @@ class HomeController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Transaction approved. Transfer to recipient M-Pesa has been initiated.',
+            'message' => 'Transaction approved. Release to recipient has been initiated.',
         ]);
     }
 
@@ -1313,8 +1212,7 @@ class HomeController extends Controller
                 'message' => 'Transaction not found.',
             ]);
         }
-        // Get stk where checkout_request_id is the same as the transaction checkout_request_id
-        $stkPush = MpesaStkPush::where('checkout_request_id', $transaction->checkout_request_id)->first();
+        $stkPush = VelipayPayment::where('velipay_payment_id', $transaction->checkout_request_id)->first();
 
         $transactionSenderRegistered = false;
         if (Schema::hasColumn('users', 'phone')) {
