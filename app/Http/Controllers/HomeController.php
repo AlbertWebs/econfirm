@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Blog;
 use App\Models\ContactSubmission;
 use App\Models\Otp;
 use App\Models\Page;
@@ -20,10 +21,10 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class HomeController extends Controller
@@ -43,12 +44,18 @@ class HomeController extends Controller
      */
     protected function homePageView(string $slug, string $fallbackView)
     {
+        $latestBlogs = Blog::query()
+            ->published()
+            ->orderByDesc('published_at')
+            ->limit(3)
+            ->get();
+
         $page = Page::query()->where('slug', $slug)->where('is_published', true)->first();
         if ($page) {
-            return view('front.home-cms', compact('page'));
+            return view('front.home-cms', compact('page', 'latestBlogs'));
         }
 
-        return view($fallbackView);
+        return view($fallbackView, compact('latestBlogs'));
     }
 
     public function portal()

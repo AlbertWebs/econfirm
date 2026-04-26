@@ -32,6 +32,7 @@ use App\Http\Controllers\DeveloperController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InsightsController;
 use App\Http\Controllers\LiveChatController;
+use App\Http\Controllers\TariffController;
 use App\Models\ScamReport;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -95,6 +96,8 @@ Route::post('/create-otp', [HomeController::class, 'createOTP'])->name('create.o
 Route::get('/api/documentation', [HomeController::class, 'getAPIDocumentation'])->name('api-documentation');
 Route::get('/insights', [InsightsController::class, 'index'])->name('insights.index');
 Route::get('/insights/{slug}', [InsightsController::class, 'show'])->name('insights.show');
+Route::get('/tariffs', [TariffController::class, 'index'])->name('tariffs.index');
+Route::get('/tarrifs', [TariffController::class, 'redirectTypo'])->name('tariffs.typo-redirect');
 
 Route::get('/e-contract', [HomeController::class, 'getEContract'])->name('e-contract');
 Route::get('/e-contract-print/{transactionID}', [ContractController::class, 'generateEscrowPdf'])->name('e-contract.print');
@@ -251,6 +254,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('scam-reports/{scam_report}', [AdminScamReportController::class, 'show'])->name('scam-reports.show');
         Route::post('scam-reports/{scam_report}/status', [AdminScamReportController::class, 'updateStatus'])->name('scam-reports.status');
         Route::get('stk-contacts', [StkContactController::class, 'index'])->name('stk-contacts.index');
+        Route::post('stk-contacts/import', [StkContactController::class, 'import'])->name('stk-contacts.import');
         Route::get('stk-contacts/export/csv', [StkContactController::class, 'exportCsv'])->name('stk-contacts.export.csv');
         Route::get('stk-contacts/export/vcf', [StkContactController::class, 'exportVcf'])->name('stk-contacts.export.vcf');
         Route::get('sms-logs', [SmsLogController::class, 'index'])->name('sms-logs.index');
