@@ -2,11 +2,19 @@
 
 return [
     /*
-    | Public tariffs page + calculator defaults.
+    | Public tariffs page + calculator.
     |
     | Platform commission matches application logic (1% of escrow principal).
-    | M-PESA tier tables are illustrative: replace with your partner / Safaricom
-    | schedule and keep amounts in whole KES for display.
+    |
+    | M-PESA amounts are taken from Safaricom’s published tables (last verified
+    | against consumer “M-PESA Charges” and Paybill Standard Tariff PDF):
+    | - b2c_tiers: “Transfer to M-PESA Users, Pochi La Biashara and Business Till to Customer”
+    | - b2b_tiers: Lipa na M-PESA Paybill — Business Bouquet (customer pays full charge)
+    |
+    | Paybill totals can differ for Mgao (split) or Customer Bouquet (business pays).
+    | Lipa na M-PESA Buy Goods at tills is often free to the payer; use Paybill bands when
+    | modelling paybill-style charges. Safaricom may update tariffs — confirm on
+    | https://www.safaricom.co.ke/personal/m-pesa/getting-started/m-pesa-rates
     */
     'commission_rate' => (float) env('TARIFFS_COMMISSION_RATE', 0.01),
 
@@ -24,17 +32,13 @@ return [
             ['min' => 7501, 'max' => 10000, 'fee' => 90],
             ['min' => 10001, 'max' => 15000, 'fee' => 100],
             ['min' => 15001, 'max' => 20000, 'fee' => 105],
-            ['min' => 20001, 'max' => 25000, 'fee' => 123],
-            ['min' => 25001, 'max' => 30000, 'fee' => 123],
-            ['min' => 30001, 'max' => 35000, 'fee' => 123],
-            ['min' => 35001, 'max' => 40000, 'fee' => 123],
-            ['min' => 40001, 'max' => 45000, 'fee' => 123],
-            ['min' => 45001, 'max' => 50000, 'fee' => 123],
-            ['min' => 50001, 'max' => 70000, 'fee' => 123],
-            ['min' => 70001, 'max' => 150000, 'fee' => 123],
+            ['min' => 20001, 'max' => 35000, 'fee' => 108],
+            ['min' => 35001, 'max' => 50000, 'fee' => 108],
+            ['min' => 50001, 'max' => 250000, 'fee' => 108],
         ],
         'b2b_tiers' => [
-            ['min' => 1, 'max' => 100, 'fee' => 0],
+            ['min' => 1, 'max' => 49, 'fee' => 0],
+            ['min' => 50, 'max' => 100, 'fee' => 0],
             ['min' => 101, 'max' => 500, 'fee' => 5],
             ['min' => 501, 'max' => 1000, 'fee' => 10],
             ['min' => 1001, 'max' => 1500, 'fee' => 15],
@@ -52,7 +56,7 @@ return [
             ['min' => 40001, 'max' => 45000, 'fee' => 103],
             ['min' => 45001, 'max' => 50000, 'fee' => 108],
             ['min' => 50001, 'max' => 70000, 'fee' => 108],
-            ['min' => 70001, 'max' => 150000, 'fee' => 108],
+            ['min' => 70001, 'max' => 250000, 'fee' => 108],
         ],
     ],
 ];

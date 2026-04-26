@@ -40,7 +40,7 @@ class TariffCalculatorService
 
         $mpesa = self::tierFee($principalKes, $tiers);
         if ($mpesa === null) {
-            throw new \InvalidArgumentException('Amount is outside the configured M-PESA tier tables.');
+            throw new \InvalidArgumentException('Amount is outside the published M-PESA tariff bands.');
         }
 
         $commission = round($principalKes * $rate, 2);
@@ -49,7 +49,7 @@ class TariffCalculatorService
         return [
             'principal' => $principalKes,
             'rail' => $rail,
-            'rail_label' => $rail === 'b2b' ? 'Paybill / till (B2B-style)' : 'Mobile phone (B2C-style)',
+            'rail_label' => $rail === 'b2b' ? 'Phone number to till (Paybill Business Bouquet)' : 'Phone number to phone number (Safaricom send)',
             'commission' => $commission,
             'mpesa_fee' => $mpesa,
             'total' => $total,

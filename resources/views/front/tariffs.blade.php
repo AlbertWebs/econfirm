@@ -1,7 +1,7 @@
 @extends('front.master')
 
 @section('seo_title', 'Tariffs & fee calculator — '.site_setting('site_name'))
-@section('seo_description', 'Understand e-confirm platform commission and illustrative M-PESA charges for phone number to phone number payouts versus phone number to till (paybill or till). Estimate what you may be billed when funding escrow.')
+@section('seo_description', 'Understand e-confirm platform commission plus Safaricom M-PESA charges for phone number to phone number (consumer send) versus phone number to till (Paybill Business Bouquet). Estimate what you may be billed when funding escrow.')
 @section('canonical_url', route('tariffs.index'))
 
 @section('content')
@@ -16,7 +16,7 @@
         </div>
         <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">Tariffs &amp; charges</h1>
         <p class="text-lg sm:text-xl text-gray-600">
-            Platform commission plus an illustrative M-PESA fee estimate—whether money moves <strong>phone number to phone number</strong> or <strong>phone number to till</strong> (paybill or till).
+            Platform commission plus the <strong>M-PESA fee from Safaricom’s published bands</strong>—for <strong>phone number to phone number</strong> (send to M-PESA user) or <strong>phone number to till</strong> (Paybill, Business Bouquet).
         </p>
     </div>
 </section>
@@ -36,8 +36,10 @@
             <div class="rounded-2xl border border-amber-200 bg-amber-50/80 p-5 text-sm text-amber-950">
                 <p class="font-semibold text-amber-900 mb-2">Important</p>
                 <p class="mb-0">
-                    The M-PESA amounts below are <strong>illustrative tier estimates</strong> for planning. Actual charges depend on Safaricom’s published tariffs,
-                    your product path, and partner pricing.
+                    M-PESA rows match <strong>Safaricom’s published tables</strong> (consumer send-to-M-PESA-user column, and Paybill <strong>Business Bouquet</strong> where you pay the full charge).
+                    Some paybills use <strong>Mgao</strong> (split) or <strong>Customer Bouquet</strong> (business pays), and till “Buy Goods” rules can differ—confirm on
+                    <a href="https://www.safaricom.co.ke/personal/m-pesa/getting-started/m-pesa-rates" class="text-amber-950 underline font-medium decoration-amber-700/60 hover:decoration-amber-900" target="_blank" rel="noopener noreferrer">Safaricom’s M-PESA charges</a>
+                    or with your counterparty. Max single transaction shown: <strong>250,000 KES</strong>.
                 </p>
             </div>
         </div>
@@ -56,7 +58,7 @@
             @endphp
             <script type="application/json" id="tariff-calculator-config">@json($tariffCalculatorConfig)</script>
             <h2 class="text-2xl font-bold text-gray-900 mb-2">Fee calculator</h2>
-            <p class="text-sm text-gray-600 mb-6">Enter the escrow amount and choose whether the payout is <strong>phone number to phone number</strong> or <strong>phone number to till</strong>. The illustrative M-PESA fee uses the matching tier table.</p>
+            <p class="text-sm text-gray-600 mb-6">Enter the escrow amount and choose whether the payout is <strong>phone number to phone number</strong> or <strong>phone number to till</strong>. The M-PESA line uses the matching Safaricom band from the tables below.</p>
 
             <form class="space-y-4" id="tariff-calculator-form" novalidate>
                 <div>
@@ -72,7 +74,7 @@
                         <option value="b2c" selected>Phone number to phone number</option>
                         <option value="b2b">Phone number to till</option>
                     </select>
-                    <p class="mt-1 text-xs text-gray-500">Fees shown are tier estimates by amount for the option you pick.</p>
+                    <p class="mt-1 text-xs text-gray-500">Safaricom fee by amount band for the option you pick.</p>
                 </div>
                 <button type="submit" class="w-full rounded-xl bg-green-600 text-white font-semibold py-3 hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 transition-colors">
                     Calculate
@@ -96,7 +98,7 @@
                         <dd class="font-medium text-gray-900 tabular-nums" id="tc-line-commission"></dd>
                     </div>
                     <div class="flex justify-between gap-4 px-4 py-3 text-sm">
-                        <dt class="text-gray-600">Illustrative M-PESA charge</dt>
+                        <dt class="text-gray-600">M-PESA charge (Safaricom band)</dt>
                         <dd class="font-medium text-gray-900 tabular-nums" id="tc-line-mpesa"></dd>
                     </div>
                     <div class="flex justify-between gap-4 px-4 py-3 text-sm bg-green-50/80">
@@ -117,10 +119,11 @@
     </div>
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center max-w-2xl mx-auto mb-10 lg:mb-12">
-            <p class="text-sm font-semibold text-green-700 uppercase tracking-wide mb-2">Planning reference</p>
-            <h2 id="tariff-tiers-heading" class="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">M-PESA tier estimates (KES)</h2>
+            <p class="text-sm font-semibold text-green-700 uppercase tracking-wide mb-2">Safaricom reference</p>
+            <h2 id="tariff-tiers-heading" class="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">M-PESA charges by band (KES)</h2>
             <p class="text-gray-600 text-sm sm:text-base leading-relaxed">
-                Principal bands and the illustrative fee we use in the calculator above. Same labels as in the form: <strong class="text-gray-800">phone number to phone number</strong> and <strong class="text-gray-800">phone number to till</strong>.
+                Same bands as the calculator. <strong class="text-gray-800">Phone number to phone number</strong> = consumer “send to M-PESA user” column;
+                <strong class="text-gray-800">Phone number to till</strong> = Paybill Standard Tariff, Business Bouquet (customer pays all).
             </p>
         </div>
 
@@ -133,7 +136,7 @@
                     </span>
                     <div class="min-w-0 text-left">
                         <h3 class="text-lg font-bold text-gray-900">Phone number to phone number</h3>
-                        <p class="text-sm text-gray-600 mt-1 leading-snug">Estimated M-PESA charge by escrow principal band.</p>
+                        <p class="text-sm text-gray-600 mt-1 leading-snug">Safaricom consumer table — transfer to M-PESA user (and related paths in that column).</p>
                     </div>
                 </div>
                 <div class="overflow-x-auto max-h-80 sm:max-h-96 overflow-y-auto overscroll-contain">
@@ -161,7 +164,6 @@
                         </tbody>
                     </table>
                 </div>
-                <p class="px-5 sm:px-6 py-3 text-xs text-gray-500 border-t border-gray-100 bg-gray-50/60">Illustrative only — not a quote from Safaricom.</p>
             </div>
 
             {{-- Phone number to till (b2b) --}}
@@ -172,7 +174,7 @@
                     </span>
                     <div class="min-w-0 text-left">
                         <h3 class="text-lg font-bold text-gray-900">Phone number to till</h3>
-                        <p class="text-sm text-gray-600 mt-1 leading-snug">Paybill or till: estimated charge by principal band.</p>
+                        <p class="text-sm text-gray-600 mt-1 leading-snug">Paybill Standard Tariff — Business Bouquet (full charge to payer).</p>
                     </div>
                 </div>
                 <div class="overflow-x-auto max-h-80 sm:max-h-96 overflow-y-auto overscroll-contain">
@@ -200,7 +202,6 @@
                         </tbody>
                     </table>
                 </div>
-                <p class="px-5 sm:px-6 py-3 text-xs text-gray-500 border-t border-gray-100 bg-gray-50/60">Illustrative only — not a quote from Safaricom.</p>
             </div>
         </div>
     </div>
@@ -297,7 +298,7 @@
         var mpesaFee = tierFee(principal, tiers);
         if (mpesaFee === null) {
             logTariffSubmission(principal, rail);
-            showError('Amount is outside the configured illustrative tier tables. Adjust tiers in config/tariffs.php.');
+            showError('That amount is outside the published bands shown (up to 250,000 KES). For current limits see Safaricom’s M-PESA charges page.');
             return;
         }
 
@@ -318,7 +319,7 @@
         document.getElementById('tc-line-total').textContent = formatKes(total) + ' KES';
 
         document.getElementById('tc-footnote').textContent =
-            'Total = principal + platform commission + illustrative M-PESA tier fee for the phone number to phone number or phone number to till option you selected.';
+            'Total = principal + e-confirm commission + M-PESA fee from the Safaricom band for the phone number to phone number or phone number to till option you selected.';
 
         res.classList.remove('hidden');
         logTariffSubmission(principal, rail);
