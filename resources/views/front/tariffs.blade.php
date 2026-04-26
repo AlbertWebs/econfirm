@@ -1,6 +1,6 @@
 @extends('front.master')
 
-@section('seo_title', 'Tariffs & fee calculator — '.site_setting('site_name'))
+@section('seo_title', 'Tariffs & fee calculator | '.site_setting('site_name'))
 @section('seo_description', 'Understand e-confirm platform commission plus Safaricom M-PESA charges for phone number to phone number (consumer send) versus phone number to till (Paybill Business Bouquet). Estimate what you may be billed when funding escrow.')
 @section('canonical_url', route('tariffs.index'))
 
@@ -16,7 +16,7 @@
         </div>
         <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">Tariffs &amp; charges</h1>
         <p class="text-lg sm:text-xl text-gray-600">
-            Platform commission plus the <strong>M-PESA fee from Safaricom’s published bands</strong>—for <strong>phone number to phone number</strong> (send to M-PESA user) or <strong>phone number to till</strong> (Paybill, Business Bouquet).
+            Platform commission plus the <strong>M-PESA fee from Safaricom’s published bands</strong>, for <strong>phone number to phone number</strong> (send to M-PESA user) or <strong>phone number to till</strong> (Paybill, Business Bouquet).
         </p>
     </div>
 </section>
@@ -133,7 +133,7 @@
                     </span>
                     <div class="min-w-0 text-left">
                         <h3 class="text-lg font-bold text-gray-900">Phone number to phone number</h3>
-                        <p class="text-sm text-gray-600 mt-1 leading-snug">Safaricom consumer table — transfer to M-PESA user (and related paths in that column).</p>
+                        <p class="text-sm text-gray-600 mt-1 leading-snug">Safaricom consumer table: transfer to M-PESA user (and related paths in that column).</p>
                     </div>
                 </div>
                 <div class="overflow-x-auto max-h-80 sm:max-h-96 overflow-y-auto overscroll-contain">
@@ -171,7 +171,7 @@
                     </span>
                     <div class="min-w-0 text-left">
                         <h3 class="text-lg font-bold text-gray-900">Phone number to till</h3>
-                        <p class="text-sm text-gray-600 mt-1 leading-snug">Paybill Standard Tariff — Business Bouquet (full charge to payer).</p>
+                        <p class="text-sm text-gray-600 mt-1 leading-snug">Paybill Standard Tariff, Business Bouquet (full charge to payer).</p>
                     </div>
                 </div>
                 <div class="overflow-x-auto max-h-80 sm:max-h-96 overflow-y-auto overscroll-contain">
