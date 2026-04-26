@@ -173,6 +173,10 @@
                         <i class="fas fa-receipt text-green-500/90 text-xs" aria-hidden="true"></i>
                         <span>Tariffs</span>
                     </a>
+                    <a href="{{ route('velinex.labs') }}" class="inline-flex items-center justify-center gap-2 text-sm font-medium text-gray-300 bg-gray-800/40 hover:bg-gray-800 border border-gray-700/60 hover:border-gray-600 px-4 py-2.5 rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900">
+                        <i class="fas fa-flask text-sky-400/90 text-xs" aria-hidden="true"></i>
+                        <span>Velinex Labs</span>
+                    </a>
                     <a href="{{ route('api-documentation') }}" class="inline-flex items-center justify-center gap-2 text-sm font-medium text-gray-300 bg-gray-800/40 hover:bg-gray-800 border border-gray-700/60 hover:border-gray-600 px-4 py-2.5 rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900">
                         <i class="fas fa-code text-green-500/90 text-xs" aria-hidden="true"></i>
                         <span>API docs</span>

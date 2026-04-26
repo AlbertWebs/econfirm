@@ -45,6 +45,7 @@
         <div
             id="tariff-calculator"
             class="rounded-2xl border-2 border-green-200 bg-gradient-to-br from-green-50 to-white p-6 sm:p-8 shadow-sm lg:sticky lg:top-24"
+            data-tariff-log-url="{{ route('tariffs.query.store') }}"
         >
             @php
                 $tariffCalculatorConfig = [
@@ -55,7 +56,7 @@
             @endphp
             <script type="application/json" id="tariff-calculator-config">@json($tariffCalculatorConfig)</script>
             <h2 class="text-2xl font-bold text-gray-900 mb-2">Fee calculator</h2>
-            <p class="text-sm text-gray-600 mb-6">Enter the escrow amount and a destination: Kenya mobile number or paybill / till.</p>
+            <p class="text-sm text-gray-600 mb-6">Enter the escrow amount and choose the payout rail (mobile wallet vs paybill/till). The illustrative M-PESA fee uses the matching tier table.</p>
 
             <form class="space-y-4" id="tariff-calculator-form" novalidate>
                 <div>
@@ -65,11 +66,13 @@
                            placeholder="e.g. 25000">
                 </div>
                 <div>
-                    <label for="tc-destination" class="block text-sm font-medium text-gray-800 mb-1">Phone or paybill / till</label>
-                    <input type="text" id="tc-destination" name="destination" required autocomplete="off"
-                           class="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 shadow-sm focus:border-green-500 focus:ring-green-500"
-                           placeholder="0712…, +254712…, or 123456">
-                    <p class="mt-1 text-xs text-gray-500">We detect paybills/tills as short numeric business numbers; otherwise we treat the value as a mobile wallet.</p>
+                    <label for="tc-rail" class="block text-sm font-medium text-gray-800 mb-1">Payout type</label>
+                    <select id="tc-rail" name="rail" required
+                            class="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 shadow-sm focus:border-green-500 focus:ring-green-500 bg-white">
+                        <option value="b2c" selected>Mobile phone </option>
+                        <option value="b2b">Paybill or till </option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">Fees shown are tier estimates by principal amount for the rail you pick.</p>
                 </div>
                 <button type="submit" class="w-full rounded-xl bg-green-600 text-white font-semibold py-3 hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 transition-colors">
                     Calculate
@@ -80,7 +83,7 @@
 
             <div id="tc-result" class="hidden mt-6 space-y-4">
                 <div class="flex items-center justify-between gap-3">
-                    <span class="text-sm font-medium text-gray-600">Detected rail</span>
+                    <span class="text-sm font-medium text-gray-600">Payout type</span>
                     <span id="tc-rail-label" class="text-sm font-semibold text-gray-900"></span>
                 </div>
                 <dl class="divide-y divide-gray-200 rounded-xl border border-gray-200 bg-white">
@@ -101,7 +104,7 @@
                         <dd class="font-bold text-green-800 tabular-nums text-base" id="tc-line-total"></dd>
                     </div>
                 </dl>
-                <p class="text-xs text-gray-500" id="tc-destination-note"></p>
+                <p class="text-xs text-gray-500" id="tc-footnote"></p>
             </div>
         </div>
     </div>
@@ -139,7 +142,7 @@
             </div>
             <div class="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
                 <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
-                    <h3 class="font-semibold text-gray-900">B2B-style (paybill / till)</h3>
+                    <h3 class="font-semibold text-gray-900">B2B-style (paybill / Till)</h3>
                     <p class="text-xs text-gray-500 mt-1">Tier fee by principal band — illustrative.</p>
                 </div>
                 <div class="max-h-80 overflow-y-auto">
@@ -202,39 +205,34 @@
         return null;
     }
 
-    function digitsOnly(s) {
-        return String(s || '').replace(/\D/g, '');
+    function railLabel(rail) {
+        return rail === 'b2b' ? 'Paybill / till (B2B-style)' : 'Mobile phone (B2C-style)';
     }
 
-    function normalizePhone254(raw) {
-        var d = digitsOnly(raw);
-        if (d.length === 12 && d.indexOf('254') === 0) return d;
-        if (d.length === 10 && d.charAt(0) === '0' && (d.charAt(1) === '7' || d.charAt(1) === '1')) return '254' + d.slice(1);
-        if (d.length === 9 && (d.charAt(0) === '7' || d.charAt(0) === '1')) return '254' + d;
-        return '';
+    function logTariffSubmission(principal, rail) {
+        var url = root.getAttribute('data-tariff-log-url');
+        if (!url || !isFinite(principal) || principal < 1) return;
+        var tokenMeta = document.querySelector('meta[name="csrf-token"]');
+        var token = tokenMeta ? tokenMeta.getAttribute('content') : '';
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ amount: principal, rail: rail })
+        }).catch(function () {});
     }
 
-    function classifyDestination(raw) {
-        var trimmed = String(raw || '').trim();
-        if (!trimmed) return { kind: 'unknown', label: '—', display: '' };
-
-        var d = digitsOnly(trimmed);
-        var p254 = normalizePhone254(trimmed);
-
-        if (p254.length === 12) {
-            return { kind: 'b2c', label: 'Phone (B2C-style)', display: '+' + p254 };
-        }
-
-        if (/^\d{5,7}$/.test(d) && d.length <= 7) {
-            return { kind: 'b2b', label: 'Paybill / till (B2B-style)', display: d };
-        }
-
-        return { kind: 'unknown', label: 'Could not detect — enter 07… / +254… or a 5–7 digit paybill/till', display: trimmed };
-    }
+    var railEl = document.getElementById('tc-rail');
 
     var form = document.getElementById('tariff-calculator-form');
     var err = document.getElementById('tc-error');
     var res = document.getElementById('tc-result');
+    if (!form) return;
 
     function showError(msg) {
         err.textContent = msg;
@@ -252,22 +250,17 @@
         clearError();
 
         var amountEl = document.getElementById('tc-amount');
-        var destEl = document.getElementById('tc-destination');
+        var rail = railEl && railEl.value === 'b2b' ? 'b2b' : 'b2c';
         var principal = Math.round(Number(amountEl.value));
         if (!isFinite(principal) || principal < 1) {
             showError('Enter a valid escrow amount in KES (whole shillings).');
             return;
         }
 
-        var dest = classifyDestination(destEl.value);
-        if (dest.kind === 'unknown') {
-            showError(dest.label);
-            return;
-        }
-
-        var tiers = dest.kind === 'b2c' ? b2cTiers : b2bTiers;
+        var tiers = rail === 'b2c' ? b2cTiers : b2bTiers;
         var mpesaFee = tierFee(principal, tiers);
         if (mpesaFee === null) {
+            logTariffSubmission(principal, rail);
             showError('Amount is outside the configured illustrative tier tables. Adjust tiers in config/tariffs.php.');
             return;
         }
@@ -275,7 +268,7 @@
         var commission = Math.round(principal * commissionRate * 100) / 100;
         var total = Math.round(principal + commission + mpesaFee);
 
-        document.getElementById('tc-rail-label').textContent = dest.label;
+        document.getElementById('tc-rail-label').textContent = railLabel(rail);
         var pctDisplay = commissionRate * 100;
         if (Math.abs(pctDisplay - Math.round(pctDisplay)) < 1e-9) {
             pctDisplay = Math.round(pctDisplay);
@@ -288,11 +281,11 @@
         document.getElementById('tc-line-mpesa').textContent = formatKes(mpesaFee) + ' KES';
         document.getElementById('tc-line-total').textContent = formatKes(total) + ' KES';
 
-        var note = 'Destination interpreted as ' + dest.display + '. ';
-        note += 'Total = principal + platform commission + illustrative M-PESA tier fee.';
-        document.getElementById('tc-destination-note').textContent = note;
+        document.getElementById('tc-footnote').textContent =
+            'Total = principal + platform commission + illustrative M-PESA tier fee for the payout type you selected.';
 
         res.classList.remove('hidden');
+        logTariffSubmission(principal, rail);
     });
 })();
 </script>

@@ -371,6 +371,14 @@ class HomeController extends Controller
         return $this->pageFromCmsOrFallback('support', 'front.support');
     }
 
+    /**
+     * Parent technology partner (Velinex Labs) — public profile and backlinks.
+     */
+    public function velinexLabs()
+    {
+        return view('front.velinex-labs');
+    }
+
     public function help()
     {
         return $this->pageFromCmsOrFallback('help', 'front.help');

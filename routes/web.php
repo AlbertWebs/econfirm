@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ScamReportController as AdminScamReportController
 use App\Http\Controllers\Admin\SiteSettingsController;
 use App\Http\Controllers\Admin\SmsLogController;
 use App\Http\Controllers\Admin\StkContactController;
+use App\Http\Controllers\Admin\TariffQueryController;
 use App\Http\Controllers\Admin\SupportHelpItemController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
@@ -33,6 +34,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InsightsController;
 use App\Http\Controllers\LiveChatController;
 use App\Http\Controllers\TariffController;
+use App\Http\Controllers\TariffQueryLogController;
 use App\Models\ScamReport;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -69,6 +71,7 @@ Route::get('/privacy-policy', [HomeController::class, 'privacyPolicy'])->name('p
 Route::get('/complience', [HomeController::class, 'complience'])->name('complience');
 Route::get('/security', [HomeController::class, 'security'])->name('security');
 Route::get('/support', [HomeController::class, 'support'])->name('support');
+Route::get('/velinex-labs', [HomeController::class, 'velinexLabs'])->name('velinex.labs');
 Route::get('/help', [HomeController::class, 'help'])->name('help');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 Route::post('/contact', [HomeController::class, 'submitContact'])
@@ -97,6 +100,9 @@ Route::get('/api/documentation', [HomeController::class, 'getAPIDocumentation'])
 Route::get('/insights', [InsightsController::class, 'index'])->name('insights.index');
 Route::get('/insights/{slug}', [InsightsController::class, 'show'])->name('insights.show');
 Route::get('/tariffs', [TariffController::class, 'index'])->name('tariffs.index');
+Route::post('/tariffs/query', [TariffQueryLogController::class, 'store'])
+    ->middleware('throttle:60,1')
+    ->name('tariffs.query.store');
 Route::get('/tarrifs', [TariffController::class, 'redirectTypo'])->name('tariffs.typo-redirect');
 
 Route::get('/e-contract', [HomeController::class, 'getEContract'])->name('e-contract');
@@ -253,6 +259,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             ->name('scam-reports.evidence.store');
         Route::get('scam-reports/{scam_report}', [AdminScamReportController::class, 'show'])->name('scam-reports.show');
         Route::post('scam-reports/{scam_report}/status', [AdminScamReportController::class, 'updateStatus'])->name('scam-reports.status');
+        Route::get('tariff-queries', [TariffQueryController::class, 'index'])->name('tariff-queries.index');
         Route::get('stk-contacts', [StkContactController::class, 'index'])->name('stk-contacts.index');
         Route::post('stk-contacts/import', [StkContactController::class, 'import'])->name('stk-contacts.import');
         Route::get('stk-contacts/export/csv', [StkContactController::class, 'exportCsv'])->name('stk-contacts.export.csv');

@@ -58,6 +58,7 @@
                         ['route' => 'admin.live-chats.index', 'pattern' => 'admin.live-chats.*', 'label' => 'Live chats', 'icon' => 'chat'],
                         ['route' => 'admin.disputes.index', 'pattern' => 'admin.disputes.*', 'label' => 'Raised disputes', 'icon' => 'exclamation-triangle'],
                         ['route' => 'admin.contact.index', 'pattern' => 'admin.contact.*', 'label' => 'Contact inbox', 'icon' => 'inbox'],
+                        ['route' => 'admin.tariff-queries.index', 'pattern' => 'admin.tariff-queries.*', 'label' => 'Tarif Queries', 'icon' => 'document'],
                         ['route' => 'admin.stk-contacts.index', 'pattern' => 'admin.stk-contacts.*', 'label' => 'STK contacts', 'icon' => 'users'],
                         ['route' => 'admin.scam-reports.index', 'pattern' => 'admin.scam-reports.*', 'label' => 'Scam reports', 'icon' => 'shield-exclamation'],
                     ],
