@@ -1,7 +1,7 @@
 @extends('front.master')
 
 @section('seo_title', 'Tariffs & fee calculator — '.site_setting('site_name'))
-@section('seo_description', 'Understand e-confirm platform commission and illustrative M-PESA B2C vs paybill/till (B2B-style) charges. Estimate what you may be billed when funding escrow.')
+@section('seo_description', 'Understand e-confirm platform commission and illustrative M-PESA charges for phone number to phone number payouts versus phone number to till (paybill or till). Estimate what you may be billed when funding escrow.')
 @section('canonical_url', route('tariffs.index'))
 
 @section('content')
@@ -16,7 +16,7 @@
         </div>
         <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">Tariffs &amp; charges</h1>
         <p class="text-lg sm:text-xl text-gray-600">
-            Platform commission plus an illustrative M-PESA rail estimate for paying to a mobile wallet (B2C-style) or a paybill / till (B2B-style).
+            Platform commission plus an illustrative M-PESA fee estimate—whether money moves <strong>phone number to phone number</strong> or <strong>phone number to till</strong> (paybill or till).
         </p>
     </div>
 </section>
@@ -30,14 +30,14 @@
                 <strong>e-confirm platform commission</strong> (currently <strong>{{ number_format((float) ($tariffs['commission_rate'] ?? 0.01) * 100, 0) }}%</strong> of the principal, consistent with transaction creation in the app).
             </p>
             <p>
-                Separately, moving funds on the M-PESA network may incur <strong>Safaricom / partner tariffs</strong>. Those differ by rail:
-                paying to a <strong>phone number</strong> (often described as consumer / B2C-style) versus a <strong>paybill or till number</strong> (business / B2B-style).
+                Separately, moving funds on the M-PESA network may incur <strong>Safaricom / partner tariffs</strong>. The amount depends on how you pay out:
+                <strong>phone number to phone number</strong> (another M-PESA line) versus <strong>phone number to till</strong> (paybill or till number).
             </p>
             <div class="rounded-2xl border border-amber-200 bg-amber-50/80 p-5 text-sm text-amber-950">
                 <p class="font-semibold text-amber-900 mb-2">Important</p>
                 <p class="mb-0">
                     The M-PESA amounts below are <strong>illustrative tier estimates</strong> for planning. Actual charges depend on Safaricom’s published tariffs,
-                    your product path, and partner pricing. Update <code class="text-xs bg-white/70 px-1 py-0.5 rounded">config/tariffs.php</code> (or env overrides) to match your live schedule.
+                    your product path, and partner pricing.
                 </p>
             </div>
         </div>
@@ -56,7 +56,7 @@
             @endphp
             <script type="application/json" id="tariff-calculator-config">@json($tariffCalculatorConfig)</script>
             <h2 class="text-2xl font-bold text-gray-900 mb-2">Fee calculator</h2>
-            <p class="text-sm text-gray-600 mb-6">Enter the escrow amount and choose the payout rail (mobile wallet vs paybill/till). The illustrative M-PESA fee uses the matching tier table.</p>
+            <p class="text-sm text-gray-600 mb-6">Enter the escrow amount and choose whether the payout is <strong>phone number to phone number</strong> or <strong>phone number to till</strong>. The illustrative M-PESA fee uses the matching tier table.</p>
 
             <form class="space-y-4" id="tariff-calculator-form" novalidate>
                 <div>
@@ -66,13 +66,13 @@
                            placeholder="e.g. 25000">
                 </div>
                 <div>
-                    <label for="tc-rail" class="block text-sm font-medium text-gray-800 mb-1">Payout type</label>
+                    <label for="tc-rail" class="block text-sm font-medium text-gray-800 mb-1">How the payout is sent</label>
                     <select id="tc-rail" name="rail" required
                             class="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 shadow-sm focus:border-green-500 focus:ring-green-500 bg-white">
-                        <option value="b2c" selected>Mobile phone </option>
-                        <option value="b2b">Paybill or till </option>
+                        <option value="b2c" selected>Phone number to phone number</option>
+                        <option value="b2b">Phone number to till</option>
                     </select>
-                    <p class="mt-1 text-xs text-gray-500">Fees shown are tier estimates by principal amount for the rail you pick.</p>
+                    <p class="mt-1 text-xs text-gray-500">Fees shown are tier estimates by amount for the option you pick.</p>
                 </div>
                 <button type="submit" class="w-full rounded-xl bg-green-600 text-white font-semibold py-3 hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 transition-colors">
                     Calculate
@@ -83,7 +83,7 @@
 
             <div id="tc-result" class="hidden mt-6 space-y-4">
                 <div class="flex items-center justify-between gap-3">
-                    <span class="text-sm font-medium text-gray-600">Payout type</span>
+                    <span class="text-sm font-medium text-gray-600">How the payout is sent</span>
                     <span id="tc-rail-label" class="text-sm font-semibold text-gray-900"></span>
                 </div>
                 <dl class="divide-y divide-gray-200 rounded-xl border border-gray-200 bg-white">
@@ -110,61 +110,97 @@
     </div>
 </section>
 
-<section class="py-14 bg-gray-50 border-t border-gray-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-8 text-center">Reference tiers (KES)</h2>
-        <div class="grid md:grid-cols-2 gap-8">
-            <div class="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
-                <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
-                    <h3 class="font-semibold text-gray-900">B2C-style (phone)</h3>
-                    <p class="text-xs text-gray-500 mt-1">Tier fee by principal band — illustrative.</p>
+<section class="relative py-16 lg:py-20 bg-gradient-to-b from-gray-50 via-white to-green-50/30 border-t border-gray-200 overflow-hidden" aria-labelledby="tariff-tiers-heading">
+    <div class="absolute inset-0 pointer-events-none opacity-40" aria-hidden="true">
+        <div class="absolute top-20 right-0 w-72 h-72 bg-green-100 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-10 left-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl"></div>
+    </div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-2xl mx-auto mb-10 lg:mb-12">
+            <p class="text-sm font-semibold text-green-700 uppercase tracking-wide mb-2">Planning reference</p>
+            <h2 id="tariff-tiers-heading" class="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">M-PESA tier estimates (KES)</h2>
+            <p class="text-gray-600 text-sm sm:text-base leading-relaxed">
+                Principal bands and the illustrative fee we use in the calculator above. Same labels as in the form: <strong class="text-gray-800">phone number to phone number</strong> and <strong class="text-gray-800">phone number to till</strong>.
+            </p>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-6 lg:gap-8">
+            {{-- Phone number to phone number (b2c) --}}
+            <div class="group rounded-2xl border border-green-200/80 bg-white shadow-sm overflow-hidden ring-1 ring-green-900/5 hover:shadow-md hover:border-green-300/80 transition-shadow">
+                <div class="flex items-start gap-4 px-5 sm:px-6 py-5 border-b border-green-100 bg-gradient-to-r from-green-50/90 to-white">
+                    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-green-600 text-white shadow-sm" aria-hidden="true">
+                        <i class="fas fa-mobile-screen text-lg"></i>
+                    </span>
+                    <div class="min-w-0 text-left">
+                        <h3 class="text-lg font-bold text-gray-900">Phone number to phone number</h3>
+                        <p class="text-sm text-gray-600 mt-1 leading-snug">Estimated M-PESA charge by escrow principal band.</p>
+                    </div>
                 </div>
-                <div class="max-h-80 overflow-y-auto">
+                <div class="overflow-x-auto max-h-80 sm:max-h-96 overflow-y-auto overscroll-contain">
                     <table class="min-w-full text-sm">
-                        <thead class="bg-white sticky top-0 text-left text-gray-600 border-b border-gray-100">
+                        <caption class="sr-only">Phone number to phone number: principal from, principal to, fee in Kenyan shillings</caption>
+                        <thead class="sticky top-0 z-10 bg-green-50/95 backdrop-blur-sm border-b border-green-100 text-left text-xs font-semibold uppercase tracking-wide text-green-900">
                             <tr>
-                                <th class="px-4 py-2 font-medium">From</th>
-                                <th class="px-4 py-2 font-medium">To</th>
-                                <th class="px-4 py-2 font-medium text-right">Fee</th>
+                                <th scope="col" class="px-5 py-3 whitespace-nowrap">From (KES)</th>
+                                <th scope="col" class="px-5 py-3 whitespace-nowrap">To (KES)</th>
+                                <th scope="col" class="px-5 py-3 text-right whitespace-nowrap">Fee (KES)</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            @foreach (($tariffs['mpesa']['b2c_tiers'] ?? []) as $row)
-                                <tr>
-                                    <td class="px-4 py-2 tabular-nums">{{ number_format((int) $row['min']) }}</td>
-                                    <td class="px-4 py-2 tabular-nums">{{ number_format((int) $row['max']) }}</td>
-                                    <td class="px-4 py-2 text-right tabular-nums font-medium">{{ number_format((int) $row['fee']) }}</td>
+                            @forelse (($tariffs['mpesa']['b2c_tiers'] ?? []) as $row)
+                                <tr class="hover:bg-green-50/40 transition-colors">
+                                    <td class="px-5 py-2.5 tabular-nums text-gray-800">{{ number_format((int) $row['min']) }}</td>
+                                    <td class="px-5 py-2.5 tabular-nums text-gray-800">{{ number_format((int) $row['max']) }}</td>
+                                    <td class="px-5 py-2.5 text-right tabular-nums font-semibold text-green-800">{{ number_format((int) $row['fee']) }}</td>
                                 </tr>
-                            @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="px-5 py-10 text-center text-sm text-gray-500">No tiers configured for this path.</td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
+                <p class="px-5 sm:px-6 py-3 text-xs text-gray-500 border-t border-gray-100 bg-gray-50/60">Illustrative only — not a quote from Safaricom.</p>
             </div>
-            <div class="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
-                <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
-                    <h3 class="font-semibold text-gray-900">B2B-style (paybill / Till)</h3>
-                    <p class="text-xs text-gray-500 mt-1">Tier fee by principal band — illustrative.</p>
+
+            {{-- Phone number to till (b2b) --}}
+            <div class="group rounded-2xl border border-emerald-200/80 bg-white shadow-sm overflow-hidden ring-1 ring-emerald-900/5 hover:shadow-md hover:border-emerald-300/80 transition-shadow">
+                <div class="flex items-start gap-4 px-5 sm:px-6 py-5 border-b border-emerald-100 bg-gradient-to-r from-emerald-50/90 to-white">
+                    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm" aria-hidden="true">
+                        <i class="fas fa-store text-lg"></i>
+                    </span>
+                    <div class="min-w-0 text-left">
+                        <h3 class="text-lg font-bold text-gray-900">Phone number to till</h3>
+                        <p class="text-sm text-gray-600 mt-1 leading-snug">Paybill or till: estimated charge by principal band.</p>
+                    </div>
                 </div>
-                <div class="max-h-80 overflow-y-auto">
+                <div class="overflow-x-auto max-h-80 sm:max-h-96 overflow-y-auto overscroll-contain">
                     <table class="min-w-full text-sm">
-                        <thead class="bg-white sticky top-0 text-left text-gray-600 border-b border-gray-100">
+                        <caption class="sr-only">Phone number to till: principal from, principal to, fee in Kenyan shillings</caption>
+                        <thead class="sticky top-0 z-10 bg-emerald-50/95 backdrop-blur-sm border-b border-emerald-100 text-left text-xs font-semibold uppercase tracking-wide text-emerald-900">
                             <tr>
-                                <th class="px-4 py-2 font-medium">From</th>
-                                <th class="px-4 py-2 font-medium">To</th>
-                                <th class="px-4 py-2 font-medium text-right">Fee</th>
+                                <th scope="col" class="px-5 py-3 whitespace-nowrap">From (KES)</th>
+                                <th scope="col" class="px-5 py-3 whitespace-nowrap">To (KES)</th>
+                                <th scope="col" class="px-5 py-3 text-right whitespace-nowrap">Fee (KES)</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            @foreach (($tariffs['mpesa']['b2b_tiers'] ?? []) as $row)
-                                <tr>
-                                    <td class="px-4 py-2 tabular-nums">{{ number_format((int) $row['min']) }}</td>
-                                    <td class="px-4 py-2 tabular-nums">{{ number_format((int) $row['max']) }}</td>
-                                    <td class="px-4 py-2 text-right tabular-nums font-medium">{{ number_format((int) $row['fee']) }}</td>
+                            @forelse (($tariffs['mpesa']['b2b_tiers'] ?? []) as $row)
+                                <tr class="hover:bg-emerald-50/40 transition-colors">
+                                    <td class="px-5 py-2.5 tabular-nums text-gray-800">{{ number_format((int) $row['min']) }}</td>
+                                    <td class="px-5 py-2.5 tabular-nums text-gray-800">{{ number_format((int) $row['max']) }}</td>
+                                    <td class="px-5 py-2.5 text-right tabular-nums font-semibold text-emerald-800">{{ number_format((int) $row['fee']) }}</td>
                                 </tr>
-                            @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="px-5 py-10 text-center text-sm text-gray-500">No tiers configured for this path.</td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
+                <p class="px-5 sm:px-6 py-3 text-xs text-gray-500 border-t border-gray-100 bg-gray-50/60">Illustrative only — not a quote from Safaricom.</p>
             </div>
         </div>
     </div>
@@ -206,7 +242,7 @@
     }
 
     function railLabel(rail) {
-        return rail === 'b2b' ? 'Paybill / till (B2B-style)' : 'Mobile phone (B2C-style)';
+        return rail === 'b2b' ? 'Phone number to till' : 'Phone number to phone number';
     }
 
     function logTariffSubmission(principal, rail) {
@@ -282,7 +318,7 @@
         document.getElementById('tc-line-total').textContent = formatKes(total) + ' KES';
 
         document.getElementById('tc-footnote').textContent =
-            'Total = principal + platform commission + illustrative M-PESA tier fee for the payout type you selected.';
+            'Total = principal + platform commission + illustrative M-PESA tier fee for the phone number to phone number or phone number to till option you selected.';
 
         res.classList.remove('hidden');
         logTariffSubmission(principal, rail);

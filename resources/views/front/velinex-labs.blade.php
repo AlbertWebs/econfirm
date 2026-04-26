@@ -6,27 +6,29 @@
 @section('canonical_url', route('velinex.labs'))
 
 @push('structured_data')
-<script type="application/ld+json">
-@json([
-    '@context' => 'https://schema.org',
-    '@type' => 'WebPage',
-    'name' => 'Velinex Labs & eConfirm',
-    'description' => 'Velinex Labs is the technology partner behind eConfirm, providing engineering, testing, and product delivery for Kenya escrow and M-Pesa workflows.',
-    'url' => route('velinex.labs'),
-    'isPartOf' => [
-        '@type' => 'WebSite',
-        'name' => site_setting('site_name'),
-        'url' => rtrim(config('app.url', url('/')), '/'),
-    ],
-    'about' => [
-        '@type' => 'Organization',
-        'name' => 'Velinex Labs',
-        'url' => 'https://www.velinexlabs.com/',
-        'description' => 'Custom software studio in Nairobi building AI, blockchain, mobile, and web products for ambitious teams.',
-        'areaServed' => 'KE',
-    ],
-], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
-</script>
+@php
+    $siteUrl = rtrim(config('app.url', url('/')), '/');
+    $velinexLabsLdJson = [
+        '@context' => 'https://schema.org',
+        '@type' => 'WebPage',
+        'name' => 'Velinex Labs & eConfirm',
+        'description' => 'Velinex Labs is the technology partner behind eConfirm, providing engineering, testing, and product delivery for Kenya escrow and M-Pesa workflows.',
+        'url' => route('velinex.labs'),
+        'isPartOf' => [
+            '@type' => 'WebSite',
+            'name' => site_setting('site_name'),
+            'url' => $siteUrl,
+        ],
+        'about' => [
+            '@type' => 'Organization',
+            'name' => 'Velinex Labs',
+            'url' => 'https://www.velinexlabs.com/',
+            'description' => 'Custom software studio in Nairobi building AI, blockchain, mobile, and web products for ambitious teams.',
+            'areaServed' => 'KE',
+        ],
+    ];
+@endphp
+<script type="application/ld+json">{!! json_encode($velinexLabsLdJson, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 @endpush
 
 @section('content')
@@ -163,9 +165,6 @@
             <a href="{{ $velinexBlog }}" target="_blank" rel="noopener noreferrer" class="inline-flex justify-center rounded-xl border border-white/30 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/10">Insights / blog</a>
             <a href="{{ $velinexContact }}" target="_blank" rel="noopener noreferrer" class="inline-flex justify-center rounded-xl border border-white/30 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/10">Contact Velinex</a>
         </div>
-        <p class="mt-6 text-xs text-slate-400">
-            eConfirm is operated as its own product; this page explains the Velinex Labs relationship for transparency and SEO. External links open in a new tab.
-        </p>
     </section>
 
     <nav class="text-center text-sm text-gray-500 pb-4" aria-label="Related on eConfirm">
