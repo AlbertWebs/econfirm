@@ -36,10 +36,7 @@
             <div class="rounded-2xl border border-amber-200 bg-amber-50/80 p-5 text-sm text-amber-950">
                 <p class="font-semibold text-amber-900 mb-2">Important</p>
                 <p class="mb-0">
-                    M-PESA rows match <strong>Safaricom’s published tables</strong> (consumer send-to-M-PESA-user column, and Paybill <strong>Business Bouquet</strong> where you pay the full charge).
-                    Some paybills use <strong>Mgao</strong> (split) or <strong>Customer Bouquet</strong> (business pays), and till “Buy Goods” rules can differ—confirm on
-                    <a href="https://www.safaricom.co.ke/personal/m-pesa/getting-started/m-pesa-rates" class="text-amber-950 underline font-medium decoration-amber-700/60 hover:decoration-amber-900" target="_blank" rel="noopener noreferrer">Safaricom’s M-PESA charges</a>
-                    or with your counterparty. Max single transaction shown: <strong>250,000 KES</strong>.
+                    On eConfirm, an STK Push to fund escrow usually covers your <strong>escrow principal</strong>, the <strong>eConfirm commission</strong> (the same percentage you see when you create a transaction in the app), and an <strong>M-PESA</strong> line that depends on how the payout will move in practice (to another M-PESA line vs a paybill or till). Use this calculator to plan what you may need to approve before you fund a deal or agree on a price with the other party. The amount on your handset at checkout is always the one that counts. Bands shown support estimates up to <strong>250,000 KES</strong> per amount.
                 </p>
             </div>
         </div>
