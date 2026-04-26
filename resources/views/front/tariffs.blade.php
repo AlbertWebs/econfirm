@@ -46,13 +46,14 @@
             id="tariff-calculator"
             class="rounded-2xl border-2 border-green-200 bg-gradient-to-br from-green-50 to-white p-6 sm:p-8 shadow-sm lg:sticky lg:top-24"
         >
-            <script type="application/json" id="tariff-calculator-config">
-@json([
-    'commission_rate' => (float) ($tariffs['commission_rate'] ?? 0.01),
-    'b2c_tiers' => $tariffs['mpesa']['b2c_tiers'] ?? [],
-    'b2b_tiers' => $tariffs['mpesa']['b2b_tiers'] ?? [],
-])
-            </script>
+            @php
+                $tariffCalculatorConfig = [
+                    'commission_rate' => (float) ($tariffs['commission_rate'] ?? 0.01),
+                    'b2c_tiers' => $tariffs['mpesa']['b2c_tiers'] ?? [],
+                    'b2b_tiers' => $tariffs['mpesa']['b2b_tiers'] ?? [],
+                ];
+            @endphp
+            <script type="application/json" id="tariff-calculator-config">@json($tariffCalculatorConfig)</script>
             <h2 class="text-2xl font-bold text-gray-900 mb-2">Fee calculator</h2>
             <p class="text-sm text-gray-600 mb-6">Enter the escrow amount and a destination: Kenya mobile number or paybill / till.</p>
 
