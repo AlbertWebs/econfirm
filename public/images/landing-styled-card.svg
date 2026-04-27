@@ -1,0 +1,66 @@
+<svg width="1200" height="760" viewBox="0 0 1200 760" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1200" y2="760" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ECFDF5"/>
+      <stop offset="1" stop-color="#E0F2FE"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="160" y1="110" x2="1020" y2="640" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F8FAFC"/>
+    </linearGradient>
+    <linearGradient id="primaryGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#16A34A"/>
+      <stop offset="1" stop-color="#059669"/>
+    </linearGradient>
+    <filter id="softShadow" x="90" y="50" width="1020" height="680" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="24" stdDeviation="26" flood-color="#065F46" flood-opacity="0.22"/>
+    </filter>
+    <filter id="pillShadow" x="750" y="90" width="290" height="72" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#047857" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="760" rx="32" fill="url(#bgGrad)"/>
+  <circle cx="156" cy="124" r="108" fill="#86EFAC" opacity="0.28"/>
+  <circle cx="1050" cy="650" r="146" fill="#67E8F9" opacity="0.22"/>
+
+  <g filter="url(#softShadow)">
+    <rect x="140" y="100" width="920" height="560" rx="30" fill="url(#cardGrad)"/>
+  </g>
+
+  <rect x="186" y="146" width="90" height="46" rx="14" fill="url(#primaryGrad)"/>
+  <path d="M231 160V178M222 169H240" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+  <rect x="292" y="146" width="262" height="46" rx="14" fill="#F0FDF4"/>
+  <rect x="304" y="160" width="238" height="18" rx="9" fill="#D1FAE5"/>
+
+  <g filter="url(#pillShadow)">
+    <rect x="766" y="104" width="258" height="44" rx="22" fill="url(#primaryGrad)"/>
+  </g>
+  <circle cx="792" cy="126" r="9" fill="#ECFDF5"/>
+  <rect x="810" y="119" width="132" height="14" rx="7" fill="#DCFCE7" opacity="0.9"/>
+
+  <rect x="186" y="226" width="828" height="62" rx="16" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <rect x="208" y="246" width="248" height="18" rx="9" fill="#E5E7EB"/>
+
+  <rect x="186" y="312" width="404" height="62" rx="16" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <rect x="610" y="312" width="404" height="62" rx="16" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <rect x="208" y="333" width="160" height="18" rx="9" fill="#E5E7EB"/>
+  <rect x="632" y="333" width="190" height="18" rx="9" fill="#E5E7EB"/>
+
+  <rect x="186" y="398" width="404" height="62" rx="16" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <rect x="610" y="398" width="404" height="62" rx="16" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <rect x="208" y="419" width="242" height="18" rx="9" fill="#E5E7EB"/>
+  <rect x="632" y="419" width="248" height="18" rx="9" fill="#E5E7EB"/>
+
+  <rect x="186" y="486" width="828" height="88" rx="16" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <rect x="208" y="509" width="370" height="16" rx="8" fill="#E5E7EB"/>
+  <rect x="208" y="533" width="290" height="16" rx="8" fill="#E5E7EB"/>
+
+  <rect x="186" y="594" width="828" height="36" rx="18" fill="url(#primaryGrad)"/>
+  <rect x="494" y="604" width="212" height="14" rx="7" fill="#ECFDF5" opacity="0.95"/>
+
+  <rect x="220" y="622" width="122" height="20" rx="10" fill="#DCFCE7"/>
+  <rect x="352" y="622" width="122" height="20" rx="10" fill="#DBEAFE"/>
+  <rect x="484" y="622" width="122" height="20" rx="10" fill="#FCE7F3"/>
+  <rect x="616" y="622" width="122" height="20" rx="10" fill="#FEF3C7"/>
+</svg>

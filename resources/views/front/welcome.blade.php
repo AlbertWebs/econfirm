@@ -358,7 +358,7 @@ function transactionFormData() {
                         Learn More
                     </a>
                     </div>
-                
+
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pt-6">
                     <div class="flex flex-col sm:flex-row items-center gap-2 p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-gray-100 hover:border-green-200 hover:bg-white/80 transition-all duration-300 group">
                         <div class="flex-shrink-0 w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-600 transition-colors">
@@ -408,7 +408,7 @@ function transactionFormData() {
                      x-transition:enter="transition ease-out duration-700 delay-200"
                      x-transition:enter-start="opacity-0 translate-y-8"
                      x-transition:enter-end="opacity-100 translate-y-0"
-                     class="bg-white/95 backdrop-blur-sm rounded-2xl p-3.5 sm:p-5 md:p-6 border border-gray-200/90 shadow-[0_12px_40px_-12px_rgba(15,118,110,0.15)] ring-1 ring-gray-100/80 relative w-full min-w-0 max-w-full overflow-visible lg:min-h-full">
+                     class="bg-white/95 backdrop-blur-sm rounded-2xl p-3.5 sm:p-5 md:p-6 border border-gray-200/90 shadow-[0_12px_40px_-12px_rgba(15,118,110,0.15)] hover:shadow-[0_24px_60px_-16px_rgba(15,118,110,0.35)] ring-1 ring-gray-100/80 relative w-full min-w-0 max-w-full overflow-visible lg:min-h-full transition-shadow duration-300">
                     <!-- Decorative gradient overlay -->
                     <div class="absolute top-0 right-0 w-32 h-32 sm:w-52 sm:h-52 bg-gradient-to-br from-emerald-100/50 to-green-50/30 rounded-full blur-2xl -mr-12 -mt-12 sm:-mr-28 sm:-mt-28 pointer-events-none"></div>
                     <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-green-100/30 to-transparent rounded-full blur-2xl -ml-8 -mb-8 pointer-events-none"></div>
@@ -639,7 +639,7 @@ function transactionFormData() {
     </div>
 
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16"
+        <div class="mb-14 lg:mb-16 grid lg:grid-cols-2 gap-8 lg:gap-12 items-center"
              x-data="{ inView: true }"
              x-intersect="inView = true">
             <div x-show="inView"
@@ -647,16 +647,28 @@ function transactionFormData() {
                  x-transition:enter="transition ease-out duration-700"
                  x-transition:enter-start="opacity-0 translate-y-8"
                  x-transition:enter-end="opacity-100 translate-y-0">
+                <img
+                    src="{{ asset('images/landing-styled-card.svg') }}"
+                    alt="Escrow workflow visual"
+                    loading="lazy"
+                    class="w-full rounded-2xl border border-emerald-100/80 shadow-lg shadow-emerald-900/10 hover:shadow-2xl hover:shadow-emerald-900/20 transition-shadow duration-300">
+            </div>
+            <div x-show="inView"
+                 x-cloak
+                 x-transition:enter="transition ease-out duration-700 delay-150"
+                 x-transition:enter-start="opacity-0 translate-y-8"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 class="text-center lg:text-left">
                 <div class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-green-200 text-green-700 rounded-full text-sm font-semibold mb-6 shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
                     <span>Why Choose Us</span>
                 </div>
-                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
                     Features That Set Us Apart
                 </h2>
-                <p class="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                <p class="text-lg sm:text-xl text-gray-600 leading-relaxed">
                     Our comprehensive escrow service is designed to provide security, convenience, and peace of mind for all types of transactions.
                 </p>
             </div>

@@ -143,25 +143,6 @@
                     </div>
                 </div>
 
-                <!-- Business Hours -->
-                <div class="bg-gray-50 rounded-xl p-6 border border-gray-200 mb-8">
-                    <h3 class="font-semibold text-gray-900 mb-4">Business Hours</h3>
-                    <div class="space-y-2 text-sm text-gray-600">
-                        <div class="flex justify-between">
-                            <span>Monday - Friday</span>
-                            <span class="font-medium">8:00 AM - 6:00 PM EAT</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Saturday</span>
-                            <span class="font-medium">9:00 AM - 2:00 PM EAT</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Sunday</span>
-                            <span class="font-medium">Closed</span>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Social Links -->
                 <div>
                     <h3 class="font-semibold text-gray-900 mb-4">Follow Us</h3>
@@ -185,6 +166,21 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</section>
+
+<!-- Office Map (just above footer) -->
+<section class="pb-16 lg:pb-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+            <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d16314137.736586282!2d35.3842978!3d-3.3639162500000004!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xbee781eaa08541b%3A0x1fb702f7c4a6317a!2sConfirm%20Diligence%20Solutions%20(E-Confirm)!5e0!3m2!1sen!2ske!4v1777301253850!5m2!1sen!2ske"
+                class="w-full h-80 sm:h-96 lg:h-[28rem]"
+                style="border:0;"
+                allowfullscreen=""
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
     </div>
 </section>
