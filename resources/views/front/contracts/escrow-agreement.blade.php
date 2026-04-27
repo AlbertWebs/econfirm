@@ -61,7 +61,7 @@
         {{-- <img src="{{ public_path('images/logo.png') }}" alt="e-confirm Logo" height="40"> --}}
         <h1>e-CONFIRM</h1>
         <p>A service of Confirm Diligence Solutions Limited</p>
-        <p>Prestige Plaza, Ngong Road, Nairobi | support@econfirm.co.ke | https://econfirm.co.ke</p>
+        <p>Prestige Plaza, Ngong Road, Nairobi | info@econfirm.co.ke | https://econfirm.co.ke</p>
     </div>
 
     <hr>

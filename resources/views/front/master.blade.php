@@ -91,19 +91,6 @@
 
     @stack('head_extra')
 
-    <script>
-        (function () {
-            var storedTheme = localStorage.getItem('theme');
-            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            var isDark = storedTheme ? storedTheme === 'dark' : prefersDark;
-            document.documentElement.classList.toggle('theme-dark', isDark);
-            document.documentElement.classList.toggle('theme-light', !isDark);
-        })();
-    </script>
-
-
-   
-   
     <style>
         /* Smooth scrolling; clip horizontal overflow without the overflow-x/y pairing bug that creates a second vertical scrollbar. */
         html {
@@ -173,88 +160,6 @@
           animation: spin 0.7s linear infinite;
         }
 
-        /* Theme toggle support */
-        .theme-toggle-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 0.75rem;
-            border: 1px solid #d1d5db;
-            color: #374151;
-            background: #ffffff;
-            transition: all 0.2s ease;
-        }
-        .theme-toggle-btn:hover {
-            border-color: #10b981;
-            background: #f9fafb;
-            color: #065f46;
-        }
-        .theme-toggle-btn-mobile {
-            width: 100%;
-            justify-content: flex-start;
-            gap: 0.5rem;
-            padding: 0.625rem 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid #d1d5db;
-            color: #374151;
-            background: #ffffff;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        .theme-dark body {
-            background: #0b1220;
-            color: #e5e7eb;
-        }
-        .theme-dark #preloader {
-            background: #0b1220;
-        }
-        .theme-dark header,
-        .theme-dark nav,
-        .theme-dark footer {
-            background-color: #111827 !important;
-            border-color: #1f2937 !important;
-        }
-        .theme-dark .bg-white,
-        .theme-dark .bg-white\/95,
-        .theme-dark .bg-white\/90,
-        .theme-dark .bg-white\/80 {
-            background-color: #111827 !important;
-        }
-        .theme-dark .text-gray-900,
-        .theme-dark .text-gray-800,
-        .theme-dark .text-gray-700,
-        .theme-dark .text-slate-900,
-        .theme-dark .text-slate-800,
-        .theme-dark .text-slate-700 {
-            color: #e5e7eb !important;
-        }
-        .theme-dark .text-gray-600,
-        .theme-dark .text-gray-500,
-        .theme-dark .text-slate-600,
-        .theme-dark .text-slate-500 {
-            color: #9ca3af !important;
-        }
-        .theme-dark .border-gray-100,
-        .theme-dark .border-gray-200,
-        .theme-dark .border-gray-300,
-        .theme-dark .border-slate-100,
-        .theme-dark .border-slate-200 {
-            border-color: #374151 !important;
-        }
-        .theme-dark .shadow-lg,
-        .theme-dark .shadow-xl,
-        .theme-dark .shadow-2xl {
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
-        }
-        .theme-dark .theme-toggle-btn,
-        .theme-dark .theme-toggle-btn-mobile {
-            background: #1f2937;
-            border-color: #374151;
-            color: #e5e7eb;
-        }
     </style>
 </head>
 @php
@@ -282,24 +187,10 @@
         searchPopupOpen: false,
         productsDropdownOpen: false,
         mobileProductsOpen: false,
-        darkMode: document.documentElement.classList.contains('theme-dark'),
         isHome: @json($navOnHome),
         isFeaturesPage: @json($navOnFeatures),
         activeHash: '',
-        syncHash() { this.activeHash = (typeof window !== 'undefined' && window.location) ? window.location.hash : ''; },
-        applyTheme(isDark) {
-            document.documentElement.classList.toggle('theme-dark', isDark);
-            document.documentElement.classList.toggle('theme-light', !isDark);
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            this.darkMode = isDark;
-            const metaTheme = document.querySelector('meta[name=theme-color]');
-            if (metaTheme) {
-                metaTheme.setAttribute('content', isDark ? '#111827' : '#18743c');
-            }
-        },
-        toggleTheme() {
-            this.applyTheme(!this.darkMode);
-        }
+        syncHash() { this.activeHash = (typeof window !== 'undefined' && window.location) ? window.location.hash : ''; }
     }"
     x-init="syncHash()"
     @hashchange.window="syncHash()"
@@ -406,14 +297,6 @@
                             :class="searchPopupOpen ? 'text-green-800 bg-green-50 font-semibold border-green-300 ring-1 ring-green-200/50' : 'text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-green-300'">
                         <i class="fas fa-search text-xs"></i> Search Escrow
                     </button>
-                    <button type="button"
-                            @click="toggleTheme()"
-                            class="theme-toggle-btn"
-                            :title="darkMode ? 'Switch to light mode' : 'Switch to dark mode'"
-                            :aria-label="darkMode ? 'Switch to light mode' : 'Switch to dark mode'">
-                        <i class="fas" :class="darkMode ? 'fa-sun text-amber-400' : 'fa-moon text-slate-600'"></i>
-                    </button>
-
                     @if (auth()->check())
                         <button type="button"
                                 onclick="window.location.href='{{ route('user.dashboard') }}'"
@@ -502,12 +385,6 @@
                         class="w-full text-left px-4 py-2.5 text-sm font-medium border rounded-lg transition-all duration-200 flex items-center gap-2"
                         :class="searchPopupOpen ? 'text-green-800 bg-green-50 font-semibold border-green-300 ring-1 ring-green-200/50' : 'text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-green-300'">
                     <i class="fas fa-search text-xs"></i> Search Escrow
-                </button>
-                <button type="button"
-                        @click="toggleTheme()"
-                        class="theme-toggle-btn-mobile">
-                    <i class="fas" :class="darkMode ? 'fa-sun text-amber-400' : 'fa-moon text-slate-600'"></i>
-                    <span x-text="darkMode ? 'Light mode' : 'Dark mode'"></span>
                 </button>
                 @if (auth()->check())
                     <button type="button" onclick="window.location.href='{{ route('user.dashboard') }}'"

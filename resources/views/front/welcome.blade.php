@@ -39,6 +39,7 @@ function transactionFormData() {
         amountFeeTooltipDismissed: false,
         submitting: false,
         mpesaResponse: null,
+        submittedForm: null,
         checkoutRequestId: null,
         _statusPollTimer: null,
 
@@ -127,6 +128,7 @@ function transactionFormData() {
             this.mpesaResponse = null;
             
             const form = event.target;
+            this.submittedForm = form;
             if (!this.selectedTransactionValue) {
                 this.mpesaResponse = { type: 'error', message: 'Please select a transaction type from the list (use search to find one).' };
                 this.submitting = false;
@@ -153,13 +155,6 @@ function transactionFormData() {
                     };
                     const checkoutId = data.CheckoutRequestID || (data.data && data.data.CheckoutRequestID);
                     if (checkoutId) {
-                        form.reset();
-                        this.selectedTransactionValue = '';
-                        this.transactionTypeQuery = '';
-                        this.transactionTypeOpen = false;
-                        this.showCustomType = false;
-                        this.transactionAmount = '';
-                        this.amountFeeTooltipDismissed = false;
                         this.checkoutRequestId = checkoutId;
                         this.pollTransactionStatus();
                     }
@@ -178,6 +173,19 @@ function transactionFormData() {
                 clearTimeout(this._statusPollTimer);
                 this._statusPollTimer = null;
             }
+        },
+
+        resetSubmittedForm() {
+            if (this.submittedForm && typeof this.submittedForm.reset === 'function') {
+                this.submittedForm.reset();
+            }
+            this.selectedTransactionValue = '';
+            this.transactionTypeQuery = '';
+            this.transactionTypeOpen = false;
+            this.showCustomType = false;
+            this.transactionAmount = '';
+            this.amountFeeTooltipDismissed = false;
+            this.submittedForm = null;
         },
 
         pollTransactionStatus() {
@@ -245,6 +253,7 @@ function transactionFormData() {
                     const st = (data.status != null ? String(data.status) : '').toLowerCase();
                     if (st === 'success' || st === 'completed') {
                         self._clearStatusTimer();
+                        self.resetSubmittedForm();
                         if (!data.transaction_id) {
                             self.mpesaResponse = { type: 'warning', message: data.message || 'Payment received. Contact support if the page does not update.' };
                             self.checkoutRequestId = null;
@@ -906,7 +915,7 @@ function transactionFormData() {
                    class="inline-flex items-center justify-center text-center text-sm sm:text-base px-3 py-3.5 sm:px-8 sm:py-4 bg-white text-green-600 font-semibold rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 min-w-0">
                     Get Started Now
                 </a>
-                <a href="mailto:support@econfirm.co.ke" 
+                <a href="mailto:info@econfirm.co.ke" 
                    class="inline-flex items-center justify-center text-center text-sm sm:text-base px-3 py-3.5 sm:px-8 sm:py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white/10 transition-all duration-200 min-w-0">
                     Contact Support
                 </a>

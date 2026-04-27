@@ -1,7 +1,7 @@
 @extends('front.master')
 
 @php
-    $pubEmail = site_setting('contact_email') ?: 'support@econfirm.co.ke';
+    $pubEmail = site_setting('contact_email') ?: 'info@econfirm.co.ke';
     $pubPhoneDisplay = site_setting('contact_phone_display') ?: '0748 349995';
     $pubPhoneE164 = site_setting('contact_phone_e164') ?: '+254748349995';
     $pubAddress = site_setting('physical_address') ?: "Prestige Plaza, Jambo Apt, Suite A18\nNgong Road, Nairobi";

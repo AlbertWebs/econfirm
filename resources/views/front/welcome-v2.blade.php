@@ -730,7 +730,7 @@
             <p>Join thousands of satisfied clients who trust our escrow service for their important transactions.</p>
             <div class="cta-buttons">
                 <a href="#home" class="btn btn-primary btn-lg">Get Started Now</a>
-                <a href="mailto:support@econfirm.co.ke" class="btn btn-outline btn-lg">Contact Support</a>
+                <a href="mailto:info@econfirm.co.ke" class="btn btn-outline btn-lg">Contact Support</a>
             </div>
             <p class="cta-note">No obligation. Cancel anytime.</p>
         </div>

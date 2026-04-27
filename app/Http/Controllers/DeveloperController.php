@@ -383,8 +383,8 @@ GO;
         return [
             'info' => [
                 '_postman_id' => Str::uuid()->toString(),
-                'name' => 'eConfirm Escrow API',
-                'description' => 'Health check + Escrow v1 + VeliPay-managed payment gateway. Set `apiRoot` (e.g. '.$apiRoot.') and `apiKey` (your ek_ key).',
+                'name' => 'eConfirm Escrow API (VeliPay)',
+                'description' => 'Health check + Escrow v1 + VeliPay-managed payment flows. Set `apiRoot` (e.g. '.$apiRoot.') and `apiKey` (your ek_ key).',
                 'schema' => 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
             ],
             'variable' => [

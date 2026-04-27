@@ -44,7 +44,7 @@
     <p><strong>1. Escrow Provider</strong><br>
     <strong>e-confirm</strong>, a service of <strong>Confirm Diligence Solutions Limited</strong><br>
     Address: {{ $escrow_address ?? 'Prestige Plaza, Ngong Road, Nairobi, Kenya' }}<br>
-    Email: {{ $escrow_email ?? 'support@econfirm.co.ke' }}<br>
+    Email: {{ $escrow_email ?? 'info@econfirm.co.ke' }}<br>
     Website: https://econfirm.co.ke</p>
 
     <p><strong>2. Buyer (Depositor)</strong><br>

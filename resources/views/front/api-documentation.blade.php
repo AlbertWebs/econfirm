@@ -4,8 +4,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>e-confirm Documentation</title>
-    <meta name="description" content="e-confirm - Secure Escrow Service Documentation" />
+    <title>e-confirm VeliPay Documentation</title>
+    <meta name="description" content="e-confirm - Public documentation for secure escrow and VeliPay-backed payments" />
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -215,7 +215,7 @@
               <h2>Introduction</h2>
               
               <div class="lead mb-4">
-                Welcome to e-confirm, a secure and reliable escrow service designed to protect your transactions and build trust between parties.
+                Welcome to e-confirm documentation. This public guide explains our secure escrow API and VeliPay-backed payment flow.
               </div>
               
               <p>
@@ -377,8 +377,8 @@
               <h2>API Reference</h2>
               
               <p>
-                The e-confirm API allows you to integrate escrow functionality directly into your applications. 
-                Our RESTful API is designed to be simple and intuitive while providing powerful functionality.
+                The e-confirm API allows you to integrate escrow workflows directly into your applications. 
+                All payment actions are orchestrated by our backend through VeliPay, so your integration stays simple and secure.
               </p>
               
               <h3>Authentication</h3>
@@ -456,7 +456,7 @@
 }
               </div>
 
-              <h3>Payments (VeliPay through our platform only)</h3>
+              <h3>Payments (VeliPay via platform only)</h3>
               <div class="alert alert-warning border-0">
                 <strong>Important:</strong> All collections and releases are handled by our backend through VeliPay. Use only the endpoints below with your API key; authentication, validation, rate limits, and audit logging run on our servers.
               </div>
@@ -500,7 +500,7 @@
   "remarks": "Duplicate payment"
 }
               </div>
-              <p>Release escrowed funds:</p>
+              <p>Release escrowed funds (VeliPay-backed via platform):</p>
               <div class="code-block">
 <strong>POST</strong> /transactions/{transaction_id}/release
 
@@ -685,8 +685,8 @@
                             <h5 class="card-title mb-0">Email Support</h5>
                           </div>
                           <p class="card-text">Get help with your account or transactions</p>
-                          <a href="mailto:tickets@e-confirm.p.tawk.email" class="btn btn-outline-primary">
-                            support@econfirm.co.ke
+                          <a href="mailto:info@econfirm.co.ke" class="btn btn-outline-primary">
+                            info@econfirm.co.ke
                           </a>
                         </div>
                       </div>

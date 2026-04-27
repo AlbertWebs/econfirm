@@ -41,7 +41,7 @@ return [
             'label' => 'Public contact email',
             'group' => 'contact',
             'rules' => ['nullable', 'email', 'max:255'],
-            'default' => 'support@econfirm.co.ke',
+            'default' => 'info@econfirm.co.ke',
         ],
         'contact_phone_display' => [
             'label' => 'Contact phone (display)',

@@ -1,8 +1,8 @@
 @extends('layouts.developer')
 
-@section('title', 'API developer hub')
-@section('page_title', 'API developer hub')
-@section('page_subtitle', 'Base URLs, secret key, examples, and API escrow activity')
+@section('title', 'VeliPay API developer hub')
+@section('page_title', 'VeliPay API developer hub')
+@section('page_subtitle', 'Base URLs, secret key, examples, and VeliPay-backed escrow API activity')
 
 @section('content')
         <section id="dev-section-overview" class="db-dev-section">
@@ -163,16 +163,17 @@
         <section id="dev-section-endpoints" class="db-dev-section">
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body">
-                    <h2 class="h6 fw-bold text-uppercase text-muted mb-3">Endpoints</h2>
+                    <h2 class="h6 fw-bold text-uppercase text-muted mb-1">Endpoints</h2>
+                    <p class="small text-muted mb-3">VeliPay documentation alignment: use STK Push as the primary funding path. Legacy payment and reversal routes are compatibility-only and currently return <code class="small">410 Gone</code>.</p>
                     <ul class="list-unstyled small mb-0">
                         <li class="mb-2"><span class="badge bg-light text-dark border me-2">GET</span> <code id="t-ping">{{ $apiRootUrl }}/ping</code> <button type="button" class="btn btn-link btn-sm p-0" data-copy-target="#t-ping">Copy</button></li>
                         <li class="mb-2"><span class="text-muted me-1">v1 base</span> <code id="t-v1">{{ $apiV1Url }}</code> <button type="button" class="btn btn-link btn-sm p-0" data-copy-target="#t-v1">Copy</button></li>
                         <li class="mb-2 pt-2 border-top"><span class="badge bg-success me-2">POST</span> <code>{{ $apiV1Url }}/payments/stk-push</code></li>
-                        <li class="mb-2"><span class="badge bg-success me-2">POST</span> <code>{{ $apiV1Url }}/payments/c2b</code> <span class="text-muted">(sandbox / when enabled)</span></li>
-                        <li class="mb-2"><span class="badge bg-success me-2">POST</span> <code>{{ $apiV1Url }}/payments/b2c</code></li>
-                        <li class="mb-2"><span class="badge bg-success me-2">POST</span> <code>{{ $apiV1Url }}/payments/b2b</code></li>
+                        <li class="mb-2"><span class="badge bg-secondary me-2">POST</span> <code>{{ $apiV1Url }}/payments/c2b</code> <span class="text-muted">(legacy compatibility, deprecated: 410)</span></li>
+                        <li class="mb-2"><span class="badge bg-secondary me-2">POST</span> <code>{{ $apiV1Url }}/payments/b2c</code> <span class="text-muted">(legacy compatibility, deprecated: 410)</span></li>
+                        <li class="mb-2"><span class="badge bg-secondary me-2">POST</span> <code>{{ $apiV1Url }}/payments/b2b</code> <span class="text-muted">(legacy compatibility, deprecated: 410)</span></li>
                         <li class="mb-2"><span class="badge bg-light text-dark border me-2">GET</span> <code>{{ $apiV1Url }}/transactions/{id}</code></li>
-                        <li class="mb-2"><span class="badge bg-success me-2">POST</span> <code>{{ $apiV1Url }}/transactions/{id}/reversal</code></li>
+                        <li class="mb-2"><span class="badge bg-secondary me-2">POST</span> <code>{{ $apiV1Url }}/transactions/{id}/reversal</code> <span class="text-muted">(legacy compatibility, deprecated: 410)</span></li>
                     </ul>
                 </div>
             </div>
@@ -248,7 +249,7 @@
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body">
                     <h2 class="h6 fw-bold text-uppercase text-muted mb-2">Postman</h2>
-                    <p class="small text-muted mb-3">Collection v2.1: health check, escrow v1, and payment gateway routes. Variables <code class="small">apiRoot</code>, <code class="small">apiKey</code>, <code class="small">transactionId</code>.</p>
+                    <p class="small text-muted mb-3">Collection v2.1: health check, escrow v1, and VeliPay-backed platform routes. Variables <code class="small">apiRoot</code>, <code class="small">apiKey</code>, <code class="small">transactionId</code>.</p>
                     <a href="{{ route('developer.postman.collection') }}" class="btn btn-success btn-sm rounded-pill px-3">Download Postman collection</a>
                     @unless ($keyPreview)
                         <p class="small text-muted mt-2 mb-0">Save a key with <strong>Generate key</strong> first; the download uses your stored key (not the one-time flash banner).</p>
@@ -260,22 +261,21 @@
         <section id="dev-section-mpesa" class="db-dev-section">
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body">
-                    <h2 class="h6 fw-bold text-uppercase text-muted mb-2">Payments &amp; M-Pesa (platform gateway)</h2>
+                    <h2 class="h6 fw-bold text-uppercase text-muted mb-2">Payments &amp; VeliPay (platform gateway)</h2>
                     <div class="alert alert-warning border-0 small mb-3">
-                        <strong>All M-PESA interactions are managed internally by our system.</strong> External developers must not connect directly to Safaricom M-PESA APIs. Integrate only with <code class="small">{{ $apiV1Url }}/…</code> using your API key; we validate, rate-limit, audit-log, and then perform any M-Pesa call from our servers. Consumer keys, passkeys, and certificates never leave our infrastructure.
+                        <strong>All payment interactions are managed internally through VeliPay.</strong> External developers must not connect directly to Safaricom M-PESA APIs or raw VeliPay credentials. Integrate only with <code class="small">{{ $apiV1Url }}/…</code> using your API key; we validate, rate-limit, audit-log, and then perform payment provider calls from our servers. Provider secrets never leave our infrastructure.
                     </div>
                     <h3 class="h6 fw-semibold mb-2">Typical funding flow</h3>
                     <ol class="small text-muted mb-4">
                         <li><code class="small">POST …/transactions</code> — create escrow (pending).</li>
                         <li><code class="small">POST …/payments/stk-push</code> — body <code class="small">transaction_id</code> + <code class="small">payer_phone</code> (254…); customer confirms on handset.</li>
-                        <li><code class="small">GET …/transactions/{id}</code> — poll escrow status; M-Pesa callbacks are processed on our side.</li>
-                        <li>Payouts (when your escrow rules allow): <code class="small">POST …/payments/b2c</code> or <code class="small">POST …/payments/b2b</code> with the same <code class="small">transaction_id</code>.</li>
-                        <li>Reversals: <code class="small">POST …/transactions/{id}/reversal</code> with <code class="small">mpesa_transaction_id</code> and <code class="small">amount</code> — forwarded only through our backend.</li>
+                        <li><code class="small">GET …/transactions/{id}</code> — poll escrow status; callbacks are processed on our side via VeliPay integration.</li>
+                        <li><code class="small">POST …/transactions/{id}/release</code> — release escrowed funds when confirmation rules are met.</li>
                     </ol>
-                    <p class="small text-muted mb-2">Optional <code class="small">POST …/payments/c2b</code> calls our internal C2B simulate path (sandbox / when explicitly enabled for production). It is not a shortcut to live paybills outside our controls.</p>
+                    <p class="small text-muted mb-2">Legacy compatibility endpoints (<code class="small">/payments/c2b</code>, <code class="small">/payments/b2c</code>, <code class="small">/payments/b2b</code>, and <code class="small">/transactions/{id}/reversal</code>) are deprecated and currently return <code class="small">410 Gone</code>.</p>
                     <h3 class="h6 fw-semibold mb-2">Operator-only callback URLs</h3>
-                    <p class="small text-muted mb-2">Inbound HTTPS routes that <strong>only Safaricom</strong> should call (STK, B2B, B2C, reversal) are provisioned by the platform operator in the server environment. They are <strong>not</strong> part of the developer API surface and are not documented here as integration targets.</p>
-                    <p class="small text-muted mb-0">If you operate this deployment, see the admin M-Pesa configuration screens and <code class="small">.env</code> — not the public API docs.</p>
+                    <p class="small text-muted mb-2">Inbound HTTPS routes that <strong>only provider systems</strong> should call (STK and other payment callbacks) are provisioned by the platform operator in server environment settings. They are <strong>not</strong> part of the developer API surface and are not integration targets.</p>
+                    <p class="small text-muted mb-0">If you operate this deployment, see the admin VeliPay/M-Pesa configuration screens and <code class="small">.env</code> — not the public API docs.</p>
                 </div>
             </div>
         </section>
