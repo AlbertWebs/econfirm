@@ -8,6 +8,40 @@
 @endif
 @section('og_type', 'article')
 
+@push('head_extra')
+<style>
+    /* Ensure article list markers are always visible */
+    .blog-content ul,
+    .blog-content ol {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+        padding-left: 1.5rem;
+        list-style-position: outside;
+    }
+
+    .blog-content ul {
+        list-style-type: disc !important;
+    }
+
+    .blog-content ol {
+        list-style-type: decimal !important;
+    }
+
+    .blog-content ul ul {
+        list-style-type: circle !important;
+    }
+
+    .blog-content ol ol {
+        list-style-type: lower-alpha !important;
+    }
+
+    .blog-content li {
+        display: list-item !important;
+        margin: 0.35rem 0;
+    }
+</style>
+@endpush
+
 @section('content')
 <article class="border-b border-slate-200/80 bg-white">
     <div class="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">

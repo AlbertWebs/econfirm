@@ -24,7 +24,7 @@
         @else
             <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($blogs as $blog)
-                    <article class="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm transition hover:border-emerald-200/80 hover:shadow-md">
+                    <article class="group wow-reveal flex flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm transition hover:border-emerald-200/80 hover:shadow-md" style="--wow-delay: {{ ($loop->index % 3) * 90 }}ms;">
                         <a href="{{ route('insights.show', $blog->slug) }}" class="block shrink-0 overflow-hidden bg-slate-100 aspect-[16/10]">
                             @if ($blog->featuredImageUrl())
                                 <img src="{{ $blog->featuredImageUrl() }}" alt="" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]" width="640" height="400" loading="lazy" decoding="async">
@@ -55,7 +55,7 @@
                     </article>
                 @endforeach
             </div>
-            <div class="mt-12">
+            <div class="mt-12 wow-reveal" style="--wow-delay: 80ms;">
                 {{ $blogs->links() }}
             </div>
         @endif

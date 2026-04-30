@@ -72,12 +72,30 @@
                 @endforeach
             </div>
         </div>
+
+        @if(($communities ?? collect())->isNotEmpty())
+            <div class="mt-4 w-full max-w-4xl mx-auto">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 text-center sm:text-left">Browse by community</p>
+                <div class="flex flex-wrap justify-center sm:justify-start gap-1.5 sm:gap-2">
+                    @foreach($communities as $community)
+                        <a href="{{ route('scam.watch.community', ['community' => $community]) }}"
+                           title="{{ $community->name }} — {{ $community->reports_count }} {{ Str::plural('report', $community->reports_count) }}"
+                           class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-white/90 border border-red-200/80 text-red-800 hover:bg-red-50 hover:border-red-300 transition-colors leading-tight shadow-sm">
+                            <span>{{ $community->name }}</span>
+                            <span class="text-red-500 font-semibold tabular-nums">({{ $community->reports_count }})</span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        @endif
     </div>
 </section>
 
 <!-- Scam List Section -->
 <section id="scam-list" class="py-16 lg:py-20 bg-white" x-data="{
+    searchInput: '',
     searchQuery: '',
+    applySearch() { this.searchQuery = (this.searchInput || '').trim(); },
     matchesFilter(report) {
         if (!this.searchQuery) return true;
         const query = this.searchQuery.toLowerCase();
@@ -99,18 +117,23 @@
         <!-- Search -->
         <div class="mb-8 bg-gray-50 rounded-xl p-6 w-full">
             <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
-            <div class="flex flex-col sm:flex-row gap-3 w-full">
+            <form @submit.prevent="applySearch()" class="flex flex-col sm:flex-row gap-3 w-full">
                 <input type="text"
-                       x-model.debounce.300ms="searchQuery"
+                       x-model="searchInput"
                        placeholder="Search by website, name, or description..."
                        class="w-full min-w-0 flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none">
+                <button type="submit"
+                        class="shrink-0 w-full sm:w-auto px-6 py-2 bg-red-600 border-2 border-red-600 text-white font-medium rounded-lg hover:bg-red-700 hover:border-red-700 transition-all duration-200 flex items-center justify-center gap-2">
+                    <i class="fas fa-search text-sm"></i>
+                    Search
+                </button>
                 <button type="button"
-                        @click="searchQuery = ''"
+                        @click="searchInput = ''; searchQuery = ''"
                         class="shrink-0 w-full sm:w-auto px-6 py-2 bg-white border-2 border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 flex items-center justify-center gap-2">
                     <i class="fas fa-times text-sm"></i>
                     Clear
                 </button>
-            </div>
+            </form>
         </div>
 
         <!-- Scam List -->
@@ -122,7 +145,8 @@
                     category: '{{ $report->category }}',
                     category_other: '{{ addslashes((string) ($report->category_other ?? '')) }}'
                 })"
-                     class="bg-white border-2 border-red-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200">
+                     class="wow-reveal bg-white border-2 border-red-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200"
+                     style="--wow-delay: {{ ($loop->index % 4) * 70 }}ms;">
                     <div class="flex items-start justify-between gap-4 mb-4">
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-3 mb-2 flex-wrap">
@@ -154,6 +178,13 @@
                                 <span class="px-3 py-1 text-xs font-semibold rounded-full {{ $report->is_verified ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-900' }}">
                                     {{ $report->verification_label }}
                                 </span>
+                                @if($report->community)
+                                    <a href="{{ route('scam.watch.community', ['community' => $report->community]) }}"
+                                       class="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-full hover:bg-indigo-200 transition-colors max-w-[16rem] truncate inline-block align-bottom"
+                                       title="{{ $report->community->name }}">
+                                        {{ $report->community->name }}
+                                    </a>
+                                @endif
                             </div>
                             <p class="text-gray-600 mb-2 break-words">
                                 <strong>
@@ -167,9 +198,17 @@
                                 </strong>
                                 <span class="text-red-600 font-mono break-all">{{ $report->reported_value }}</span>
                             </p>
-                            <p class="text-gray-600 mb-4 break-words">
+                            <p class="text-gray-600 mb-3 break-words sm:hidden">
+                                {{ Str::limit($report->description, 220, '…') }}
+                            </p>
+                            <p class="text-gray-600 mb-4 break-words hidden sm:block">
                                 {{ $report->description }}
                             </p>
+                            <a href="{{ route('scam.watch.show', ['report' => $report, 'slug' => $report->seoSlug()]) }}"
+                               class="inline-flex sm:hidden items-center gap-1 text-sm font-semibold text-red-600 hover:text-red-700 mb-4">
+                                View more
+                                <i class="fas fa-arrow-right text-[10px]"></i>
+                            </a>
                             <div class="flex flex-wrap gap-4 text-sm text-gray-500">
                                 <span class="flex items-center gap-1">
                                     <i class="fas fa-calendar text-xs"></i> First reported: {{ $report->created_at->diffForHumans() }}
@@ -230,7 +269,7 @@
 
             <!-- Pagination -->
             @if($reports->hasPages())
-                <div class="mt-8">
+                <div class="mt-8 wow-reveal" style="--wow-delay: 80ms;">
                     {{ $reports->links() }}
                 </div>
             @endif

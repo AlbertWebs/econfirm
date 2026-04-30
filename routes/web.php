@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ScamReportController as AdminScamReportController
 use App\Http\Controllers\Admin\SiteSettingsController;
 use App\Http\Controllers\Admin\SmsLogController;
 use App\Http\Controllers\Admin\StkContactController;
+use App\Http\Controllers\Admin\ScamCommunityAdminController as AdminScamCommunityAdminController;
 use App\Http\Controllers\Admin\TariffQueryController;
 use App\Http\Controllers\Admin\SupportHelpItemController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
@@ -83,6 +84,14 @@ Route::get('/scam-watch/report', [HomeController::class, 'scamWatchReportForm'])
 Route::get('/scam-watch/category/{category}', [HomeController::class, 'scamWatchCategory'])
     ->name('scam.watch.category')
     ->whereIn('category', array_keys(ScamReport::CATEGORY_LABELS));
+Route::get('/scam-watch/community/{community:slug}', [HomeController::class, 'scamWatchCommunity'])
+    ->name('scam.watch.community');
+Route::post('/scam-watch/community/{community:slug}/admin-request', [HomeController::class, 'requestScamCommunityAdmin'])
+    ->middleware('auth')
+    ->name('scam.watch.community.admin.request');
+Route::post('/scam-watch/community/{community:slug}/reports/{report}/moderate', [HomeController::class, 'moderateScamCommunityReport'])
+    ->middleware('auth')
+    ->name('scam.watch.community.reports.moderate');
 Route::get('/scam-watch/reports/{report}/evidence/{index}', [HomeController::class, 'scamWatchEvidence'])
     ->name('scam.watch.evidence')
     ->whereNumber('index');
@@ -252,6 +261,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('contact/{contact}', [ContactSubmissionController::class, 'show'])->name('contact.show');
         Route::post('contact/{contact}/unread', [ContactSubmissionController::class, 'markUnread'])->name('contact.unread');
         Route::get('scam-reports', [AdminScamReportController::class, 'index'])->name('scam-reports.index');
+        Route::get('scam-community-admins', [AdminScamCommunityAdminController::class, 'index'])->name('scam-community-admins.index');
+        Route::post('scam-community-admins/{scamCommunityAdmin}/status', [AdminScamCommunityAdminController::class, 'updateStatus'])->name('scam-community-admins.status');
         Route::get('scam-reports/{scam_report}/evidence/{index}', [AdminScamReportController::class, 'evidence'])
             ->name('scam-reports.evidence')
             ->whereNumber('index');

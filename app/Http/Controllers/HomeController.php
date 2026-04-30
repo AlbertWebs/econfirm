@@ -7,6 +7,8 @@ use App\Models\ContactSubmission;
 use App\Models\Otp;
 use App\Models\Page;
 use App\Models\ScamReport;
+use App\Models\ScamCommunity;
+use App\Models\ScamCommunityAdmin;
 use App\Models\ScamReportComment;
 use App\Models\ScamReportLike;
 use App\Models\SupportHelpItem;
@@ -558,7 +560,7 @@ class HomeController extends Controller
 
     public function scamWatch()
     {
-        $reports = ScamReport::withCount('likes')
+        $reports = ScamReport::with('community')->withCount('likes')
             ->publicListed()
             ->orderBy('report_count', 'desc')
             ->orderBy('created_at', 'desc')
@@ -570,12 +572,25 @@ class HomeController extends Controller
             ->groupBy('category')
             ->pluck('cnt', 'category');
 
-        return view('front.scam-watch', compact('reports', 'categoryCounts'));
+        $communities = ScamCommunity::query()
+            ->where('is_active', true)
+            ->withCount(['reports' => fn ($q) => $q->publicListed()])
+            ->orderByDesc('reports_count')
+            ->orderBy('name')
+            ->limit(12)
+            ->get();
+
+        return view('front.scam-watch', compact('reports', 'categoryCounts', 'communities'));
     }
 
     public function scamWatchReportForm()
     {
-        return view('front.report-a-scam');
+        $communities = ScamCommunity::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('front.report-a-scam', compact('communities'));
     }
 
     /**
@@ -611,12 +626,13 @@ class HomeController extends Controller
             return redirect()->route('scam.watch.show', ['report' => $report, 'slug' => $expected], 301);
         }
 
+        $report->load('community');
         $report->loadCount('likes');
         $report->loadCount([
             'comments as comments_count' => fn ($q) => $q->where('is_hidden', false),
         ]);
 
-        $related = ScamReport::withCount('likes')
+        $related = ScamReport::with('community')->withCount('likes')
             ->publicListed()
             ->where('category', $report->category)
             ->where('id', '!=', $report->id)
@@ -693,7 +709,7 @@ class HomeController extends Controller
 
         $label = ScamReport::CATEGORY_LABELS[$category];
 
-        $reports = ScamReport::withCount('likes')
+        $reports = ScamReport::with('community')->withCount('likes')
             ->publicListed()
             ->where('category', $category)
             ->orderBy('report_count', 'desc')
@@ -712,6 +728,92 @@ class HomeController extends Controller
             'pageTitle',
             'metaDescription'
         ));
+    }
+
+    public function scamWatchCommunity(ScamCommunity $community)
+    {
+        abort_unless($community->is_active, 404);
+
+        $adminRole = auth()->check()
+            ? ScamCommunityAdmin::query()
+                ->where('scam_community_id', $community->id)
+                ->where('user_id', (int) auth()->id())
+                ->first()
+            : null;
+        $isApprovedCommunityAdmin = ($adminRole?->status ?? null) === 'approved';
+
+        $reportsQuery = ScamReport::with('community')->withCount('likes')
+            ->where('community_id', $community->id);
+
+        if ($isApprovedCommunityAdmin) {
+            // Approved community admins can review pending/rejected community moderation items.
+            $reportsQuery->where('status', 'approved');
+        } else {
+            $reportsQuery->publicListed();
+        }
+
+        $reports = $reportsQuery
+            ->orderBy('report_count', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20)
+            ->withQueryString();
+
+        $canonicalUrl = route('scam.watch.community', ['community' => $community]);
+        $pageTitle = $community->name.' — scam reports | eConfirm Scam Alert';
+        $metaDescription = 'Scam reports shared by '.$community->name.'. Browse warnings, discuss in comments, and share alerts with your network.';
+
+        return view('front.scam-watch-community', compact(
+            'community',
+            'reports',
+            'canonicalUrl',
+            'pageTitle',
+            'metaDescription',
+            'adminRole'
+        ));
+    }
+
+    public function requestScamCommunityAdmin(Request $request, ScamCommunity $community)
+    {
+        $user = $request->user();
+        abort_unless($user, 403);
+        abort_unless($community->is_active, 404);
+
+        ScamCommunityAdmin::query()->firstOrCreate([
+            'scam_community_id' => $community->id,
+            'user_id' => $user->id,
+        ], [
+            'status' => 'pending',
+        ]);
+
+        return back()->with('status', 'Community admin request submitted. A platform admin must approve you before you can moderate posts.');
+    }
+
+    public function moderateScamCommunityReport(Request $request, ScamCommunity $community, ScamReport $report)
+    {
+        $user = $request->user();
+        abort_unless($user, 403);
+        abort_unless((int) $report->community_id === (int) $community->id, 404);
+
+        $role = ScamCommunityAdmin::query()
+            ->where('scam_community_id', $community->id)
+            ->where('user_id', $user->id)
+            ->where('status', 'approved')
+            ->first();
+        abort_unless($role, 403);
+
+        $validated = $request->validate([
+            'decision' => 'required|in:approved,rejected',
+        ]);
+
+        $report->update([
+            'community_moderation_status' => $validated['decision'],
+            'community_moderated_by_user_id' => $user->id,
+            'community_moderated_at' => now(),
+        ]);
+
+        return back()->with('status', $validated['decision'] === 'approved'
+            ? 'Report approved by community admin and is now eligible for public display.'
+            : 'Report rejected by community admin.');
     }
 
     /**
@@ -739,6 +841,20 @@ class HomeController extends Controller
                 'priority' => '0.85',
             ];
         }
+
+        ScamCommunity::query()
+            ->where('is_active', true)
+            ->whereHas('reports', fn ($q) => $q->publicListed())
+            ->orderBy('name')
+            ->get()
+            ->each(function (ScamCommunity $community) use (&$entries, $lastmod): void {
+                $entries[] = [
+                    'loc' => route('scam.watch.community', ['community' => $community]),
+                    'lastmod' => $lastmod,
+                    'changefreq' => 'daily',
+                    'priority' => '0.75',
+                ];
+            });
 
         ScamReport::query()
             ->publicListed()
@@ -790,6 +906,8 @@ class HomeController extends Controller
             'reported_email' => 'exclude_unless:report_type,email|required_if:report_type,email|email|max:255',
             'category' => 'required|string|in:ecommerce,services,investment,job,romance,other',
             'category_other' => 'required_if:category,other|nullable|string|max:255',
+            'community_id' => 'nullable|integer|exists:scam_communities,id',
+            'community_name' => 'nullable|string|max:120',
             'description' => 'required|string|max:5000',
             'email' => 'nullable|email|max:255',
             'reporter_phone' => 'nullable|string|max:40',
@@ -805,8 +923,31 @@ class HomeController extends Controller
             $validated['category_other'] = null;
         }
 
+        $communityId = isset($validated['community_id']) ? (int) $validated['community_id'] : null;
+        $communityName = trim((string) ($validated['community_name'] ?? ''));
+        unset($validated['community_name']);
+        if ($communityName !== '' && ! $communityId) {
+            $baseSlug = Str::slug($communityName);
+            $slug = $baseSlug !== '' ? $baseSlug : 'community';
+            $originalSlug = $slug;
+            $counter = 2;
+            while (ScamCommunity::query()->where('slug', $slug)->exists()) {
+                $slug = $originalSlug.'-'.$counter;
+                $counter++;
+            }
+
+            $community = ScamCommunity::query()->create([
+                'name' => $communityName,
+                'slug' => $slug,
+                'is_active' => true,
+            ]);
+            $communityId = (int) $community->id;
+        }
+        $validated['community_id'] = $communityId ?: null;
+
         // Check if this report already exists
         $existingReport = ScamReport::where('report_type', $validated['report_type'])
+            ->where('community_id', $validated['community_id'])
             ->where(function ($query) use ($validated) {
                 if ($validated['report_type'] === 'website') {
                     $query->where('website', $validated['website']);
@@ -822,8 +963,15 @@ class HomeController extends Controller
             // Increment report count
             $existingReport->increment('report_count');
         } else {
-            // Await review; public listing shows approved reports only (see ScamReport::scopePublicListed).
-            $validated['status'] = 'pending';
+            if (! empty($validated['community_id'])) {
+                // Community flow: requires approved community admin decision before public listing.
+                $validated['status'] = 'approved';
+                $validated['community_moderation_status'] = 'pending';
+            } else {
+                // General flow: platform admin moderation.
+                $validated['status'] = 'pending';
+                $validated['community_moderation_status'] = null;
+            }
             $report = ScamReport::create($validated);
 
             $evidencePaths = [];

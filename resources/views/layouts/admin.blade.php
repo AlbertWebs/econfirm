@@ -61,6 +61,7 @@
                         ['route' => 'admin.tariff-queries.index', 'pattern' => 'admin.tariff-queries.*', 'label' => 'Tarif Queries', 'icon' => 'document'],
                         ['route' => 'admin.stk-contacts.index', 'pattern' => 'admin.stk-contacts.*', 'label' => 'STK contacts', 'icon' => 'users'],
                         ['route' => 'admin.scam-reports.index', 'pattern' => 'admin.scam-reports.*', 'label' => 'Scam reports', 'icon' => 'shield-exclamation'],
+                        ['route' => 'admin.scam-community-admins.index', 'pattern' => 'admin.scam-community-admins.*', 'label' => 'Community admins', 'icon' => 'users'],
                     ],
                 ],
                 [

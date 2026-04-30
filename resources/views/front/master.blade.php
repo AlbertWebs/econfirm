@@ -160,6 +160,27 @@
           animation: spin 0.7s linear infinite;
         }
 
+        /* WOW-like reveal utility */
+        .wow-reveal {
+            opacity: 0;
+            transform: translate3d(0, 26px, 0) scale(0.985);
+            transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+            transition-delay: var(--wow-delay, 0ms);
+            will-change: opacity, transform;
+        }
+        .wow-reveal.is-visible {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1);
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .wow-reveal,
+            .wow-reveal.is-visible {
+                opacity: 1;
+                transform: none;
+                transition: none;
+            }
+        }
+
     </style>
 </head>
 @php
@@ -623,6 +644,53 @@
                     }
                 });
             });
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const selector = '.wow-reveal:not(.is-visible)';
+
+            const inViewport = function (el) {
+                const rect = el.getBoundingClientRect();
+                const vh = window.innerHeight || document.documentElement.clientHeight;
+                return rect.top <= vh * 0.92 && rect.bottom >= 0;
+            };
+
+            const revealNowIfVisible = function () {
+                document.querySelectorAll(selector).forEach((el) => {
+                    if (inViewport(el)) {
+                        el.classList.add('is-visible');
+                    }
+                });
+            };
+
+            if (!('IntersectionObserver' in window)) {
+                document.querySelectorAll('.wow-reveal').forEach((el) => el.classList.add('is-visible'));
+                return;
+            }
+
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach((entry) => {
+                    if (!entry.isIntersecting) return;
+                    entry.target.classList.add('is-visible');
+                    obs.unobserve(entry.target);
+                });
+            }, { threshold: 0.02, rootMargin: '0px 0px -6% 0px' });
+
+            const observePending = function () {
+                document.querySelectorAll(selector).forEach((el) => observer.observe(el));
+            };
+
+            observePending();
+            revealNowIfVisible();
+
+            // Re-scan for elements added/updated by Alpine/UI interactions.
+            const mo = new MutationObserver(() => {
+                observePending();
+                revealNowIfVisible();
+            });
+            mo.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
         });
     </script>
 

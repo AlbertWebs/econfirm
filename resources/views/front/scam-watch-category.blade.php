@@ -79,7 +79,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="space-y-4">
             @forelse($reports as $report)
-                <article class="bg-white border-2 border-red-100 rounded-xl p-6 hover:shadow-lg transition-all">
+                <article class="wow-reveal bg-white border-2 border-red-100 rounded-xl p-6 hover:shadow-lg transition-all" style="--wow-delay: {{ ($loop->index % 4) * 70 }}ms;">
                     <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                         <div class="flex-1 min-w-0">
                             <h2 class="text-xl font-bold text-gray-900 mb-2">
@@ -95,6 +95,9 @@
                             </h2>
                             <p class="text-gray-700 mb-4">{{ Str::limit($report->description, 280, '…') }}</p>
                             <div class="flex flex-wrap gap-3 text-sm text-gray-500 items-center">
+                                @if($report->community)
+                                    <a href="{{ route('scam.watch.community', ['community' => $report->community]) }}" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700 hover:bg-indigo-200">{{ $report->community->name }}</a>
+                                @endif
                                 <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $report->is_verified ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-900' }}">{{ $report->verification_label }}</span>
                                 <span><i class="fas fa-calendar text-xs"></i> {{ $report->created_at->diffForHumans() }}</span>
                                 <span class="font-semibold text-red-600">{{ $report->report_count }} {{ Str::plural('report', $report->report_count) }}</span>
@@ -116,7 +119,7 @@
         </div>
 
         @if($reports->hasPages())
-            <div class="mt-10">
+            <div class="mt-10 wow-reveal" style="--wow-delay: 80ms;">
                 {{ $reports->links() }}
             </div>
         @endif

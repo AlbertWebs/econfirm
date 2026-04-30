@@ -94,4 +94,9 @@ class User extends Authenticatable
             })
             ->first();
     }
+
+    public function communityAdminRoles()
+    {
+        return $this->hasMany(ScamCommunityAdmin::class);
+    }
 }

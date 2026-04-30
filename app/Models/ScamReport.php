@@ -34,6 +34,10 @@ class ScamReport extends Model
         'reported_email',
         'category',
         'category_other',
+        'community_id',
+        'community_moderation_status',
+        'community_moderated_by_user_id',
+        'community_moderated_at',
         'description',
         'evidence',
         'email',
@@ -46,6 +50,7 @@ class ScamReport extends Model
     protected $casts = [
         'date_of_incident' => 'date',
         'evidence' => 'array',
+        'community_moderated_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -115,7 +120,12 @@ class ScamReport extends Model
      */
     public function scopePublicListed($query)
     {
-        return $query->where('status', 'approved');
+        return $query
+            ->where('status', 'approved')
+            ->where(function ($q) {
+                $q->whereNull('community_id')
+                    ->orWhere('community_moderation_status', 'approved');
+            });
     }
 
     public function resolveRouteBinding($value, $field = null)
@@ -137,6 +147,11 @@ class ScamReport extends Model
     public function comments()
     {
         return $this->hasMany(ScamReportComment::class);
+    }
+
+    public function community()
+    {
+        return $this->belongsTo(ScamCommunity::class, 'community_id');
     }
 
     public function getLikesCountAttribute()

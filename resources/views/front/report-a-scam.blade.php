@@ -159,6 +159,26 @@
                     </select>
                 </div>
 
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Choose community (Optional)</label>
+                        <select name="community_id" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none">
+                            <option value="">No specific community</option>
+                            @foreach(($communities ?? collect()) as $community)
+                                <option value="{{ $community->id }}">{{ $community->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Or create a new community</label>
+                        <input type="text"
+                               name="community_name"
+                               maxlength="120"
+                               placeholder="e.g., Online Taxi Community in Kenya"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none">
+                    </div>
+                </div>
+
                 <div x-show="category === 'other'">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Specify other type *</label>
                     <input type="text"

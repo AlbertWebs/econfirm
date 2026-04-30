@@ -89,6 +89,10 @@
                 <li><a href="{{ route('scam.watch') }}" class="hover:text-red-600">Scam Alert</a></li>
                 <li><span class="text-gray-400">/</span></li>
                 <li><a href="{{ route('scam.watch.category', ['category' => $report->category]) }}" class="hover:text-red-600">{{ $report->category_label }}</a></li>
+                @if($report->community)
+                    <li><span class="text-gray-400">/</span></li>
+                    <li><a href="{{ route('scam.watch.community', ['community' => $report->community]) }}" class="hover:text-indigo-600">{{ $report->community->name }}</a></li>
+                @endif
                 <li><span class="text-gray-400">/</span></li>
                 <li class="text-gray-900 font-medium truncate max-w-[12rem] sm:max-w-none">{{ Str::limit((string) $report->reported_value, 48, '…') }}</li>
             </ol>
@@ -106,6 +110,9 @@
         </h1>
         <p class="text-lg text-gray-600 mb-6">
             This entry is filed under <a href="{{ route('scam.watch.category', ['category' => $report->category]) }}" class="text-red-600 font-semibold hover:underline">{{ $report->category_label }}</a>.
+            @if($report->community)
+                Community: <a href="{{ route('scam.watch.community', ['community' => $report->community]) }}" class="text-indigo-600 font-semibold hover:underline">{{ $report->community->name }}</a>.
+            @endif
             Always verify offers and never send money to strangers.
         </p>
         <div class="flex flex-wrap gap-3 text-sm">
@@ -116,6 +123,9 @@
                 {{ $report->verification_label }}
             </span>
             <span class="px-3 py-1 rounded-full bg-red-100 text-red-800 font-medium">{{ $report->category_label }}</span>
+            @if($report->community)
+                <a href="{{ route('scam.watch.community', ['community' => $report->community]) }}" class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200">{{ $report->community->name }}</a>
+            @endif
             <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 capitalize">{{ $report->report_type }}</span>
             @if($report->report_count > 1)
                 <span class="px-3 py-1 rounded-full bg-orange-100 text-orange-800 font-medium">{{ $report->report_count }} community {{ Str::plural('report', $report->report_count) }}</span>
@@ -189,9 +199,18 @@
                 <span x-text="liked ? 'Marked as helpful' : 'Helpful if this warning saved you time'"></span>
                 <span x-show="likesCount > 0" class="text-xs font-semibold" x-text="'(' + likesCount + ')'"></span>
             </button>
-            <a href="{{ route('scam.watch.report') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors text-sm">
-                <i class="fas fa-flag"></i> Report another scam
-            </a>
+            <div class="flex flex-wrap items-center gap-3">
+                <button
+                    type="button"
+                    onclick="shareScamReportLink(this)"
+                    data-share-url="{{ route('scam.watch.show', ['report' => $report, 'slug' => $report->seoSlug()]) }}"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                    <i class="fas fa-share-alt"></i> Share link
+                </button>
+                <a href="{{ route('scam.watch.report') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors text-sm">
+                    <i class="fas fa-flag"></i> Report another scam
+                </a>
+            </div>
         </div>
     </div>
 </section>
@@ -241,7 +260,7 @@
 
         <div class="space-y-4">
             @forelse($comments as $comment)
-                <article class="rounded-xl border border-gray-200 bg-white p-5">
+                <article class="wow-reveal rounded-xl border border-gray-200 bg-white p-5" style="--wow-delay: {{ ($loop->index % 5) * 60 }}ms;">
                     <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                         <p class="font-semibold text-gray-900">{{ $comment->author_name ?: 'Anonymous' }}</p>
                         <span class="text-gray-400">•</span>
@@ -287,7 +306,7 @@
         </div>
 
         @if($comments->hasPages())
-            <div class="mt-6">
+            <div class="mt-6 wow-reveal" style="--wow-delay: 80ms;">
                 {{ $comments->links() }}
             </div>
         @endif
@@ -325,6 +344,27 @@
 @endif
 
 <script>
+async function shareScamReportLink(button) {
+    const url = button?.dataset?.shareUrl || window.location.href;
+    const title = document.title || 'Scam report';
+
+    if (navigator.share) {
+        try {
+            await navigator.share({ title, url });
+            return;
+        } catch (_) {
+            // Fallback to clipboard below when share is cancelled/unavailable.
+        }
+    }
+
+    try {
+        await navigator.clipboard.writeText(url);
+        alert('Share link copied to clipboard.');
+    } catch (_) {
+        window.prompt('Copy this link:', url);
+    }
+}
+
 function likeReportDetail(reportId, buttonElement) {
     const button = buttonElement;
     const xData = Alpine.$data(button);
